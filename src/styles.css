@@ -28,10 +28,19 @@ body {
   box-sizing: border-box;
 }
 
+.body {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  border: 1px solid;
+  border-color: #d1d5db;
+  /* border-radius: 5px; */
+}
+
 .container {
   display: flex;
   flex-flow: row;
-  height: 100%;
+  flex-grow: 1;
 }
 
 .container iframe {
@@ -83,14 +92,10 @@ body {
 
 .titlebar {
   height: 30px;
-  background: #329ea3;
+  background: #e5e7eb;
   user-select: none;
   display: flex;
   justify-content: flex-end;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
 }
 .titlebar-button {
   display: inline-flex;
@@ -98,7 +103,17 @@ body {
   align-items: center;
   width: 30px;
   height: 30px;
+  border: none;
+  background: #e5e7eb;
 }
 .titlebar-button:hover {
-  background: #5bbec3;
+  background: #ffffff;
+}
+.titlebar-title {
+  display: inline-flex;
+  align-items: center;
+  flex-grow: 1;
+  text-align: left;
+  font-weight: bold;
+  margin-left: 10px;
 }

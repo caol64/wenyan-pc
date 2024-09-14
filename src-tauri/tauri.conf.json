@@ -33,6 +33,9 @@
         "unmaximize": true,
         "unminimize": true,
         "startDragging": true
+      },
+      "clipboard": {
+        "writeText": true
       }
     },
     "windows": [

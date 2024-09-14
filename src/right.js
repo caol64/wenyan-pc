@@ -148,6 +148,25 @@ window.addEventListener('message', (event) => {
             setPreviewMode(event.data.previewMode);
         } else if (event.data.type === 'onFootnoteChange') {
             addFootnotes();
+        } else if (event.data.type === 'setTheme') {
+            if (event.data.platform === 'gzh') {
+                setTheme('themes/gzh_default.css');
+                setHighlight(event.data.highlightStyle);
+            } else if (event.data.platform === 'toutiao') {
+                setTheme('themes/toutiao_default.css');
+                setHighlight(event.data.highlightStyle);
+            } else if (event.data.platform === 'zhihu') {
+                setTheme('themes/zhihu_default.css');
+                setHighlight(null);
+            } else if (event.data.platform === 'juejin') {
+                setTheme('themes/juejin_default.css');
+                setHighlight(event.data.highlightStyle);
+            }
         }
     }
 });
+
+const message = {
+    type: 'onRightReady'
+};
+window.parent.postMessage(message, '*');

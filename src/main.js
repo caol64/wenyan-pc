@@ -13,8 +13,10 @@ let theme = "themes/gzh_default.css";
 let highlightStyle = "highlight/styles/github.min.css";
 let previewMode = "style.css";
 let content = "";
-let isCopied = false
-let isFootnotes = false
+let isCopied = false;
+let isFootnotes = false;
+let leftReady = false;
+let rightReady = false;
 
 // async function greet() {
 //   // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -34,27 +36,37 @@ let isFootnotes = false
 window.addEventListener('message', async (event) => {
   if (event.data) {
     if (event.data.type === "onReady") {
-      try {
-        const resourcePath = await resolveResource('resources/example.md');
-        content = await readTextFile(resourcePath);
-        const iframe = document.getElementById('leftFrame');
-        if (iframe) {
-          const message = {
-            type: 'onUpdate',
-            value: content
-          };
-          iframe.contentWindow.postMessage(message, '*');
-        }
-        onUpdate();
-      } catch (error) {
-        console.error("Error reading file:", error);
-      }
+      leftReady = true;
+      load();
     } else if (event.data.type === "onChange") {
       content = event.data.value;
       onUpdate();
+    } else if (event.data.type === "onRightReady") {
+      rightReady = true;
+      load();
     }
   }
 });
+
+async function load() {
+  if (leftReady && rightReady) {
+    try {
+      const resourcePath = await resolveResource('resources/example.md');
+      content = await readTextFile(resourcePath);
+      const iframe = document.getElementById('leftFrame');
+      if (iframe) {
+        const message = {
+          type: 'onUpdate',
+          value: content
+        };
+        iframe.contentWindow.postMessage(message, '*');
+      }
+      onUpdate();
+    } catch (error) {
+      console.error("Error reading file:", error);
+    }
+  }
+}
 
 function onUpdate() {
   const iframe = document.getElementById('rightFrame');
@@ -115,5 +127,17 @@ function onFootnoteChange(button) {
   } else {
     useElement.setAttribute('href', '#footnoteIcon');
     onContentChange();
+  }
+}
+
+function changePlatform(platform) {
+  const iframe = document.getElementById('rightFrame');
+  if (iframe) {
+    const message = {
+      type: 'setTheme',
+      highlightStyle: highlightStyle,
+      platform: platform
+    };
+    iframe.contentWindow.postMessage(message, '*');
   }
 }
