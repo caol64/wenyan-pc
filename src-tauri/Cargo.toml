@@ -1,0 +1,21 @@
+[package]
+name = "wenyan"
+version = "1.0.0"
+description = "多平台写作，一键排版美化"
+authors = ["caol64@gmail.com"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "1", features = [] }
+
+[dependencies]
+tauri = { version = "1", features = [ "window-close", "window-hide", "window-show", "window-unminimize", "window-start-dragging", "window-maximize", "window-minimize", "window-unmaximize", "fs-read-file", "fs-read-dir", "path-all", "shell-open"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# tauri-plugin-store = "2.0.0-rc"
+
+[features]
+# This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]
