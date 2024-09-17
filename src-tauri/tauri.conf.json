@@ -5,8 +5,8 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "wenyan",
-    "version": "0.1.0"
+    "productName": "WenYan",
+    "version": "1.0.0"
   },
   "tauri": {
     "allowlist": {
