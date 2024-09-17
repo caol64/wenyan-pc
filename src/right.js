@@ -104,7 +104,11 @@ function scroll(scrollFactor) {
 }
 window.onscroll = function () {
     if (!isScrollingFromScript) {
-        // window.webkit.messageHandlers.scrollHandler.postMessage({ y0: window.scrollY / document.body.scrollHeight });
+        const message = {
+            type: 'rightScroll',
+            value: { y0: window.scrollY / document.body.scrollHeight }
+        };
+        window.parent.postMessage(message, '*');
     }
 };
 function addFootnotes() {

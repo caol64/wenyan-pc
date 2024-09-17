@@ -5,7 +5,7 @@ const { readTextFile } = window.__TAURI__.fs;
 // import { appWindow } from '@tauri-apps/api/window'
 const { appWindow } = window.__TAURI__.window;
 
-// const { invoke } = window.__TAURI__.tauri;
+const { invoke } = window.__TAURI__.tauri;
 
 // let greetInputEl;
 // let greetMsgEl;
@@ -13,25 +13,10 @@ let theme = "themes/gzh_default.css";
 let highlightStyle = "highlight/styles/github.min.css";
 let previewMode = "style.css";
 let content = "";
-let isCopied = false;
 let isFootnotes = false;
+let platform = "gzh";
 let leftReady = false;
 let rightReady = false;
-
-// async function greet() {
-//   // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-//   greetMsgEl.textContent = await invoke("greet", { name: greetInputEl.value });
-// }
-
-// window.addEventListener("DOMContentLoaded", async () => {
-//   try {
-//     const resourcePath = await resolveResource('resources/example.md');
-//     content = await readTextFile(resourcePath);
-//     onUpdate();
-//   } catch (error) {
-//     console.error("Error reading file:", error);
-//   }
-// });
 
 window.addEventListener('message', async (event) => {
   if (event.data) {
@@ -40,10 +25,19 @@ window.addEventListener('message', async (event) => {
       load();
     } else if (event.data.type === "onChange") {
       content = event.data.value;
+      localStorage.setItem("lastArticle", content);
       onUpdate();
     } else if (event.data.type === "onRightReady") {
       rightReady = true;
       load();
+    } else if (event.data.type === "leftScroll") {
+      const iframe = document.getElementById('rightFrame');
+      const iframeWindow = iframe.contentWindow;
+      iframeWindow.scroll(event.data.value.y0);
+    } else if (event.data.type === "rightScroll") {
+      const iframe = document.getElementById('leftFrame');
+      const iframeWindow = iframe.contentWindow;
+      iframeWindow.scroll(event.data.value.y0);
     }
   }
 });
@@ -51,8 +45,12 @@ window.addEventListener('message', async (event) => {
 async function load() {
   if (leftReady && rightReady) {
     try {
-      const resourcePath = await resolveResource('resources/example.md');
-      content = await readTextFile(resourcePath);
+      let lastArticle = localStorage.getItem("lastArticle");
+      if (!lastArticle) {
+        const resourcePath = await resolveResource('resources/example.md');
+        lastArticle = await readTextFile(resourcePath);
+      }
+      content = lastArticle;
       const iframe = document.getElementById('leftFrame');
       if (iframe) {
         const message = {
@@ -130,7 +128,8 @@ function onFootnoteChange(button) {
   }
 }
 
-function changePlatform(platform) {
+function changePlatform(selectedPlatform) {
+  platform = selectedPlatform;
   const iframe = document.getElementById('rightFrame');
   if (iframe) {
     const message = {
@@ -140,4 +139,34 @@ function changePlatform(platform) {
     };
     iframe.contentWindow.postMessage(message, '*');
   }
+}
+
+async function onCopy(button) {
+  const iframe = document.getElementById('rightFrame');
+  const iframeWindow = iframe.contentWindow;
+  let htmlValue = "";
+  if (platform === "gzh") {
+    htmlValue = iframeWindow.getContentWithMathSvg();
+    const themeResponse = await fetch(theme);
+    const themeValue = await themeResponse.text();
+    const hightlightPathResponse = await fetch(highlightStyle);
+    const hightlightValue = await hightlightPathResponse.text();
+    htmlValue = `${htmlValue}<style>${themeValue}${hightlightValue}</style>`;
+  } else if (platform === "zhihu") {
+    htmlValue = iframeWindow.getContentWithMathImg();
+  } else if (platform === "juejin") {
+    htmlValue = iframeWindow.getPostprocessMarkdown();
+  } else {
+    htmlValue = iframeWindow.getContent();
+  }
+  if (platform === "juejin") {
+    await invoke('write_text_to_clipboard', { text: htmlValue });
+  } else {
+    await invoke('write_html_to_clipboard', { text: htmlValue });
+  }
+  const useElement = button.querySelector('use');
+  useElement.setAttribute('href', '#checkIcon');
+  setTimeout(() => {
+    useElement.setAttribute('href', '#clipboardIcon');
+  }, 1000);
 }

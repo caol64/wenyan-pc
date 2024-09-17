@@ -11,10 +11,6 @@
   "tauri": {
     "allowlist": {
       "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      },
       "fs": {
         "scope": ["**"],
         "readDir": true,
@@ -33,9 +29,6 @@
         "unmaximize": true,
         "unminimize": true,
         "startDragging": true
-      },
-      "clipboard": {
-        "writeText": true
       }
     },
     "windows": [

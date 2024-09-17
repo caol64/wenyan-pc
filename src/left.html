@@ -198,7 +198,11 @@
 
     window.onscroll = function () {
       if (!isScrollingFromScript) {
-        //window.webkit.messageHandlers.scrollHandler.postMessage({ y0: window.scrollY / document.body.scrollHeight });
+        const message = {
+          type: 'leftScroll',
+          value: { y0: window.scrollY / document.body.scrollHeight }
+        };
+        window.parent.postMessage(message, '*');
       }
     };
 

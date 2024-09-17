@@ -11,8 +11,8 @@
 
 <body>
   <div class="body">
-    <div data-tauri-drag-region class="titlebar">
-      <div class="titlebar-title">文颜</div>
+    <div class="titlebar">
+      <div data-tauri-drag-region class="titlebar-title">文颜</div>
       <button class="titlebar-button" id="gzh-button">
         <img src="icon/gzh.svg" alt="gzh" />
       </button>
@@ -26,13 +26,19 @@
         <img src="icon/juejin.svg" alt="juejin" />
       </button>
       <button style="margin-left: 20px;" class="titlebar-button" id="titlebar-minimize">
-        <img src="icon/mdi_window-minimize.svg" alt="minimize" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M20 14H4v-4h16"/>
+        </svg>
       </button>
       <button class="titlebar-button" id="titlebar-maximize">
-        <img src="icon/mdi_window-maximize.svg" alt="maximize" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M4 4h16v16H4zm2 4v10h12V8z"/>
+        </svg>
       </button>
       <button class="titlebar-button" id="titlebar-close">
-        <img src="icon/mdi_close.svg" alt="close" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z"/>
+        </svg>
       </button>
     </div>
     <div class="container">
@@ -53,7 +59,7 @@
           </svg>
           脚注
         </button>
-        <button class="overlay-button">
+        <button class="overlay-button" onclick="onCopy(this);">
           <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <use href="#clipboardIcon"></use>
           </svg>

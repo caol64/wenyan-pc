@@ -11,6 +11,7 @@
     "@tauri-apps/cli": "^1"
   },
   "dependencies": {
-    "@tauri-apps/plugin-store": "^2.0.0-rc.1"
+    "@tauri-apps/plugin-store": "^2.0.0-rc.1",
+    "tauri-plugin-clipboard-api": "^1.1.4"
   }
 }
