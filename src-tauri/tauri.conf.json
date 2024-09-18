@@ -5,8 +5,8 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "WenYan",
-    "version": "1.0.0"
+    "productName": "文颜",
+    "version": "../package.json"
   },
   "tauri": {
     "allowlist": {
@@ -57,7 +57,17 @@
       ],
       "resources": [
         "resources/*"
-      ]
+      ],
+      "copyright": "© 2024 Lei Cao. All rights reserved.",
+      "windows": {
+        "wix": {
+          "language": "zh-CN"
+        },
+        "nsis": {
+          "languages": ["SimpChinese", "English"],
+          "displayLanguageSelector": true
+        }
+      }
     }
   }
 }
