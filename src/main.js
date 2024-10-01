@@ -40,6 +40,7 @@ window.addEventListener('message', async (event) => {
       iframeWindow.scroll(event.data.value.y0);
     } else if (event.data.clicked) {
       hideThemeOverlay();
+      hideMenu();
     }
   }
 });
@@ -198,6 +199,11 @@ function hideThemeOverlay() {
   themeOverlay.style.display = "none";
 }
 
+function hideMenu() {
+  const themeOverlay = document.getElementById('dropdown');
+  themeOverlay.style.display = "none";
+}
+
 function changeTheme(selectedTheme) {
   theme = selectedTheme;
   const iframe = document.getElementById('rightFrame');
@@ -275,4 +281,12 @@ function replaceCSSVariables(css) {
   }
 
   return modifiedCSS;
+}
+function showMoreMenu() {
+  const dropdown = document.getElementById('dropdown');
+  dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+}
+
+function openAbout() {
+  appWindow.emit("open-about");
 }

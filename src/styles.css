@@ -68,7 +68,7 @@ body {
   display: flex;
   opacity: 1;
   transition: opacity 0.3s;
-  z-index: 999;
+  z-index: 99;
   display: none;
   padding: 10px 0;
   border: 1px solid;
@@ -165,6 +165,23 @@ body {
   transform: translateY(-50%);
 }
 
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  top: 35px;
+  right: 20px;
+  z-index: 100;
+}
+.dropdown-content a {
+  padding: 12px 16px;
+  display: block;
+  font-size: 13px;
+  text-decoration: none
+}
+
 @media (prefers-color-scheme: dark) {
   .titlebar, .titlebar-button, .titlebar-svg {
     color: #f6f6f6;
@@ -172,5 +189,8 @@ body {
   }
   .titlebar-button #mediumicon {
     filter: invert(1); /* 深色模式，反转颜色 */
+  }
+  .titlebar button:hover {
+    background-color: #a0a0a0; /* 鼠标悬浮时的背景颜色 */
   }
 }

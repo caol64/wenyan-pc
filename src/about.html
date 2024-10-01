@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>关于</title>
+  <style>
+    :root {
+        font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        color: #0f0f0f;
+        background-color: #ffffff;
+
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        width: 100%;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+    .centered-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* 水平居中 */
+        align-items: center; /* 垂直居中 */
+        height: 100vh; /* 占满整个屏幕高度 */
+        text-align: center;
+    }
+    p {
+        text-align: center;
+        margin: 8px 0;
+    }
+  </style>
+</head>
+
+<body>
+    <div class="centered-container">
+        <p>版本：windows v1.1</p>
+        <p id="feedback-link">问题反馈：<a href="#">https://yuzhi.tech/contact</a></p>
+        <p>联系邮箱：<a href="mailto:support@yuzhi.tech">support@yuzhi.tech</a></p>
+        <p>© 2024 Lei Cao. All rights reserved.</p>
+    </div>
+    <script>
+        // const { shell } = window.__TAURI__.shell;
+        // document.getElementById('feedback-link').addEventListener('click', async (event) => {
+        //     event.preventDefault(); // 阻止默认行为
+        //     // 使用 Tauri 的 shell 模块打开链接
+        //     await shell.open("https://yuzhi.tech/contact");
+        // });
+    </script>
+</body>
+</html>
