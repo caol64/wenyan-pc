@@ -9,7 +9,7 @@ const { invoke } = window.__TAURI__.tauri;
 
 // let greetInputEl;
 // let greetMsgEl;
-let theme = "themes/gzh_default.css";
+let theme = "gzh_default";
 let highlightStyle = "highlight/styles/github.min.css";
 let previewMode = "style.css";
 let content = "";
@@ -38,6 +38,8 @@ window.addEventListener('message', async (event) => {
       const iframe = document.getElementById('leftFrame');
       const iframeWindow = iframe.contentWindow;
       iframeWindow.scroll(event.data.value.y0);
+    } else if (event.data.clicked) {
+      hideThemeOverlay();
     }
   }
 });
@@ -59,6 +61,11 @@ async function load() {
         };
         iframe.contentWindow.postMessage(message, '*');
       }
+      let gzhTheme = localStorage.getItem("gzhTheme");
+      if (gzhTheme) {
+        theme = gzhTheme;
+      }
+      document.getElementById(theme).classList.add('selected');
       onUpdate();
     } catch (error) {
       console.error("Error reading file:", error);
@@ -129,16 +136,23 @@ function onFootnoteChange(button) {
 }
 
 function changePlatform(selectedPlatform) {
-  platform = selectedPlatform;
-  const iframe = document.getElementById('rightFrame');
-  if (iframe) {
-    const message = {
-      type: 'setTheme',
-      highlightStyle: highlightStyle,
-      platform: platform
-    };
-    iframe.contentWindow.postMessage(message, '*');
+  hideThemeOverlay();
+  if (selectedPlatform !== "gzh") {
+    document.getElementById('gzhThemeButton').style.display = "none";
+  } else {
+    if (document.getElementById('gzhThemeButton').style.display === "none") {
+      document.getElementById('gzhThemeButton').style.display = "";
+    }
   }
+  platform = selectedPlatform;
+  let selectedTheme = platform + "_default";
+  if (platform === "gzh") {
+    let gzhTheme = localStorage.getItem("gzhTheme");
+    if (gzhTheme) {
+      selectedTheme = gzhTheme;
+    }
+  }
+  changeTheme(selectedTheme);
 }
 
 async function onCopy(button) {
@@ -146,16 +160,19 @@ async function onCopy(button) {
   const iframeWindow = iframe.contentWindow;
   let htmlValue = "";
   if (platform === "gzh") {
-    htmlValue = iframeWindow.getContentWithMathSvg();
-    const themeResponse = await fetch(theme);
+    htmlValue = iframeWindow.getContentForGzh();
+    const themeResponse = await fetch(`themes/${theme}.css`);
     const themeValue = await themeResponse.text();
+    const resolvedTheme = replaceCSSVariables(themeValue);
     const hightlightPathResponse = await fetch(highlightStyle);
     const hightlightValue = await hightlightPathResponse.text();
-    htmlValue = `${htmlValue}<style>${themeValue}${hightlightValue}</style>`;
+    htmlValue = `${htmlValue}<style>${resolvedTheme}${hightlightValue}</style>`;
   } else if (platform === "zhihu") {
     htmlValue = iframeWindow.getContentWithMathImg();
   } else if (platform === "juejin") {
     htmlValue = iframeWindow.getPostprocessMarkdown();
+  } else if (platform === "medium") {
+    htmlValue = iframeWindow.getContentForMedium();
   } else {
     htmlValue = iframeWindow.getContent();
   }
@@ -169,4 +186,93 @@ async function onCopy(button) {
   setTimeout(() => {
     useElement.setAttribute('href', '#clipboardIcon');
   }, 1000);
+}
+
+function displayThemeOverlay() {
+  const themeOverlay = document.getElementById('themeOverlay');
+  themeOverlay.style.display = "block";
+}
+
+function hideThemeOverlay() {
+  const themeOverlay = document.getElementById('themeOverlay');
+  themeOverlay.style.display = "none";
+}
+
+function changeTheme(selectedTheme) {
+  theme = selectedTheme;
+  const iframe = document.getElementById('rightFrame');
+  if (iframe) {
+    const message = {
+      type: 'setTheme',
+      highlightStyle: highlightStyle,
+      theme: theme
+    };
+    if (platform == "zhihu") {
+      delete message.highlightStyle;
+    }
+    iframe.contentWindow.postMessage(message, '*');
+  }
+  if (platform === "gzh") {
+    localStorage.setItem("gzhTheme", selectedTheme);
+  }
+}
+
+function replaceCSSVariables(css) {
+  // 正则表达式用于匹配变量定义，例如 --sans-serif-font: ...
+  const variablePattern = /--([a-zA-Z0-9\-]+):\s*([^;]+);/g;
+  // 正则表达式用于匹配使用 var() 的地方
+  const varPattern = /var\(--([a-zA-Z0-9\-]+)\)/g;
+
+  const cssVariables = {};
+
+  // 1. 提取变量定义并存入字典
+  let match;
+  while ((match = variablePattern.exec(css)) !== null) {
+      const variableName = match[1];
+      const variableValue = match[2].trim();
+
+      // 将变量存入字典
+      cssVariables[variableName] = variableValue;
+  }
+
+  // 2. 递归解析 var() 引用为字典中对应的值
+  function resolveVariable(value, variables, resolved = new Set()) {
+      // 如果已经解析过这个值，则返回原始值以避免死循环
+      if (resolved.has(value)) return value;
+
+      resolved.add(value);
+      let resolvedValue = value;
+
+      // 解析变量
+      let match;
+      while ((match = varPattern.exec(resolvedValue)) !== null) {
+          const varName = match[1];
+
+          // 查找对应的变量值，如果变量引用另一个变量，递归解析
+          if (variables[varName]) {
+              const resolvedVar = resolveVariable(variables[varName], variables, resolved);
+              resolvedValue = resolvedValue.replace(match[0], resolvedVar);
+          }
+      }
+      return resolvedValue;
+  }
+
+  // 3. 替换所有变量引用
+  for (const key in cssVariables) {
+      const resolvedValue = resolveVariable(cssVariables[key], cssVariables);
+      cssVariables[key] = resolvedValue;
+  }
+
+  // 4. 替换 CSS 中的 var() 引用
+  let modifiedCSS = css;
+  while ((match = varPattern.exec(css)) !== null) {
+      const varName = match[1];
+
+      // 查找对应的变量值
+      if (cssVariables[varName]) {
+          modifiedCSS = modifiedCSS.replace(match[0], cssVariables[varName]);
+      }
+  }
+
+  return modifiedCSS;
 }

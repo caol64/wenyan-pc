@@ -25,6 +25,9 @@
       <button class="titlebar-button" id="juejin-button">
         <img src="icon/juejin.svg" alt="juejin" />
       </button>
+      <button class="titlebar-button" id="medium-button">
+        <img id="mediumicon" src="icon/medium.svg" alt="medium" />
+      </button>
       <button style="margin-left: 20px;" class="titlebar-button" id="titlebar-minimize">
         <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
           <path fill="currentColor" d="M20 14H4v-4h16"/>
@@ -47,6 +50,12 @@
     </div>
     <div class="overlay">
       <div class="button-container">
+        <button id="gzhThemeButton" class="overlay-button" onclick="displayThemeOverlay(this);">
+          <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <use href="#themeIcon"></use>
+          </svg>
+          主题
+        </button>
         <button class="overlay-button" onclick="onPeviewModeChange(this);">
           <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <use href="#desktopIcon"></use>
@@ -67,6 +76,17 @@
         </button>
       </div>
     </div>
+    <div id="themeOverlay" class="theme-overlay">
+      <ul id="gzhThemeSelector">
+        <li id="gzh_default"><span>默认</span></li>
+        <li id="orangeheart"><span>Orange Heart</span><span>evgo2017</span></li>
+        <li id="rainbow"><span>Rainbow</span><span>thezbm</span></li>
+        <li id="lapis"><span>Lapis</span><span>YiNN</span></li>
+        <li id="pie"><span>Pie</span><span>kevinzhao2233</span></li>
+        <li id="maize"><span>Maize</span><span>BEATREE</span></li>
+        <li id="purple"><span>Purple</span><span>hliu202</span></li>
+      </ul>
+    </div>
     <svg style="display: none;">
       <symbol id="desktopIcon" viewBox="0 0 48 48">
         <rect x="6" y="6" width="36" height="28" rx="3" fill="none" stroke="#333" stroke-width="4" stroke-linejoin="round"/>
@@ -85,6 +105,9 @@
       <symbol id="checkIcon" viewBox="0 0 48 48">
         <path d="M43 11L16.875 37L5 25.1818" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
       </symbol>
+      <symbol id="themeIcon" viewBox="0 0 48 48">
+        <path d="M18 6C18 9.31371 20.6863 12 24 12C27.3137 12 30 9.31371 30 6H35.4545L42 15.8182L36.2727 20.7273V42H11.7273V20.7273L6 15.8182L12.5455 6H18Z" fill="none" stroke="#333" stroke-width="4" stroke-linejoin="round"/>
+      </symbol>
     </svg>
   </div>
 </body>
@@ -97,6 +120,15 @@
   document.getElementById('toutiao-button').addEventListener('click', () => changePlatform('toutiao'));
   document.getElementById('zhihu-button').addEventListener('click', () => changePlatform('zhihu'));
   document.getElementById('juejin-button').addEventListener('click', () => changePlatform('juejin'));
+  document.getElementById('medium-button').addEventListener('click', () => changePlatform('medium'));
+  const listItems = document.querySelectorAll('#gzhThemeSelector li');
+  listItems.forEach(item => {
+    item.addEventListener('click', function() {
+        listItems.forEach(li => li.classList.remove('selected'));
+        this.classList.add('selected');
+        changeTheme(item.id);
+    });
+  });
 </script>
 
 </html>

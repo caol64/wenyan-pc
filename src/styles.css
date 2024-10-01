@@ -44,17 +44,54 @@ body {
 
 .overlay {
   position: absolute;
-  top: 20px;
+  top: 30px;
   right: 20px;
   width: 100px;
-  height: 150px;
-  /* background-color: rgba(0, 0, 0, 0.6); */
+  height: 180px;
   color: white;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: start;
   opacity: 1;
   transition: opacity 0.3s;
+  z-index: 10;
+  padding-top: 15px;
+}
+
+.theme-overlay {
+  position: absolute;
+  top: 35px;
+  right: 20px;
+  width: 200px;
+  height: 180px;
+  background-color: #ffffff;
+  display: flex;
+  opacity: 1;
+  transition: opacity 0.3s;
+  z-index: 999;
+  display: none;
+  padding: 10px 0;
+  border: 1px solid;
+  border-color: #d1d5db;
+  border-radius: 5px;
+}
+
+.theme-overlay ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.theme-overlay li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  cursor: default;
+  padding: 3px 10px;
+}
+
+.theme-overlay li.selected {
+  background-color: #f0f0f0;
 }
 
 .button-container {
@@ -108,16 +145,32 @@ body {
   flex-grow: 1;
   text-align: left;
   font-weight: bold;
+  padding-left: 30px;
+  position: relative;
   margin-left: 10px;
+  cursor: default;
+}
+
+.titlebar-title::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-image: url('icon/wenyan.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 @media (prefers-color-scheme: dark) {
-  /* :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  } */
   .titlebar, .titlebar-button, .titlebar-svg {
     color: #f6f6f6;
     background-color: #374151;
+  }
+  .titlebar-button #mediumicon {
+    filter: invert(1); /* 深色模式，反转颜色 */
   }
 }
