@@ -23,6 +23,13 @@
                     renderActions: {
                         addContainer: [190, (doc) => {for (const math of doc.math) {addContainer(math, doc)}}, addContainer]
                     }
+                },
+                svg: {
+                    fontCache: 'none'
+                },
+                tex: {
+                    inlineMath: [['$', '$'], ['\\(', '\\)']],
+                    displayMath: [['$$', '$$'], ['\\[', '\\]']]
                 }
             };
         </script>
