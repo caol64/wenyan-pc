@@ -194,3 +194,15 @@ body {
     background-color: #a0a0a0; /* 鼠标悬浮时的背景颜色 */
   }
 }
+
+#about-btn {
+  color: #000; 
+}
+
+#about-btn:hover {
+  color: #000; 
+}
+
+#about-btn:active {
+  color: #000; 
+}
