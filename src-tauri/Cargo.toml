@@ -1,6 +1,6 @@
 [package]
 name = "wenyan"
-version = "1.2.0"
+version = "1.1.1"
 description = "多平台写作，一键排版美化"
 authors = ["caol64@gmail.com"]
 edition = "2021"
