@@ -4,8 +4,21 @@ body {
 }
 .preview {
     margin: auto;
-    width: 100%;
+    width: 92%;
     outline: none;
     overflow: auto;
     padding: 20px;
+}
+/* 代码块滚动条 */
+#wenyan .hljs::-webkit-scrollbar-track {
+    border-radius: 6px;
+    background-color: #fff
+}
+#wenyan .hljs::-webkit-scrollbar-thumb {
+    border-radius: 6px;
+    background-color: #90929880
+}
+#wenyan .hljs::-webkit-scrollbar {
+    height: 6px;
+    background-color: #fff
 }

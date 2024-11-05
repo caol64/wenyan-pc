@@ -1,8 +1,6 @@
-const { markedHighlight } = globalThis.markedHighlight;
-
+const {markedHighlight} = globalThis.markedHighlight;
 let postprocessMarkdown = "";
 let isScrollingFromScript = false;
-
 // ------- marked.js默认配置开始 -------
 // 处理frontMatter的函数
 function preprocess(markdown) {
@@ -20,37 +18,43 @@ function preprocess(markdown) {
 marked.use({ hooks: { preprocess } }); // marked加载frontMatter函数
 marked.use(markedHighlight({ // marked加载highlight函数
     langPrefix: "hljs language-",
-    highlight: function (code, language) {
+    highlight: function(code, language) {
         language = hljs.getLanguage(language) ? language : "plaintext";
         return hljs.highlight(code, { language: language }).value;
     }
 }));
 // 自定义渲染器
-const renderer = new marked.Renderer();
-const parser = new marked.Parser();
+const renderer = marked.Renderer;
+const parser = marked.Parser;
 
 // 重写渲染标题的方法（h1 ~ h6）
 renderer.heading = function(heading) {
     const text = parser.parseInline(heading.tokens);
     const level = heading.depth;
     // 返回带有 span 包裹的自定义标题
-    return `<h${level}><span class="h${level}-span">${text}</span></h${level}>\n`;
+    return `<h${level}><span>${text}</span></h${level}>\n`;
 };
 // 重写渲染paragraph的方法以更好的显示行间公式
 renderer.paragraph = function(paragraph) {
-    const text = parser.parseInline(paragraph.tokens);
-    if (text.length > 4 && /^(\$\$)(?!\$)/.test(text)) {
+    const text = paragraph.text;
+    if (text.length > 4 && (/\$\$[\s\S]*?\$\$/g.test(text) || /\\\[[\s\S]*?\\\]/g.test(text))) {
         return `${text}\n`;
     } else {
-        return `<p>${text}</p>\n`;
+        return `<p>${parser.parseInline(paragraph.tokens)}</p>\n`;
     }
 };
+
 // 配置 marked.js 使用自定义的 Renderer
 marked.use({
     renderer: renderer
 });
 // ------- marked.js默认配置完毕 -------
-
+function getScrollFrame() {
+    const height = document.body.scrollHeight;
+    const width = document.getElementById("wenyan").offsetWidth;
+    const fullWidth = document.body.scrollWidth;
+    return { width, height, fullWidth }
+}
 function setStylesheet(id, href) {
     const style = document.createElement("link");
     style.setAttribute("id", id);
@@ -69,11 +73,18 @@ function setContent(content) {
 }
 function setPreviewMode(mode) {
     document.getElementById("style")?.remove();
-    setStylesheet("style", mode)
+    setStylesheet("style", mode);
 }
 function setTheme(theme) {
     document.getElementById("theme")?.remove();
-    setStylesheet("theme", theme)
+    setStylesheet("theme", theme);
+}
+function setCustomTheme(css) {
+    document.getElementById("theme")?.remove();
+    const style = document.createElement("style");
+    style.setAttribute("id", "theme");
+    document.head.appendChild(style);
+    style.innerText = css;
 }
 function setHighlight(highlight) {
     document.getElementById("hljs")?.remove();
@@ -124,7 +135,7 @@ function getContentForGzh() {
         element.remove();
         parent.appendChild(svg);
         if (parent.classList.contains('block-equation')) {
-            parent.setAttribute("style", "text-align: center;");
+            parent.setAttribute("style", "text-align: center; margin-bottom: 1rem;");
         }
     });
     // 读取主题css样式
@@ -153,7 +164,7 @@ function getContentForGzh() {
                 const styles = value;
                 if (styles.size > 0) {
                     // 创建一个新的 <span> 元素
-                    const span = document.createElement('span');
+                    const span = document.createElement('section');
                     // 将伪类的内容和样式应用到 <span> 标签
                     span.textContent = styles.get("content").replace(/['"]/g, '');
                     const entries = Array.from(styles.entries());
@@ -168,7 +179,7 @@ function getContentForGzh() {
             }
         });
     });
-    return clonedWenyan.outerHTML;
+    return clonedWenyan.outerHTML.replace(/class="mjx-solid"/g, 'fill="none" stroke-width="70"');
 }
 function getContentForMedium() {
     const wenyan = document.getElementById("wenyan");
@@ -236,15 +247,6 @@ function scroll(scrollFactor) {
     window.scrollTo(0, document.body.scrollHeight * scrollFactor);
     requestAnimationFrame(() => isScrollingFromScript = false);
 }
-window.onscroll = function () {
-    if (!isScrollingFromScript) {
-        const message = {
-            type: 'rightScroll',
-            value: { y0: window.scrollY / document.body.scrollHeight }
-        };
-        window.parent.postMessage(message, '*');
-    }
-};
 function addFootnotes(listStyle) {
     let footnotes = [];
     let footnoteIndex = 0;
@@ -266,11 +268,11 @@ function addFootnotes(listStyle) {
         if (!listStyle) {
             let footnoteArray = footnotes.map((x) => {
                 if (x[1] === x[2]) {
-                    return `<p id="#footnote-${x[0]}">[${x[0]}]: <i>${x[1]}</i></p>`;
+                    return `<p><span class="footnote-num">[${x[0]}]</span><span class="footnote-txt"><i>${x[1]}</i></span></p>`;
                 }
-                return `<p id="#footnote-${x[0]}">[${x[0]}]<span>${x[1]}: <i>${x[2]}</i></span></p>`;
+                return `<p><span class="footnote-num">[${x[0]}]</span><span class="footnote-txt">${x[1]}: <i>${x[2]}</i></span></p>`;
             });
-            const footnotesHtml = `<h3>引用链接</h3><div id="footnotes">${footnoteArray.join("")}</div>`;
+            const footnotesHtml = `<h3>引用链接</h3><section id="footnotes">${footnoteArray.join("")}</section>`;
             document.getElementById("wenyan").innerHTML += footnotesHtml;
         } else {
             let footnoteArray = footnotes.map((x) => {
@@ -288,7 +290,7 @@ function tableToAsciiArt(table) {
     const rows = Array.from(table.querySelectorAll('tr')).map(tr =>
         Array.from(tr.querySelectorAll('th, td')).map(td => td.innerText.trim())
     );
-  
+
     if (rows.length === 0) return '';
 
     // 获取每列的最大宽度
@@ -297,12 +299,12 @@ function tableToAsciiArt(table) {
     );
 
     const horizontalLine = '+' + columnWidths.map(width => '-'.repeat(width + 2)).join('+') + '+\n';
-  
+
     // 格式化行数据
     const formattedRows = rows.map(row =>
         '| ' + row.map((cell, i) => cell.padEnd(columnWidths[i])).join(' | ') + ' |\n'
     );
-  
+
     // 构建最终的表格
     let asciiTable = horizontalLine;
     asciiTable += formattedRows[0];  // 表头
@@ -328,6 +330,8 @@ function transformUl(ulElement) {
     // 将原来的 <ul> 替换为转换后的字符串
     ulElement.outerHTML = replaceString;
 }
+
+//// 非通用方法
 window.addEventListener('message', (event) => {
     if (event.data) {
         if (event.data.type === 'onUpdate') {
@@ -349,12 +353,19 @@ window.addEventListener('message', (event) => {
         }
     }
 });
-
+window.onscroll = function () {
+    if (!isScrollingFromScript) {
+        const message = {
+            type: 'rightScroll',
+            value: { y0: window.scrollY / document.body.scrollHeight }
+        };
+        window.parent.postMessage(message, '*');
+    }
+};
 window.addEventListener('click', function(event) {
     // 发送点击事件的消息到父页面
     window.parent.postMessage({ clicked: true }, '*');
 });
-
 const message = {
     type: 'onRightReady'
 };

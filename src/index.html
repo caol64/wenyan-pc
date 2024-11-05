@@ -2,141 +2,187 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <link rel="stylesheet" href="styles.css" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>文颜</title>
-  <script src="main.js"></script>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文颜</title>
+    <script src="html2canvas/html2canvas.min.js"></script>
+    <script src="main.js"></script>
 </head>
 
 <body>
-  <div class="body">
-    <div class="titlebar">
-      <div data-tauri-drag-region class="titlebar-title">文颜</div>
-      <button class="titlebar-button" id="gzh-button">
-        <img src="icon/gzh.svg" alt="gzh" />
-      </button>
-      <button class="titlebar-button" id="toutiao-button">
-        <img src="icon/toutiao.svg" alt="toutiao" />
-      </button>
-      <button class="titlebar-button" id="zhihu-button">
-        <img src="icon/zhihu.svg" alt="zhihu" />
-      </button>
-      <button class="titlebar-button" id="juejin-button">
-        <img src="icon/juejin.svg" alt="juejin" />
-      </button>
-      <button class="titlebar-button" id="medium-button">
-        <img id="mediumicon" src="icon/medium.svg" alt="medium" />
-      </button>
-      <button style="margin-left: 20px;" class="titlebar-button" id="more-button">
-        <svg width="24" height="24" viewBox="0 0 48 48" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="12" r="3" fill="#currentColor"/><circle cx="24" cy="24" r="3" fill="#currentColor"/><circle cx="24" cy="35" r="3" fill="#currentColor"/></svg>
-      </button>
-      <button class="titlebar-button" id="titlebar-minimize">
-        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M20 14H4v-4h16"/>
+    <div class="body">
+        <div class="titlebar">
+            <div data-tauri-drag-region class="titlebar-title">文颜</div>
+            <button class="titlebar-button" id="gzh-button">
+                <img src="icon/gzh.svg" alt="gzh" />
+            </button>
+            <button class="titlebar-button" id="toutiao-button">
+                <img src="icon/toutiao.svg" alt="toutiao" />
+            </button>
+            <button class="titlebar-button" id="zhihu-button">
+                <img src="icon/zhihu.svg" alt="zhihu" />
+            </button>
+            <button class="titlebar-button" id="juejin-button">
+                <img src="icon/juejin.svg" alt="juejin" />
+            </button>
+            <button class="titlebar-button" id="medium-button">
+                <img id="mediumicon" src="icon/medium.svg" alt="medium" />
+            </button>
+            <button style="margin-left: 20px;" class="titlebar-button" id="more-button">
+                <svg width="24" height="24" viewBox="0 0 48 48" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="24" cy="12" r="3" fill="#currentColor" />
+                    <circle cx="24" cy="24" r="3" fill="#currentColor" />
+                    <circle cx="24" cy="35" r="3" fill="#currentColor" />
+                </svg>
+            </button>
+            <button class="titlebar-button" id="titlebar-minimize">
+                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M20 14H4v-4h16" />
+                </svg>
+            </button>
+            <button class="titlebar-button" id="titlebar-maximize">
+                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M4 4h16v16H4zm2 4v10h12V8z" />
+                </svg>
+            </button>
+            <button class="titlebar-button" id="titlebar-close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                    <path fill="currentColor"
+                        d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z" />
+                </svg>
+            </button>
+        </div>
+        <div class="container">
+            <iframe src="/left.html" id="leftFrame"></iframe>
+            <iframe src="/right.html" id="rightFrame"></iframe>
+        </div>
+        <div class="overlay">
+            <div class="button-container">
+                <button id="gzhThemeButton" class="overlay-button" onclick="displayThemeOverlay(this);">
+                    <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use href="#themeIcon"></use>
+                    </svg>
+                    主题
+                </button>
+                <button class="overlay-button" onclick="onPeviewModeChange(this);">
+                    <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use href="#desktopIcon"></use>
+                    </svg>
+                    预览
+                </button>
+                <button class="overlay-button" onclick="onFootnoteChange(this);">
+                    <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use href="#footnoteIcon"></use>
+                    </svg>
+                    脚注
+                </button>
+                <button class="overlay-button" onclick="exportLongImage(this);">
+                    <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use href="#screenShotIcon"></use>
+                    </svg>
+                    长图
+                </button>
+                <button class="overlay-button" onclick="onCopy(this);">
+                    <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use href="#clipboardIcon"></use>
+                    </svg>
+                    复制
+                </button>
+            </div>
+        </div>
+        <div id="themeOverlay" class="theme-overlay">
+            <ul id="gzhThemeSelector">
+                <li id="gzh_default"><span>默认</span></li>
+                <li id="orangeheart"><span>Orange Heart</span><span>evgo2017</span></li>
+                <li id="rainbow"><span>Rainbow</span><span>thezbm</span></li>
+                <li id="lapis"><span>Lapis</span><span>YiNN</span></li>
+                <li id="pie"><span>Pie</span><span>kevinzhao2233</span></li>
+                <li id="maize"><span>Maize</span><span>BEATREE</span></li>
+                <li id="purple"><span>Purple</span><span>hliu202</span></li>
+                <li id="create-theme"><span>创建新主题</span></li>
+            </ul>
+        </div>
+        <div id="dropdown" class="dropdown-content">
+            <a href="#" id="about-btn">关于</a>
+        </div>
+        <svg style="display: none;">
+            <symbol id="desktopIcon" viewBox="0 0 48 48">
+                <rect x="6" y="6" width="36" height="28" rx="3" fill="none" stroke="#333" stroke-width="4"
+                    stroke-linejoin="round" />
+                <path d="M14 42L34 42" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M24 34V42" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            </symbol>
+            <symbol id="mobileIcon" viewBox="0 0 48 48">
+                <rect x="11" y="4" width="26" height="40" rx="3" fill="none" stroke="#333" stroke-width="4" />
+                <path d="M22 10L26 10" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M20 38H28" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            </symbol>
+            <symbol id="footnoteIcon" viewBox="0 0 48 48">
+                <path
+                    d="M26.2401 16.373L17.1001 7.23303C14.4388 4.57168 10.0653 4.6303 7.33158 7.36397C4.59791 10.0976 4.53929 14.4712 7.20064 17.1325L15.1359 25.0678"
+                    stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                <path
+                    d="M32.9027 23.0031L40.838 30.9384C43.4994 33.5998 43.4407 37.9733 40.7071 40.707C37.9734 43.4407 33.5999 43.4993 30.9385 40.8379L21.7985 31.6979"
+                    stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M26.1093 26.1416C28.843 23.4079 28.9016 19.0344 26.2403 16.373" stroke="#333" stroke-width="4"
+                    stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M21.7989 21.7984C19.0652 24.5321 19.0066 28.9056 21.6679 31.5669" stroke="#333"
+                    stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            </symbol>
+            <symbol id="clipboardIcon" viewBox="0 0 48 48">
+                <path
+                    d="M17 7H16H10C8.89543 7 8 7.89543 8 9L8 42C8 43.1046 8.89543 44 10 44H38C39.1046 44 40 43.1046 40 42V9C40 7.89543 39.1046 7 38 7H33.0499H31"
+                    stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                <rect x="17" y="4" width="14" height="6" fill="none" stroke="#333" stroke-width="4"
+                    stroke-linejoin="round" />
+            </symbol>
+            <symbol id="checkIcon" viewBox="0 0 48 48">
+                <path d="M43 11L16.875 37L5 25.1818" stroke="#333" stroke-width="4" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </symbol>
+            <symbol id="themeIcon" viewBox="0 0 48 48">
+                <path
+                    d="M18 6C18 9.31371 20.6863 12 24 12C27.3137 12 30 9.31371 30 6H35.4545L42 15.8182L36.2727 20.7273V42H11.7273V20.7273L6 15.8182L12.5455 6H18Z"
+                    fill="none" stroke="#333" stroke-width="4" stroke-linejoin="round" />
+            </symbol>
+            <symbol id="screenShotIcon" viewBox="0 0 48 48">
+                <path d="M16 6H8C6.89543 6 6 6.89543 6 8V16" stroke="#333" stroke-width="4" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                <path d="M16 42H8C6.89543 42 6 41.1046 6 40V32" stroke="#333" stroke-width="4" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                <path d="M32 42H40C41.1046 42 42 41.1046 42 40V32" stroke="#333" stroke-width="4" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                <path d="M32 6H40C41.1046 6 42 6.89543 42 8V16" stroke="#333" stroke-width="4" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                <rect x="14" y="14" width="20" height="20" rx="2" fill="none" stroke="#333" stroke-width="4" />
+            </symbol>
         </svg>
-      </button>
-      <button class="titlebar-button" id="titlebar-maximize">
-        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M4 4h16v16H4zm2 4v10h12V8z"/>
-        </svg>
-      </button>
-      <button class="titlebar-button" id="titlebar-close">
-        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z"/>
-        </svg>
-      </button>
     </div>
-    <div class="container">
-      <iframe src="/left.html" id="leftFrame"></iframe>
-      <iframe src="/right.html" id="rightFrame"></iframe>
-    </div>
-    <div class="overlay">
-      <div class="button-container">
-        <button id="gzhThemeButton" class="overlay-button" onclick="displayThemeOverlay(this);">
-          <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <use href="#themeIcon"></use>
-          </svg>
-          主题
-        </button>
-        <button class="overlay-button" onclick="onPeviewModeChange(this);">
-          <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <use href="#desktopIcon"></use>
-          </svg>
-          预览
-        </button>
-        <button class="overlay-button" onclick="onFootnoteChange(this);">
-          <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <use href="#footnoteIcon"></use>
-          </svg>
-          脚注
-        </button>
-        <button class="overlay-button" onclick="onCopy(this);">
-          <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <use href="#clipboardIcon"></use>
-          </svg>
-          复制
-        </button>
-      </div>
-    </div>
-    <div id="themeOverlay" class="theme-overlay">
-      <ul id="gzhThemeSelector">
-        <li id="gzh_default"><span>默认</span></li>
-        <li id="orangeheart"><span>Orange Heart</span><span>evgo2017</span></li>
-        <li id="rainbow"><span>Rainbow</span><span>thezbm</span></li>
-        <li id="lapis"><span>Lapis</span><span>YiNN</span></li>
-        <li id="pie"><span>Pie</span><span>kevinzhao2233</span></li>
-        <li id="maize"><span>Maize</span><span>BEATREE</span></li>
-        <li id="purple"><span>Purple</span><span>hliu202</span></li>
-      </ul>
-    </div>
-    <div id="dropdown" class="dropdown-content">
-      <a href="#" id="about-btn">关于</a>
-    </div>
-    <svg style="display: none;">
-      <symbol id="desktopIcon" viewBox="0 0 48 48">
-        <rect x="6" y="6" width="36" height="28" rx="3" fill="none" stroke="#333" stroke-width="4" stroke-linejoin="round"/>
-        <path d="M14 42L34 42" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M24 34V42" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-      </symbol>
-      <symbol id="mobileIcon" viewBox="0 0 48 48">
-        <rect x="11" y="4" width="26" height="40" rx="3" fill="none" stroke="#333" stroke-width="4"/><path d="M22 10L26 10" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 38H28" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-      </symbol>
-      <symbol id="footnoteIcon" viewBox="0 0 48 48">
-        <path d="M26.2401 16.373L17.1001 7.23303C14.4388 4.57168 10.0653 4.6303 7.33158 7.36397C4.59791 10.0976 4.53929 14.4712 7.20064 17.1325L15.1359 25.0678" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M32.9027 23.0031L40.838 30.9384C43.4994 33.5998 43.4407 37.9733 40.7071 40.707C37.9734 43.4407 33.5999 43.4993 30.9385 40.8379L21.7985 31.6979" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M26.1093 26.1416C28.843 23.4079 28.9016 19.0344 26.2403 16.373" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.7989 21.7984C19.0652 24.5321 19.0066 28.9056 21.6679 31.5669" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-      </symbol>
-      <symbol id="clipboardIcon" viewBox="0 0 48 48">
-        <path d="M17 7H16H10C8.89543 7 8 7.89543 8 9L8 42C8 43.1046 8.89543 44 10 44H38C39.1046 44 40 43.1046 40 42V9C40 7.89543 39.1046 7 38 7H33.0499H31" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><rect x="17" y="4" width="14" height="6" fill="none" stroke="#333" stroke-width="4" stroke-linejoin="round"/>
-      </symbol>
-      <symbol id="checkIcon" viewBox="0 0 48 48">
-        <path d="M43 11L16.875 37L5 25.1818" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-      </symbol>
-      <symbol id="themeIcon" viewBox="0 0 48 48">
-        <path d="M18 6C18 9.31371 20.6863 12 24 12C27.3137 12 30 9.31371 30 6H35.4545L42 15.8182L36.2727 20.7273V42H11.7273V20.7273L6 15.8182L12.5455 6H18Z" fill="none" stroke="#333" stroke-width="4" stroke-linejoin="round"/>
-      </symbol>
-    </svg>
-  </div>
 </body>
 
 <script>
-  document.getElementById('titlebar-minimize').addEventListener('click', () => appWindow.minimize());
-  document.getElementById('titlebar-maximize').addEventListener('click', () => appWindow.toggleMaximize());
-  document.getElementById('titlebar-close').addEventListener('click', () => appWindow.close());
-  document.getElementById('gzh-button').addEventListener('click', () => changePlatform('gzh'));
-  document.getElementById('toutiao-button').addEventListener('click', () => changePlatform('toutiao'));
-  document.getElementById('zhihu-button').addEventListener('click', () => changePlatform('zhihu'));
-  document.getElementById('juejin-button').addEventListener('click', () => changePlatform('juejin'));
-  document.getElementById('medium-button').addEventListener('click', () => changePlatform('medium'));
-  document.getElementById('more-button').addEventListener('click', () => showMoreMenu());
-  document.getElementById('about-btn').addEventListener('click', () => openAbout());
-  const listItems = document.querySelectorAll('#gzhThemeSelector li');
-  listItems.forEach(item => {
-    item.addEventListener('click', function() {
-        listItems.forEach(li => li.classList.remove('selected'));
-        this.classList.add('selected');
-        changeTheme(item.id);
+    document.getElementById('titlebar-minimize').addEventListener('click', () => appWindow.minimize());
+    document.getElementById('titlebar-maximize').addEventListener('click', () => appWindow.toggleMaximize());
+    document.getElementById('titlebar-close').addEventListener('click', () => appWindow.close());
+    document.getElementById('gzh-button').addEventListener('click', () => changePlatform('gzh'));
+    document.getElementById('toutiao-button').addEventListener('click', () => changePlatform('toutiao'));
+    document.getElementById('zhihu-button').addEventListener('click', () => changePlatform('zhihu'));
+    document.getElementById('juejin-button').addEventListener('click', () => changePlatform('juejin'));
+    document.getElementById('medium-button').addEventListener('click', () => changePlatform('medium'));
+    document.getElementById('more-button').addEventListener('click', () => showMoreMenu());
+    document.getElementById('about-btn').addEventListener('click', () => openAbout());
+    const listItems = document.querySelectorAll('#gzhThemeSelector li');
+    listItems.forEach(item => {
+        item.addEventListener('click', function () {
+            if (item.id !== "create-theme") {
+                listItems.forEach(li => li.classList.remove('selected'));
+                this.classList.add('selected');
+                changeTheme(item.id);
+            }
+        });
     });
-  });
+    document.getElementById('create-theme').addEventListener('click', () => createTheme());
 </script>
 
 </html>
