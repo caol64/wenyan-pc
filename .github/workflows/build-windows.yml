@@ -1,0 +1,29 @@
+name: Build windows release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: setup node
+      uses: actions/setup-node@v4
+      with:
+          node-version: '22.3.0'
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build
+      run: npm run tauri
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: tauri-build
+        path: src-tauri/target/release/bundle/
