@@ -7,6 +7,7 @@ const { appWindow } = window.__TAURI__.window;
 
 const { invoke } = window.__TAURI__.tauri;
 const { save } = window.__TAURI__.dialog;
+const { fetch, ResponseType } = window.__TAURI__.http;
 
 // let greetInputEl;
 // let greetMsgEl;
@@ -292,31 +293,72 @@ function openAbout() {
     appWindow.emit('open-about');
 }
 
-function exportLongImage(button) {
+async function exportLongImage(button) {
     const iframe = document.getElementById('rightFrame');
-    // const iframeWindow = iframe.contentWindow;
     const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    // const { width, height, fullWidth } = iframeWindow.getScrollFrame();
-    // console.log({ width, height, fullWidth });
-    html2canvas(iframeDocument.getElementById('wenyan')).then(canvas => {
-        // 将 Canvas 转换为 JPEG 图像数据
-        canvas.toBlob(async blob => {
-            const filePath = await save({
-                filters: [{
-                    name: 'Image',
-                    extensions: ['jpeg']
-                }]
+    const clonedWenyan = iframeDocument.getElementById("wenyan").cloneNode(true);
+    const images = clonedWenyan.querySelectorAll('img');
+    const promises = Array.from(images).map(async (img, index) => {
+        try {
+            // 获取图片二进制数据
+            const response = await fetch(img.src, {
+                method: 'GET',
+                responseType: ResponseType.Binary
             });
-            // 截取目录部分
-            const directory = filePath.substring(0, filePath.lastIndexOf('/'));
-            // 截取文件名部分
-            const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
-            blob.arrayBuffer().then(async arrayBuffer => {
-                console.log(arrayBuffer); // ArrayBuffer 内容
-                await writeBinaryFile(filePath, arrayBuffer);
-            });
-        }, 'image/jpeg', 0.9); // 0.9 表示 JPEG 压缩系数
+            const arrayBuffer = await response.data;
+
+            // 将 ArrayBuffer 转换为 Base64 字符串
+            const base64String = arrayBufferToBase64(arrayBuffer);
+            const mimeType = response.headers['content-type'] || 'image/png'; // 获取 MIME 类型
+
+            // 替换 img.src
+            img.src = `data:${mimeType};base64,${base64String}`;
+            // console.log(img.src);
+            
+        } catch (error) {
+            console.error(`Failed to process image ${index}:`, error);
+        }
     });
+    Promise.all(promises).then(() => {
+        clonedWenyan.classList.add("invisible");
+        // console.log(clonedWenyan.outerHTML);
+        iframeDocument.body.appendChild(clonedWenyan);
+        html2canvas(clonedWenyan).then(canvas => {
+            // 将 Canvas 转换为 JPEG 图像数据
+            canvas.toBlob(async blob => {
+                const filePath = await save({
+                    filters: [{
+                        name: 'Image',
+                        extensions: ['jpeg']
+                    }]
+                });
+                if (filePath) {
+                    blob.arrayBuffer().then(async arrayBuffer => {
+                        // console.log(arrayBuffer); // ArrayBuffer 内容
+                        await writeBinaryFile(filePath, arrayBuffer);
+                    });
+                }
+            }, 'image/jpeg', 0.9); // 0.9 表示 JPEG 压缩系数
+            iframeDocument.body.removeChild(clonedWenyan);
+        }).catch(error => {
+            console.error('Error capturing with html2canvas:', error);
+            iframeDocument.body.removeChild(clonedWenyan);
+        });
+    }).catch((error) => {
+        console.error('An error occurred during the image processing:', error);
+    });
+    
+}
+
+// 将 ArrayBuffer 转换为 Base64 字符串的辅助函数
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
 }
 
 function createTheme() {}

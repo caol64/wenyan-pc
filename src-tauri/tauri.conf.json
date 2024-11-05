@@ -11,6 +11,10 @@
     "tauri": {
         "allowlist": {
             "all": false,
+            "http": {
+                "all": true,
+                "scope": ["https://**"]
+            },
             "dialog": {
                 "save": true
             },
