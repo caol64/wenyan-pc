@@ -45,6 +45,7 @@ fn main() {
             Ok(())
         })
         .plugin(tauri_plugin_clipboard::init())
+        .plugin(tauri_plugin_sql::Builder::default().build())
         // .plugin(tauri_plugin_store::Builder::default().build())
         .invoke_handler(tauri::generate_handler![write_html_to_clipboard, write_text_to_clipboard])
         .run(tauri::generate_context!())

@@ -4,10 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="micromodal/micromodal.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文颜</title>
     <script src="html2canvas/html2canvas.min.js"></script>
     <script src="main.js"></script>
+    <script src="micromodal/micromodal.min.js"></script>
 </head>
 
 <body>
@@ -93,14 +95,6 @@
         </div>
         <div id="themeOverlay" class="theme-overlay">
             <ul id="gzhThemeSelector">
-                <li id="gzh_default"><span>默认</span></li>
-                <li id="orangeheart"><span>Orange Heart</span><span>evgo2017</span></li>
-                <li id="rainbow"><span>Rainbow</span><span>thezbm</span></li>
-                <li id="lapis"><span>Lapis</span><span>YiNN</span></li>
-                <li id="pie"><span>Pie</span><span>kevinzhao2233</span></li>
-                <li id="maize"><span>Maize</span><span>BEATREE</span></li>
-                <li id="purple"><span>Purple</span><span>hliu202</span></li>
-                <li id="create-theme"><span>创建新主题</span></li>
             </ul>
         </div>
         <div id="dropdown" class="dropdown-content">
@@ -157,7 +151,35 @@
                     stroke-linejoin="round" />
                 <rect x="14" y="14" width="20" height="20" rx="2" fill="none" stroke="#333" stroke-width="4" />
             </symbol>
+            <symbol id="plusIcon" viewBox="0 0 48 48">
+                <path d="M24.0605 10L24.0239 38" stroke="#333" stroke-width="4" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                <path d="M10 24L38 24" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            </symbol>
+            <symbol id="editIcon" viewBox="0 0 48 48">
+                <path d="M29 4H9C7.89543 4 7 4.89543 7 6V42C7 43.1046 7.89543 44 9 44H37C38.1046 44 39 43.1046 39 42V20.0046" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M13 18H21" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <path d="M13 28H25" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <path d="M40.9991 6.00098L29.0044 17.9958" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
         </svg>
+        <div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
+            <div class="modal__overlay" tabindex="-1">
+                <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
+                    <main class="modal__content" id="modal-1-content">
+                        <iframe id="cssLeftFrame"></iframe>
+                        <iframe src="/example.html" id="cssRightFrame"></iframe>
+                    </main>
+                    <footer id="modalFooter" class="modal__footer">
+                        <button id="btnDeleteTheme" class="modal__btn modal__btn-delete" onclick="deleteCustomTheme()">删除</button>
+                        <div style="margin-left: auto;">
+                            <button class="modal__btn modal__btn-primary" onclick="saveCustomTheme()">保存</button>
+                            <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">取消</button>
+                        </div>
+                    </footer>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 
@@ -172,17 +194,10 @@
     document.getElementById('medium-button').addEventListener('click', () => changePlatform('medium'));
     document.getElementById('more-button').addEventListener('click', () => showMoreMenu());
     document.getElementById('about-btn').addEventListener('click', () => openAbout());
-    const listItems = document.querySelectorAll('#gzhThemeSelector li');
-    listItems.forEach(item => {
-        item.addEventListener('click', function () {
-            if (item.id !== "create-theme") {
-                listItems.forEach(li => li.classList.remove('selected'));
-                this.classList.add('selected');
-                changeTheme(item.id);
-            }
-        });
-    });
-    document.getElementById('create-theme').addEventListener('click', () => createTheme());
+    (async () => {
+        await loadCustomThemes();
+        MicroModal.init();
+    })();
 </script>
 
 </html>

@@ -54,7 +54,6 @@ body {
     align-items: start;
     opacity: 1;
     transition: opacity 0.3s;
-    z-index: 10;
     padding-top: 15px;
 }
 
@@ -63,12 +62,12 @@ body {
     top: 35px;
     right: 20px;
     width: 200px;
-    height: 180px;
+    height: 250px;
     background-color: #ffffff;
     display: flex;
     opacity: 1;
     transition: opacity 0.3s;
-    z-index: 99;
+    z-index: 1;
     display: none;
     padding: 10px 0;
     border: 1px solid;
@@ -91,7 +90,8 @@ body {
 }
 
 .theme-overlay li.selected {
-    background-color: #f0f0f0;
+    background-color: #1c90ff;
+    color: #fff;
 }
 
 .button-container {
@@ -207,4 +207,13 @@ body {
 
 #about-btn:active {
     color: #000;
+}
+
+li span svg {
+    cursor: pointer;
+}
+
+.border-li {
+    margin-top: 5px;
+    border-top: 1px solid #f0f0f0;
 }

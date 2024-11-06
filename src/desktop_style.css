@@ -22,3 +22,7 @@ body {
     height: 6px;
     background-color: #fff
 }
+.invisible {
+    position: absolute;
+    left: -9999px;
+}

@@ -7,11 +7,49 @@ const { appWindow } = window.__TAURI__.window;
 
 const { invoke } = window.__TAURI__.tauri;
 const { save } = window.__TAURI__.dialog;
-const { fetch, ResponseType } = window.__TAURI__.http;
+const { fetch: tauriFetch, ResponseType } = window.__TAURI__.http;
+
+const builtinThemes = [
+    {
+        id: "gzh_default",
+        name: "默认",
+        author: ""
+    },
+    {
+        id: "orangeheart",
+        name: "Orange Heart",
+        author: "evgo2017"
+    },
+    {
+        id: "rainbow",
+        name: "Rainbow",
+        author: "thezbm"
+    },
+    {
+        id: "lapis",
+        name: "Lapis",
+        author: "YiNN"
+    },
+    {
+        id: "pie",
+        name: "Pie",
+        author: "kevinzhao2233"
+    },
+    {
+        id: "maize",
+        name: "Maize",
+        author: "BEATREE"
+    },
+    {
+        id: "purple",
+        name: "Purple",
+        author: "hliu202"
+    }
+];
 
 // let greetInputEl;
 // let greetMsgEl;
-let theme = 'gzh_default';
+let selectedTheme = 'gzh_default';
 let highlightStyle = 'highlight/styles/github.min.css';
 let previewMode = 'style.css';
 let content = '';
@@ -19,6 +57,8 @@ let isFootnotes = false;
 let platform = 'gzh';
 let leftReady = false;
 let rightReady = false;
+let customThemeContent = '';
+let selectedCustomTheme = '';
 
 window.addEventListener('message', async (event) => {
     if (event.data) {
@@ -43,6 +83,11 @@ window.addEventListener('message', async (event) => {
         } else if (event.data.clicked) {
             hideThemeOverlay();
             hideMenu();
+        } else if (event.data.type === 'onReadyCss') {
+            loadCustomTheme();
+        } else if (event.data.type === 'onChangeCss') {
+            customThemeContent = event.data.value;
+            updateThemePreview();
         }
     }
 });
@@ -66,9 +111,13 @@ async function load() {
             }
             let gzhTheme = localStorage.getItem('gzhTheme');
             if (gzhTheme) {
-                theme = gzhTheme;
+                selectedTheme = gzhTheme;
+                if (gzhTheme.startsWith("customTheme")) {
+                    const id = gzhTheme.replace("customTheme", "");
+                    customThemeContent = await getCustomThemeById(id);
+                }
             }
-            document.getElementById(theme).classList.add('selected');
+            document.getElementById(selectedTheme).classList.add('selected');
             onUpdate();
         } catch (error) {
             console.error('Error reading file:', error);
@@ -76,21 +125,23 @@ async function load() {
     }
 }
 
-function onUpdate() {
+async function onUpdate() {
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
         const message = {
             type: 'onUpdate',
             content: content,
-            theme: theme,
+            theme: selectedTheme,
             highlightStyle: highlightStyle,
-            previewMode: previewMode
+            previewMode: previewMode,
+            themeValue: customThemeContent,
+            themeType: selectedTheme.startsWith("customTheme") ? "custom" : "builtin"
         };
         iframe.contentWindow.postMessage(message, '*');
     }
 }
 
-function onContentChange() {
+async function onContentChange() {
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
         const message = {
@@ -101,7 +152,7 @@ function onContentChange() {
     }
 }
 
-function onPeviewModeChange(button) {
+async function onPeviewModeChange(button) {
     const useElement = button.querySelector('use');
     if (previewMode === 'style.css') {
         previewMode = 'desktop_style.css';
@@ -120,7 +171,7 @@ function onPeviewModeChange(button) {
     }
 }
 
-function onFootnoteChange(button) {
+async function onFootnoteChange(button) {
     isFootnotes = !isFootnotes;
     const useElement = button.querySelector('use');
     if (isFootnotes) {
@@ -138,7 +189,7 @@ function onFootnoteChange(button) {
     }
 }
 
-function changePlatform(selectedPlatform) {
+async function changePlatform(selectedPlatform) {
     hideThemeOverlay();
     if (selectedPlatform !== 'gzh') {
         document.getElementById('gzhThemeButton').style.display = 'none';
@@ -164,12 +215,17 @@ async function onCopy(button) {
     let htmlValue = '';
     if (platform === 'gzh') {
         htmlValue = iframeWindow.getContentForGzh();
-        const themeResponse = await fetch(`themes/${theme}.css`);
-        const themeValue = await themeResponse.text();
+        let themeValue = '';
+        if (selectedTheme.startsWith("customTheme")) {
+            themeValue = customThemeContent;
+        } else {
+            const themeResponse = await fetch(`themes/${selectedTheme}.css`);
+            themeValue = await themeResponse.text();
+        }
         const resolvedTheme = replaceCSSVariables(themeValue);
         const hightlightPathResponse = await fetch(highlightStyle);
         const hightlightValue = await hightlightPathResponse.text();
-        htmlValue = `${htmlValue}<style>${resolvedTheme}${hightlightValue}</style>`;
+        htmlValue = `${htmlValue}<style>${removeComments(resolvedTheme)}${removeComments(hightlightValue)}</style>`;
     } else if (platform === 'zhihu') {
         htmlValue = iframeWindow.getContentWithMathImg();
     } else if (platform === 'juejin') {
@@ -179,6 +235,7 @@ async function onCopy(button) {
     } else {
         htmlValue = iframeWindow.getContent();
     }
+    // console.log(htmlValue);
     if (platform === 'juejin') {
         await invoke('write_text_to_clipboard', { text: htmlValue });
     } else {
@@ -206,14 +263,20 @@ function hideMenu() {
     themeOverlay.style.display = 'none';
 }
 
-function changeTheme(selectedTheme) {
-    theme = selectedTheme;
+async function changeTheme(theme) {
+    selectedTheme = theme;
+    if (selectedTheme.startsWith("customTheme")) {
+        const id = selectedTheme.replace("customTheme", "");
+        customThemeContent = await getCustomThemeById(id);
+    }
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
         const message = {
-            type: 'setTheme',
+            type: 'onUpdate',
             highlightStyle: highlightStyle,
-            theme: theme
+            theme: selectedTheme,
+            themeValue: customThemeContent,
+            themeType: selectedTheme.startsWith("customTheme") ? "custom" : "builtin"
         };
         if (platform == 'zhihu') {
             delete message.highlightStyle;
@@ -289,7 +352,7 @@ function showMoreMenu() {
     dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
 }
 
-function openAbout() {
+async function openAbout() {
     appWindow.emit('open-about');
 }
 
@@ -301,7 +364,7 @@ async function exportLongImage(button) {
     const promises = Array.from(images).map(async (img, index) => {
         try {
             // 获取图片二进制数据
-            const response = await fetch(img.src, {
+            const response = await tauriFetch(img.src, {
                 method: 'GET',
                 responseType: ResponseType.Binary
             });
@@ -317,6 +380,20 @@ async function exportLongImage(button) {
             
         } catch (error) {
             console.error(`Failed to process image ${index}:`, error);
+        }
+    });
+    let elements = clonedWenyan.querySelectorAll("mjx-container");
+    elements.forEach(element => {
+        const svg = element.querySelector('svg');
+        svg.style.width = svg.getAttribute("width");
+        svg.style.height = svg.getAttribute("height");
+        svg.removeAttribute("width");
+        svg.removeAttribute("height");
+        const parent = element.parentElement;
+        element.remove();
+        parent.appendChild(svg);
+        if (parent.classList.contains('block-equation')) {
+            parent.setAttribute("style", "text-align: center; margin-bottom: 1rem;");
         }
     });
     Promise.all(promises).then(() => {
@@ -361,4 +438,172 @@ function arrayBufferToBase64(buffer) {
     return btoa(binary);
 }
 
-function createTheme() {}
+async function showCssEditor(customTheme) {
+    const element = document.getElementById('btnDeleteTheme');
+    if (element) {
+        element.remove();
+    }
+    selectedCustomTheme = customTheme ? customTheme : '';
+    const iframe = document.getElementById('cssLeftFrame');
+    iframe.src = '/css_left.html';
+    if (selectedCustomTheme) {
+        const footer = document.getElementById('modalFooter');
+        const btn = document.createElement("button");
+        btn.setAttribute("id", "btnDeleteTheme");
+        btn.classList.add("modal__btn", "modal__btn-delete");
+        btn.addEventListener('click', () => deleteCustomTheme());
+        btn.innerHTML = "删除";
+        footer.insertBefore(btn, footer.firstChild);
+    }
+    MicroModal.show('modal-1');
+    hideThemeOverlay();
+}
+
+async function loadCustomThemes() {
+    const ul = document.getElementById('gzhThemeSelector');
+    if (ul) {
+        ul.innerHTML = '';
+        builtinThemes.forEach(i => {
+            const li = document.createElement("li");
+            li.setAttribute("id", i.id);
+            const span1 = document.createElement("span");
+            span1.innerHTML = i.name;
+            const span2 = document.createElement("span");
+            span2.innerHTML = i.author;
+            li.appendChild(span1);
+            li.appendChild(span2);
+            ul.appendChild(li);
+        });
+        await invoke('plugin:sql|load', {
+            db: 'sqlite:data.db'
+        });
+        await invoke('plugin:sql|execute', {
+            db: 'sqlite:data.db',
+            query: `CREATE TABLE IF NOT EXISTS CustomTheme (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                content TEXT NOT NULL,
+                createdAt TEXT NOT NULL
+            );
+        `,
+            values: []
+        });
+        const customThemes = await invoke('plugin:sql|select', {
+            db: 'sqlite:data.db',
+            query: 'SELECT * FROM CustomTheme',
+            values: []
+        });
+        // console.log(customThemes);
+        if (customThemes && customThemes.length > 0) {
+            customThemes.forEach(i => {
+                const li = document.createElement("li");
+                li.setAttribute("id", `customTheme${i.id}`);
+                const span1 = document.createElement("span");
+                span1.innerHTML = `${i.name}`;
+                const span2 = document.createElement("span");
+                span2.innerHTML = `<svg width="12" height="16" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#editIcon"></use></svg>`;
+                span2.addEventListener('click', () => showCssEditor(`${i.id}`));
+                li.appendChild(span1);
+                li.appendChild(span2);
+                ul.appendChild(li);
+            });
+        }
+        const listItems = ul.querySelectorAll('li');
+        listItems.forEach(item => {
+            item.addEventListener('click', function () {
+                listItems.forEach(li => li.classList.remove('selected'));
+                this.classList.add('selected');
+                changeTheme(item.id);
+            });
+        });
+        if (customThemes && customThemes.length < 3) {
+            const li = document.createElement("li");
+            li.setAttribute("id", "create-theme");
+            li.classList.add("border-li");
+            const span1 = document.createElement("span");
+            span1.innerHTML = "创建新主题";
+            const span2 = document.createElement("span");
+            span2.innerHTML = `<svg width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#plusIcon"></use></svg>`;
+            span2.addEventListener('click', () => showCssEditor());
+            li.appendChild(span1);
+            li.appendChild(span2);
+            ul.appendChild(li);
+        }
+    }
+}
+
+async function saveCustomTheme() {
+    if (selectedCustomTheme) {
+        await invoke('plugin:sql|execute', {
+            db: 'sqlite:data.db',
+            query: 'UPDATE CustomTheme SET content = ?, createdAt = ? WHERE id = ?;',
+            values: [customThemeContent, new Date().toISOString(), selectedCustomTheme]
+        });
+    } else {
+        await invoke('plugin:sql|execute', {
+            db: 'sqlite:data.db',
+            query: 'INSERT INTO CustomTheme (name, content, createdAt) VALUES (?, ?, ?);',
+            values: ['自定义主题', customThemeContent, new Date().toISOString()]
+        });
+    }
+    MicroModal.close('modal-1');
+    await loadCustomThemes();
+    document.getElementById(selectedTheme).classList.add('selected');
+    changeTheme(selectedTheme);
+}
+
+async function deleteCustomTheme() {
+    if (selectedCustomTheme) {
+        await invoke('plugin:sql|execute', {
+            db: 'sqlite:data.db',
+            query: 'DELETE FROM CustomTheme WHERE id = ?;',
+            values: [selectedCustomTheme]
+        });
+    }
+    MicroModal.close('modal-1');
+    await loadCustomThemes();
+    selectedTheme = "gzh_default";
+    document.getElementById(selectedTheme).classList.add('selected');
+    changeTheme(selectedTheme);
+}
+
+async function loadCustomTheme() {
+    if (!selectedCustomTheme) {
+        const theme = 'gzh_default';
+        const themeResponse = await fetch(`themes/${theme}.css`);
+        customThemeContent = await themeResponse.text();
+    }
+    
+    const iframe = document.getElementById('cssLeftFrame');
+    const iframeWindow = iframe.contentWindow;
+    iframeWindow.setContent(customThemeContent);
+}
+
+async function getCustomThemeById(id) {
+    const customTheme = await invoke('plugin:sql|select', {
+        db: 'sqlite:data.db',
+        query: 'SELECT * FROM CustomTheme WHERE id = ?;',
+        values: [id]
+    });
+    if (customTheme && customTheme.length > 0) {
+        return customTheme[0].content;
+    }
+    return null;
+}
+
+function removeComments(input) {
+    // 正则表达式：匹配单行和多行注释
+    const pattern = /(\/\/.*?$)|\/\*[\s\S]*?\*\//gm;
+
+    // 使用正则表达式替换匹配的注释部分为空字符串
+    const output = input.replace(pattern, '');
+
+    // 返回去除了注释的字符串
+    return output;
+}
+
+async function updateThemePreview() {
+    const iframe = document.getElementById('cssRightFrame');
+    const iframeWindow = iframe.contentWindow;
+    iframeWindow.setCss(customThemeContent);
+}

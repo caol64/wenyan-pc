@@ -335,21 +335,26 @@ function transformUl(ulElement) {
 window.addEventListener('message', (event) => {
     if (event.data) {
         if (event.data.type === 'onUpdate') {
-            setContent(event.data.content);
-            setTheme(`themes/${event.data.theme}.css`);
-            setHighlight(event.data.highlightStyle);
-            setPreviewMode(event.data.previewMode);
+            if (event.data.content) {
+                setContent(event.data.content);
+            }
+            if (event.data.highlightStyle) {
+                setHighlight(event.data.highlightStyle);
+            }
+            if (event.data.previewMode) {
+                setPreviewMode(event.data.previewMode);
+            }
+            if (event.data.themeType === "custom") {
+                setCustomTheme(`${event.data.themeValue}`);
+            } else {
+                setTheme(`themes/${event.data.theme}.css`);
+            }
         } else if (event.data.type === 'onContentChange') {
             setContent(event.data.content);
         } else if (event.data.type === 'onPeviewModeChange') {
             setPreviewMode(event.data.previewMode);
         } else if (event.data.type === 'onFootnoteChange') {
             addFootnotes();
-        } else if (event.data.type === 'setTheme') {
-            setTheme(`themes/${event.data.theme}.css`);
-            if (event.data.highlightStyle) {
-                setHighlight(event.data.highlightStyle);
-            }
         }
     }
 });
