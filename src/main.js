@@ -193,9 +193,13 @@ async function changePlatform(selectedPlatform) {
     hideThemeOverlay();
     if (selectedPlatform !== 'gzh') {
         document.getElementById('gzhThemeButton').style.display = 'none';
+        document.getElementById('exportImageButton').style.display = 'none';
     } else {
         if (document.getElementById('gzhThemeButton').style.display === 'none') {
             document.getElementById('gzhThemeButton').style.display = '';
+        }
+        if (document.getElementById('exportImageButton').style.display === 'none') {
+            document.getElementById('exportImageButton').style.display = '';
         }
     }
     platform = selectedPlatform;
