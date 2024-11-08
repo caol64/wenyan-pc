@@ -85,12 +85,16 @@ function setCustomTheme(css) {
     style.textContent = customCss;
     document.head.appendChild(style);
 }
-function setHighlight(highlight) {
+function setHighlight(css) {
     document.getElementById("hljs")?.remove();
-    highlightCss = "";
-    if (highlight) {
-        setStylesheet("hljs", highlight);
-        highlightCss = highlight;
+    if (css) {
+        const style = document.createElement("style");
+        style.setAttribute("id", "hljs");
+        highlightCss = css;
+        style.textContent = css;
+        document.head.appendChild(style);
+    } else {
+        css = "";
     }
 }
 function getContent() {
@@ -121,7 +125,7 @@ function getContentWithMathImg() {
     });
     return clonedWenyan.outerHTML;
 }
-async function getContentForGzh() {
+function getContentForGzh() {
     const wenyan = document.getElementById("wenyan");
     const clonedWenyan = wenyan.cloneNode(true);
     // 处理公式
@@ -161,7 +165,7 @@ async function getContentForGzh() {
     elements = clonedWenyan.querySelectorAll('h1, h2, h3, h4, h5, h6, blockquote');
     elements.forEach(element => {
         const afterRresults = Array.from(stylesMap)
-            .filter(([key, value]) => 
+            .filter(([key, value]) =>
                 key.includes(element.tagName.toLowerCase() + "::after")
             )
             .map(([key, value]) => value).reduce((acc, map) => {
@@ -171,7 +175,7 @@ async function getContentForGzh() {
                 return acc;
             }, new Map());
         const beforeRresults = Array.from(stylesMap)
-            .filter(([key]) => 
+            .filter(([key]) =>
                 key.includes(element.tagName.toLowerCase() + "::before")
             )
             .map(([key, value]) => value).reduce((acc, map) => {
@@ -187,9 +191,7 @@ async function getContentForGzh() {
             element.insertBefore(buildPseudoSpan(beforeRresults), element.firstChild);
         }
     });
-    const hightlightPathResponse = await fetch(highlightCss);
-    const hightlightValue = await hightlightPathResponse.text();
-    return `${clonedWenyan.outerHTML.replace(/class="mjx-solid"/g, 'fill="none" stroke-width="70"')}<style>${removeComments(customCss)}${removeComments(hightlightValue)}</style>`;
+    return `${clonedWenyan.outerHTML.replace(/class="mjx-solid"/g, 'fill="none" stroke-width="70"')}<style>${removeComments(customCss)}${removeComments(highlightCss)}</style>`;
 }
 function getContentForMedium() {
     const wenyan = document.getElementById("wenyan");
@@ -357,7 +359,7 @@ function replaceCSSVariables(css) {
 
         // 将变量存入字典
         cssVariables[variableName] = variableValue;
-    }   
+    }
 
     // 2. 递归解析 var() 引用为字典中对应的值
     function resolveVariable(value, variables, resolved = new Set()) {
@@ -442,8 +444,8 @@ window.addEventListener('message', (event) => {
             if (event.data.content) {
                 setContent(event.data.content);
             }
-            if (event.data.highlightStyle) {
-                setHighlight(event.data.highlightStyle);
+            if (event.data.highlightCss) {
+                setHighlight(event.data.highlightCss);
             }
             if (event.data.previewMode) {
                 setPreviewMode(event.data.previewMode);

@@ -131,10 +131,12 @@ async function load() {
 async function onUpdate() {
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
+        const highlightResponse = await fetch(highlightStyle);
+        const highlightCss = await highlightResponse.text();
         const message = {
             type: 'onUpdate',
             content: content,
-            highlightStyle: highlightStyle,
+            highlightCss: highlightCss,
             previewMode: previewMode,
             themeValue: customThemeContent
         };
@@ -219,7 +221,7 @@ async function onCopy(button) {
     const iframeWindow = iframe.contentWindow;
     let htmlValue = '';
     if (platform === 'gzh') {
-        htmlValue = await iframeWindow.getContentForGzh();
+        htmlValue = iframeWindow.getContentForGzh();
     } else if (platform === 'zhihu') {
         htmlValue = iframeWindow.getContentWithMathImg();
     } else if (platform === 'juejin') {
@@ -268,13 +270,15 @@ async function changeTheme(theme) {
     }
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
+        const highlightResponse = await fetch(highlightStyle);
+        const highlightCss = await highlightResponse.text();
         const message = {
             type: 'onUpdate',
-            highlightStyle: highlightStyle,
+            highlightCss: highlightCss,
             themeValue: customThemeContent
         };
         if (platform == 'zhihu') {
-            delete message.highlightStyle;
+            delete message.highlightCss;
         }
         iframe.contentWindow.postMessage(message, '*');
     }
