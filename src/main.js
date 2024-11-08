@@ -68,7 +68,7 @@ window.addEventListener('message', async (event) => {
         } else if (event.data.type === 'onChange') {
             content = event.data.value;
             localStorage.setItem('lastArticle', content);
-            onUpdate();
+            onContentChange();
         } else if (event.data.type === 'onRightReady') {
             rightReady = true;
             load();
