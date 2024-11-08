@@ -360,7 +360,7 @@ async function openAbout() {
     appWindow.emit('open-about');
 }
 
-async function exportLongImage(button) {
+async function exportLongImage() {
     const iframe = document.getElementById('rightFrame');
     const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
     const clonedWenyan = iframeDocument.getElementById("wenyan").cloneNode(true);
@@ -404,7 +404,9 @@ async function exportLongImage(button) {
         clonedWenyan.classList.add("invisible");
         // console.log(clonedWenyan.outerHTML);
         iframeDocument.body.appendChild(clonedWenyan);
-        html2canvas(clonedWenyan).then(canvas => {
+        html2canvas(clonedWenyan, {
+            logging: false
+        }).then(canvas => {
             // 将 Canvas 转换为 JPEG 图像数据
             canvas.toBlob(async blob => {
                 const filePath = await save({

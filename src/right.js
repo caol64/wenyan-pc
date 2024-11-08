@@ -83,8 +83,8 @@ function setCustomTheme(css) {
     document.getElementById("theme")?.remove();
     const style = document.createElement("style");
     style.setAttribute("id", "theme");
+    style.textContent = css;
     document.head.appendChild(style);
-    style.innerText = css;
 }
 function setHighlight(highlight) {
     document.getElementById("hljs")?.remove();
