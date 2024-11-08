@@ -115,6 +115,9 @@ async function load() {
                 if (gzhTheme.startsWith("customTheme")) {
                     const id = gzhTheme.replace("customTheme", "");
                     customThemeContent = await getCustomThemeById(id);
+                } else {
+                    const themeResponse = await fetch(`themes/${selectedTheme}.css`);
+                    customThemeContent = await themeResponse.text();
                 }
             }
             document.getElementById(selectedTheme).classList.add('selected');
@@ -131,11 +134,9 @@ async function onUpdate() {
         const message = {
             type: 'onUpdate',
             content: content,
-            theme: selectedTheme,
             highlightStyle: highlightStyle,
             previewMode: previewMode,
-            themeValue: customThemeContent,
-            themeType: selectedTheme.startsWith("customTheme") ? "custom" : "builtin"
+            themeValue: customThemeContent
         };
         iframe.contentWindow.postMessage(message, '*');
     }
@@ -218,18 +219,7 @@ async function onCopy(button) {
     const iframeWindow = iframe.contentWindow;
     let htmlValue = '';
     if (platform === 'gzh') {
-        htmlValue = iframeWindow.getContentForGzh();
-        let themeValue = '';
-        if (selectedTheme.startsWith("customTheme")) {
-            themeValue = customThemeContent;
-        } else {
-            const themeResponse = await fetch(`themes/${selectedTheme}.css`);
-            themeValue = await themeResponse.text();
-        }
-        const resolvedTheme = replaceCSSVariables(themeValue);
-        const hightlightPathResponse = await fetch(highlightStyle);
-        const hightlightValue = await hightlightPathResponse.text();
-        htmlValue = `${htmlValue}<style>${removeComments(resolvedTheme)}${removeComments(hightlightValue)}</style>`;
+        htmlValue = await iframeWindow.getContentForGzh();
     } else if (platform === 'zhihu') {
         htmlValue = iframeWindow.getContentWithMathImg();
     } else if (platform === 'juejin') {
@@ -272,15 +262,16 @@ async function changeTheme(theme) {
     if (selectedTheme.startsWith("customTheme")) {
         const id = selectedTheme.replace("customTheme", "");
         customThemeContent = await getCustomThemeById(id);
+    } else {
+        const themeResponse = await fetch(`themes/${selectedTheme}.css`);
+        customThemeContent = await themeResponse.text();
     }
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
         const message = {
             type: 'onUpdate',
             highlightStyle: highlightStyle,
-            theme: selectedTheme,
-            themeValue: customThemeContent,
-            themeType: selectedTheme.startsWith("customTheme") ? "custom" : "builtin"
+            themeValue: customThemeContent
         };
         if (platform == 'zhihu') {
             delete message.highlightStyle;
@@ -292,65 +283,6 @@ async function changeTheme(theme) {
     }
 }
 
-function replaceCSSVariables(css) {
-    // 正则表达式用于匹配变量定义，例如 --sans-serif-font: ...
-    const variablePattern = /--([a-zA-Z0-9\-]+):\s*([^;]+);/g;
-    // 正则表达式用于匹配使用 var() 的地方
-    const varPattern = /var\(--([a-zA-Z0-9\-]+)\)/g;
-
-    const cssVariables = {};
-
-    // 1. 提取变量定义并存入字典
-    let match;
-    while ((match = variablePattern.exec(css)) !== null) {
-        const variableName = match[1];
-        const variableValue = match[2].trim();
-
-        // 将变量存入字典
-        cssVariables[variableName] = variableValue;
-    }
-
-    // 2. 递归解析 var() 引用为字典中对应的值
-    function resolveVariable(value, variables, resolved = new Set()) {
-        // 如果已经解析过这个值，则返回原始值以避免死循环
-        if (resolved.has(value)) return value;
-
-        resolved.add(value);
-        let resolvedValue = value;
-
-        // 解析变量
-        let match;
-        while ((match = varPattern.exec(resolvedValue)) !== null) {
-            const varName = match[1];
-
-            // 查找对应的变量值，如果变量引用另一个变量，递归解析
-            if (variables[varName]) {
-                const resolvedVar = resolveVariable(variables[varName], variables, resolved);
-                resolvedValue = resolvedValue.replace(match[0], resolvedVar);
-            }
-        }
-        return resolvedValue;
-    }
-
-    // 3. 替换所有变量引用
-    for (const key in cssVariables) {
-        const resolvedValue = resolveVariable(cssVariables[key], cssVariables);
-        cssVariables[key] = resolvedValue;
-    }
-
-    // 4. 替换 CSS 中的 var() 引用
-    let modifiedCSS = css;
-    while ((match = varPattern.exec(css)) !== null) {
-        const varName = match[1];
-
-        // 查找对应的变量值
-        if (cssVariables[varName]) {
-            modifiedCSS = modifiedCSS.replace(match[0], cssVariables[varName]);
-        }
-    }
-
-    return modifiedCSS;
-}
 function showMoreMenu() {
     const dropdown = document.getElementById('dropdown');
     dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
@@ -595,17 +527,6 @@ async function getCustomThemeById(id) {
         return customTheme[0].content;
     }
     return null;
-}
-
-function removeComments(input) {
-    // 正则表达式：匹配单行和多行注释
-    const pattern = /(\/\/.*?$)|\/\*[\s\S]*?\*\//gm;
-
-    // 使用正则表达式替换匹配的注释部分为空字符串
-    const output = input.replace(pattern, '');
-
-    // 返回去除了注释的字符串
-    return output;
 }
 
 async function updateThemePreview() {
