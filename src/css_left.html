@@ -8,10 +8,13 @@
   <link rel="stylesheet" href="codemirror/lib/codemirror.css">
   <script src="codemirror/lib/codemirror.js"></script>
 
-  <link rel="stylesheet" href="codemirror/theme/base16-light.css">
+  <link rel="stylesheet" href="codemirror/theme/juejin.min.css">
 
   <script src="codemirror/modes/css/css.js"></script>
-  
+  <script src="csstree/csstree.js"></script>
+  <script src="csstree/handler.js"></script>
+  <script src="prettier/prettier.min.js"></script>
+  <script src="prettier/postcss.js"></script>
 </head>
 
 <body>
@@ -22,13 +25,13 @@
       lineNumbers: false,
       autofocus: true,
       mode: "text/css",
-      theme: "base16-light",
+      theme: "juejin",
       showInvisibles: false,
       maxInvisibles: 16,
       autoCloseTags: true,
       smartIndent: true,
-      tabSize: 2,
-      indentUnit: 2,
+      tabSize: 4,
+      indentUnit: 4,
       lineWrapping: true,
       readOnly: false,
       autoCloseBrackets: true,
