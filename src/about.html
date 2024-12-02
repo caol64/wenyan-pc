@@ -2,60 +2,68 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>关于</title>
-  <style>
-    :root {
-        font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-        color: #0f0f0f;
-        background-color: #ffffff;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于</title>
+    <style>
+        :root {
+            font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            color: #0f0f0f;
+            background-color: #ffffff;
 
-        font-synthesis: none;
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        -webkit-text-size-adjust: 100%;
-    }
+            font-synthesis: none;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-text-size-adjust: 100%;
+        }
 
-    body {
-        width: 100%;
-        font-size: 14px;
-        margin: 0;
-    }
+        body {
+            width: 100%;
+            font-size: 14px;
+            margin: 0;
+        }
 
-    * {
-        box-sizing: border-box;
-    }
-    .centered-container {
-        display: flex;
-        flex-direction: column;
-        justify-content: center; /* 水平居中 */
-        align-items: center; /* 垂直居中 */
-        height: 100vh; /* 占满整个屏幕高度 */
-        text-align: center;
-    }
-    p {
-        text-align: center;
-        margin: 8px 0;
-    }
-    a {
-        color: black;
-    }
-    a:hover {
-        color: black;
-    }
-    a:active {
-        color: black;
-    }
-  </style>
-  <script>
-    const { getVersion } = window.__TAURI__.app;
-    (async () => {
-        const version = await getVersion();
-        document.getElementById('version').textContent = `版本：windows v${version}`;
-    })();
-  </script>
+        * {
+            box-sizing: border-box;
+        }
+
+        .centered-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /* 水平居中 */
+            align-items: center;
+            /* 垂直居中 */
+            height: 100vh;
+            /* 占满整个屏幕高度 */
+            text-align: center;
+        }
+
+        p {
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        a {
+            color: black;
+        }
+
+        a:hover {
+            color: black;
+        }
+
+        a:active {
+            color: black;
+        }
+    </style>
+    <script>
+        const { getVersion } = window.__TAURI__.app;
+        (async () => {
+            const version = await getVersion();
+            document.getElementById('version').textContent = `版本：windows v${version}`;
+        })();
+    </script>
 </head>
 
 <body>
@@ -74,4 +82,5 @@
         // });
     </script>
 </body>
+
 </html>

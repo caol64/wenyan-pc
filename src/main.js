@@ -6,44 +6,45 @@ const { readTextFile, writeBinaryFile } = window.__TAURI__.fs;
 const { appWindow } = window.__TAURI__.window;
 
 const { invoke } = window.__TAURI__.tauri;
-const { save } = window.__TAURI__.dialog;
+const { save, open } = window.__TAURI__.dialog;
 const { fetch: tauriFetch, ResponseType } = window.__TAURI__.http;
+const { listen } = window.__TAURI__.event;
 
 const builtinThemes = [
     {
-        id: "gzh_default",
-        name: "默认",
-        author: ""
+        id: 'gzh_default',
+        name: '默认',
+        author: ''
     },
     {
-        id: "orangeheart",
-        name: "Orange Heart",
-        author: "evgo2017"
+        id: 'orangeheart',
+        name: 'Orange Heart',
+        author: 'evgo2017'
     },
     {
-        id: "rainbow",
-        name: "Rainbow",
-        author: "thezbm"
+        id: 'rainbow',
+        name: 'Rainbow',
+        author: 'thezbm'
     },
     {
-        id: "lapis",
-        name: "Lapis",
-        author: "YiNN"
+        id: 'lapis',
+        name: 'Lapis',
+        author: 'YiNN'
     },
     {
-        id: "pie",
-        name: "Pie",
-        author: "kevinzhao2233"
+        id: 'pie',
+        name: 'Pie',
+        author: 'kevinzhao2233'
     },
     {
-        id: "maize",
-        name: "Maize",
-        author: "BEATREE"
+        id: 'maize',
+        name: 'Maize',
+        author: 'BEATREE'
     },
     {
-        id: "purple",
-        name: "Purple",
-        author: "hliu202"
+        id: 'purple',
+        name: 'Purple',
+        author: 'hliu202'
     }
 ];
 
@@ -112,8 +113,8 @@ async function load() {
             let gzhTheme = localStorage.getItem('gzhTheme');
             if (gzhTheme) {
                 selectedTheme = gzhTheme;
-                if (gzhTheme.startsWith("customTheme")) {
-                    const id = gzhTheme.replace("customTheme", "");
+                if (gzhTheme.startsWith('customTheme')) {
+                    const id = gzhTheme.replace('customTheme', '');
                     customThemeContent = await getCustomThemeById(id);
                 } else {
                     const themeResponse = await fetch(`themes/${selectedTheme}.css`);
@@ -193,6 +194,7 @@ async function onFootnoteChange(button) {
 }
 
 async function changePlatform(selectedPlatform) {
+    hideMenu();
     hideThemeOverlay();
     if (selectedPlatform !== 'gzh') {
         document.getElementById('gzhThemeButton').style.display = 'none';
@@ -257,12 +259,14 @@ function hideThemeOverlay() {
 function hideMenu() {
     const themeOverlay = document.getElementById('dropdown');
     themeOverlay.style.display = 'none';
+    const mainMenu = document.getElementById('mainMenu');
+    mainMenu.style.display = 'none';
 }
 
 async function changeTheme(theme) {
     selectedTheme = theme;
-    if (selectedTheme.startsWith("customTheme")) {
-        const id = selectedTheme.replace("customTheme", "");
+    if (selectedTheme.startsWith('customTheme')) {
+        const id = selectedTheme.replace('customTheme', '');
         customThemeContent = await getCustomThemeById(id);
     } else {
         const themeResponse = await fetch(`themes/${selectedTheme}.css`);
@@ -292,6 +296,11 @@ function showMoreMenu() {
     dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
 }
 
+function showMainMenu() {
+    const dropdown = document.getElementById('mainMenu');
+    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+}
+
 async function openAbout() {
     appWindow.emit('open-about');
 }
@@ -299,7 +308,7 @@ async function openAbout() {
 async function exportLongImage() {
     const iframe = document.getElementById('rightFrame');
     const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    const clonedWenyan = iframeDocument.getElementById("wenyan").cloneNode(true);
+    const clonedWenyan = iframeDocument.getElementById('wenyan').cloneNode(true);
     const images = clonedWenyan.querySelectorAll('img');
     const promises = Array.from(images).map(async (img, index) => {
         try {
@@ -317,56 +326,64 @@ async function exportLongImage() {
             // 替换 img.src
             img.src = `data:${mimeType};base64,${base64String}`;
             // console.log(img.src);
-            
         } catch (error) {
             console.error(`Failed to process image ${index}:`, error);
         }
     });
-    let elements = clonedWenyan.querySelectorAll("mjx-container");
-    elements.forEach(element => {
+    let elements = clonedWenyan.querySelectorAll('mjx-container');
+    elements.forEach((element) => {
         const svg = element.querySelector('svg');
-        svg.style.width = svg.getAttribute("width");
-        svg.style.height = svg.getAttribute("height");
-        svg.removeAttribute("width");
-        svg.removeAttribute("height");
+        svg.style.width = svg.getAttribute('width');
+        svg.style.height = svg.getAttribute('height');
+        svg.removeAttribute('width');
+        svg.removeAttribute('height');
         const parent = element.parentElement;
         element.remove();
         parent.appendChild(svg);
         if (parent.classList.contains('block-equation')) {
-            parent.setAttribute("style", "text-align: center; margin-bottom: 1rem;");
+            parent.setAttribute('style', 'text-align: center; margin-bottom: 1rem;');
         }
     });
-    Promise.all(promises).then(() => {
-        clonedWenyan.classList.add("invisible");
-        // console.log(clonedWenyan.outerHTML);
-        iframeDocument.body.appendChild(clonedWenyan);
-        html2canvas(clonedWenyan, {
-            logging: false
-        }).then(canvas => {
-            // 将 Canvas 转换为 JPEG 图像数据
-            canvas.toBlob(async blob => {
-                const filePath = await save({
-                    filters: [{
-                        name: 'Image',
-                        extensions: ['jpeg']
-                    }]
+    Promise.all(promises)
+        .then(() => {
+            clonedWenyan.classList.add('invisible');
+            // console.log(clonedWenyan.outerHTML);
+            iframeDocument.body.appendChild(clonedWenyan);
+            html2canvas(clonedWenyan, {
+                logging: false
+            })
+                .then((canvas) => {
+                    // 将 Canvas 转换为 JPEG 图像数据
+                    canvas.toBlob(
+                        async (blob) => {
+                            const filePath = await save({
+                                filters: [
+                                    {
+                                        name: 'Image',
+                                        extensions: ['jpeg']
+                                    }
+                                ]
+                            });
+                            if (filePath) {
+                                blob.arrayBuffer().then(async (arrayBuffer) => {
+                                    // console.log(arrayBuffer); // ArrayBuffer 内容
+                                    await writeBinaryFile(filePath, arrayBuffer);
+                                });
+                            }
+                        },
+                        'image/jpeg',
+                        0.9
+                    ); // 0.9 表示 JPEG 压缩系数
+                    iframeDocument.body.removeChild(clonedWenyan);
+                })
+                .catch((error) => {
+                    console.error('Error capturing with html2canvas:', error);
+                    iframeDocument.body.removeChild(clonedWenyan);
                 });
-                if (filePath) {
-                    blob.arrayBuffer().then(async arrayBuffer => {
-                        // console.log(arrayBuffer); // ArrayBuffer 内容
-                        await writeBinaryFile(filePath, arrayBuffer);
-                    });
-                }
-            }, 'image/jpeg', 0.9); // 0.9 表示 JPEG 压缩系数
-            iframeDocument.body.removeChild(clonedWenyan);
-        }).catch(error => {
-            console.error('Error capturing with html2canvas:', error);
-            iframeDocument.body.removeChild(clonedWenyan);
+        })
+        .catch((error) => {
+            console.error('An error occurred during the image processing:', error);
         });
-    }).catch((error) => {
-        console.error('An error occurred during the image processing:', error);
-    });
-    
 }
 
 // 将 ArrayBuffer 转换为 Base64 字符串的辅助函数
@@ -389,13 +406,13 @@ async function showCssEditor(customTheme) {
     const iframe = document.getElementById('cssLeftFrame');
     iframe.src = '/css_left.html';
     if (selectedCustomTheme) {
-        const footer = document.getElementById('modalFooter');
-        const btn = document.createElement("button");
-        btn.setAttribute("id", "btnDeleteTheme");
-        btn.classList.add("modal__btn", "modal__btn-delete");
+        const footer = document.getElementById('footerButtonContainer');
+        const btn = document.createElement('button');
+        btn.setAttribute('id', 'btnDeleteTheme');
+        btn.classList.add('modal__btn', 'modal__btn-delete');
         btn.addEventListener('click', () => deleteCustomTheme());
-        btn.innerHTML = "删除";
-        footer.insertBefore(btn, footer.firstChild);
+        btn.innerHTML = '删除';
+        footer.appendChild(btn);
     }
     MicroModal.show('modal-1');
     hideThemeOverlay();
@@ -405,12 +422,12 @@ async function loadCustomThemes() {
     const ul = document.getElementById('gzhThemeSelector');
     if (ul) {
         ul.innerHTML = '';
-        builtinThemes.forEach(i => {
-            const li = document.createElement("li");
-            li.setAttribute("id", i.id);
-            const span1 = document.createElement("span");
+        builtinThemes.forEach((i) => {
+            const li = document.createElement('li');
+            li.setAttribute('id', i.id);
+            const span1 = document.createElement('span');
             span1.innerHTML = i.name;
-            const span2 = document.createElement("span");
+            const span2 = document.createElement('span');
             span2.innerHTML = i.author;
             li.appendChild(span1);
             li.appendChild(span2);
@@ -437,12 +454,12 @@ async function loadCustomThemes() {
         });
         // console.log(customThemes);
         if (customThemes && customThemes.length > 0) {
-            customThemes.forEach(i => {
-                const li = document.createElement("li");
-                li.setAttribute("id", `customTheme${i.id}`);
-                const span1 = document.createElement("span");
+            customThemes.forEach((i) => {
+                const li = document.createElement('li');
+                li.setAttribute('id', `customTheme${i.id}`);
+                const span1 = document.createElement('span');
                 span1.innerHTML = `${i.name}`;
-                const span2 = document.createElement("span");
+                const span2 = document.createElement('span');
                 span2.innerHTML = `<svg width="12" height="16" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#editIcon"></use></svg>`;
                 span2.addEventListener('click', () => showCssEditor(`${i.id}`));
                 li.appendChild(span1);
@@ -451,20 +468,20 @@ async function loadCustomThemes() {
             });
         }
         const listItems = ul.querySelectorAll('li');
-        listItems.forEach(item => {
+        listItems.forEach((item) => {
             item.addEventListener('click', function () {
-                listItems.forEach(li => li.classList.remove('selected'));
+                listItems.forEach((li) => li.classList.remove('selected'));
                 this.classList.add('selected');
                 changeTheme(item.id);
             });
         });
         if (customThemes && customThemes.length < 3) {
-            const li = document.createElement("li");
-            li.setAttribute("id", "create-theme");
-            li.classList.add("border-li");
-            const span1 = document.createElement("span");
-            span1.innerHTML = "创建新主题";
-            const span2 = document.createElement("span");
+            const li = document.createElement('li');
+            li.setAttribute('id', 'create-theme');
+            li.classList.add('border-li');
+            const span1 = document.createElement('span');
+            span1.innerHTML = '创建新主题';
+            const span2 = document.createElement('span');
             span2.innerHTML = `<svg width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#plusIcon"></use></svg>`;
             span2.addEventListener('click', () => showCssEditor());
             li.appendChild(span1);
@@ -504,18 +521,28 @@ async function deleteCustomTheme() {
     }
     MicroModal.close('modal-1');
     await loadCustomThemes();
-    selectedTheme = "gzh_default";
+    selectedTheme = 'gzh_default';
     document.getElementById(selectedTheme).classList.add('selected');
     changeTheme(selectedTheme);
 }
 
 async function loadCustomTheme() {
     if (!selectedCustomTheme) {
-        const theme = 'gzh_default';
-        const themeResponse = await fetch(`themes/${theme}.css`);
-        customThemeContent = await themeResponse.text();
+        if (selectedTheme) {
+            if (selectedTheme.startsWith('customTheme')) {
+                const id = selectedTheme.replace('customTheme', '');
+                customThemeContent = await getCustomThemeById(id);
+            } else {
+                const themeResponse = await fetch(`themes/${selectedTheme}.css`);
+                customThemeContent = await themeResponse.text();
+            }
+        } else {
+            const theme = 'gzh_default';
+            const themeResponse = await fetch(`themes/${theme}.css`);
+            customThemeContent = await themeResponse.text();
+        }
     }
-    
+
     const iframe = document.getElementById('cssLeftFrame');
     const iframeWindow = iframe.contentWindow;
     iframeWindow.setContent(customThemeContent);
@@ -538,3 +565,65 @@ async function updateThemePreview() {
     const iframeWindow = iframe.contentWindow;
     iframeWindow.setCss(customThemeContent);
 }
+
+async function openMarkdownFile() {
+    const selected = await open({
+        multiple: false,
+        filters: [
+            {
+                name: 'Markdown',
+                extensions: ['md', 'markdown']
+            }
+        ]
+    });
+    
+    if (selected) {
+        try {
+            const fileContent = await readTextFile(selected);
+            const iframe = document.getElementById('leftFrame');
+            const iframeWindow = iframe.contentWindow;
+            iframeWindow.setContent(fileContent);
+        } catch (error) {
+            console.error("Error reading file:", error);
+        }
+    }
+}
+
+async function openCssFile() {
+    const selected = await open({
+        multiple: false,
+        filters: [
+            {
+                name: 'Stylesheet',
+                extensions: ['css']
+            }
+        ]
+    });
+    
+    if (selected) {
+        try {
+            const fileContent = await readTextFile(selected);
+            const iframe = document.getElementById('cssLeftFrame');
+            const iframeWindow = iframe.contentWindow;
+            iframeWindow.loadCss(fileContent);
+        } catch (error) {
+            console.error("Error reading file:", error);
+        }
+    }
+}
+
+listen('tauri://file-drop', async(event) => {
+    try {
+        if (event && event.payload) {
+            const fileUrl = event.payload[0];
+            if (fileUrl.endsWith('.md') || fileUrl.endsWith('.markdown')) {
+                const fileContent = await readTextFile(fileUrl);
+                const iframe = document.getElementById('leftFrame');
+                const iframeWindow = iframe.contentWindow;
+                iframeWindow.setContent(fileContent);
+            }
+        }
+    } catch (error) {
+        console.error("Error reading file:", error);
+    }
+});

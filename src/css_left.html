@@ -69,6 +69,17 @@
       editor.doc.markClean();
     }
 
+    async function loadCss(css) {
+      const result = parseCss(css, 1);
+      const formattedCss = await prettier.format(result, {
+        parser: "css",
+        plugins: prettierPlugins,
+        printWidth: 128,
+        tabWidth: 4
+      });
+      setContent(formattedCss);
+    }
+
     function getContent() {
       return editor.doc.getValue();
     }

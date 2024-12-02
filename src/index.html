@@ -15,7 +15,8 @@
 <body>
     <div class="body">
         <div class="titlebar">
-            <div data-tauri-drag-region class="titlebar-title">文颜</div>
+            <div data-tauri-drag-region class="titlebar-title" id="titlebar-title">文颜</div>
+            <div data-tauri-drag-region class="titlebar-spacer" id="titlebar-spacer"></div>
             <button class="titlebar-button" id="gzh-button">
                 <img src="icon/gzh.svg" alt="gzh" />
             </button>
@@ -31,7 +32,7 @@
             <button class="titlebar-button" id="medium-button">
                 <img id="mediumicon" src="icon/medium.svg" alt="medium" />
             </button>
-            <button style="margin-left: 20px;" class="titlebar-button" id="more-button">
+            <button style="margin-left: 20px;" class="titlebar-button" id="more-button" onclick="showMoreMenu()">
                 <svg width="24" height="24" viewBox="0 0 48 48" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="24" cy="12" r="3" fill="#currentColor" />
                     <circle cx="24" cy="24" r="3" fill="#currentColor" />
@@ -98,7 +99,10 @@
             </ul>
         </div>
         <div id="dropdown" class="dropdown-content">
-            <a href="#" id="about-btn">关于</a>
+            <a href="#" id="about-btn" class="dropdown-link" onclick="openAbout()">关于</a>
+        </div>
+        <div id="mainMenu" class="main-menu">
+            <a href="#" id="about-btn" class="dropdown-link" onclick="openMarkdownFile()">打开文件...</a>
         </div>
         <svg style="display: none;">
             <symbol id="desktopIcon" viewBox="0 0 48 48">
@@ -171,6 +175,9 @@
                         <iframe src="/example.html" id="cssRightFrame"></iframe>
                     </main>
                     <footer id="modalFooter" class="modal__footer">
+                        <div id="footerButtonContainer">
+                            <button class="modal__btn" aria-label="Import CSS file" onclick="openCssFile()">导入</button>
+                        </div>
                         <div style="margin-left: auto;">
                             <button class="modal__btn modal__btn-primary" onclick="saveCustomTheme()">保存</button>
                             <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">取消</button>
@@ -191,8 +198,8 @@
     document.getElementById('zhihu-button').addEventListener('click', () => changePlatform('zhihu'));
     document.getElementById('juejin-button').addEventListener('click', () => changePlatform('juejin'));
     document.getElementById('medium-button').addEventListener('click', () => changePlatform('medium'));
-    document.getElementById('more-button').addEventListener('click', () => showMoreMenu());
-    document.getElementById('about-btn').addEventListener('click', () => openAbout());
+    document.getElementById('titlebar-title').addEventListener('click', () => showMainMenu());
+    document.getElementById('titlebar-spacer').addEventListener('click', () => hideMenu());
     (async () => {
         await loadCustomThemes();
         MicroModal.init();

@@ -16,7 +16,8 @@
                 "scope": ["https://**"]
             },
             "dialog": {
-                "save": true
+                "save": true,
+                "open": true
             },
             "fs": {
                 "scope": [

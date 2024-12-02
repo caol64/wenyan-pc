@@ -142,12 +142,18 @@ body {
 .titlebar-title {
     display: inline-flex;
     align-items: center;
-    flex-grow: 1;
     text-align: left;
     font-weight: bold;
     padding-left: 30px;
     position: relative;
     margin-left: 10px;
+    cursor: default;
+}
+
+.titlebar-spacer {
+    display: inline-flex;
+    flex-grow: 1;
+    position: relative;
     cursor: default;
 }
 
@@ -165,6 +171,17 @@ body {
     transform: translateY(-50%);
 }
 
+.main-menu {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    top: 35px;
+    left: 20px;
+    z-index: 100;
+}
+
 .dropdown-content {
     display: none;
     position: absolute;
@@ -175,7 +192,7 @@ body {
     right: 20px;
     z-index: 100;
 }
-.dropdown-content a {
+.dropdown-link {
     padding: 12px 16px;
     display: block;
     font-size: 13px;
