@@ -40,7 +40,7 @@
 
 ## 下载
 
-[https://yuzhi.tech/docs/wenyan/windows](https://yuzhi.tech/docs/wenyan/windows)
+[https://yuzhi.tech/docs/wenyan/download](https://yuzhi.tech/docs/wenyan/download)
 
 ## 支持
 
