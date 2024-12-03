@@ -29,6 +29,10 @@
             function setCss(css) {
                 document.getElementById("theme").innerText = css;
             }
+            window.addEventListener('click', function (event) {
+                // 发送点击事件的消息到父页面
+                window.parent.postMessage({ clicked: true }, '*');
+            });
         </script>
         <script src="mathjax/tex-svg-full.min.js"></script>
         <link rel="stylesheet" href="style.css">

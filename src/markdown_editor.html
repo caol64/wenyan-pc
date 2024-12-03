@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <link rel="stylesheet" href="codemirror/lib/codemirror.css">
+    <script src="codemirror/lib/codemirror.js"></script>
+
+    <link rel="stylesheet" href="codemirror/theme/juejin.min.css">
+
+    <script src="codemirror/modes/markdown/markdown.js"></script>
+    <script src="codemirror/modes/xml/xml.js"></script>
+
+</head>
+
+<body>
+    <script>
+
+        CodeMirror.keyMap["default"]["Cmd-/"] = "toggleComment";  // Add-on
+        let isScrollingFromScript = false;
+        var editor = CodeMirror(document.body, {
+            lineNumbers: false,
+            autofocus: true,
+            mode: "markdown",
+            theme: "juejin",
+            showInvisibles: false,
+            maxInvisibles: 16,
+            autoCloseTags: true,
+            smartIndent: true,
+            tabSize: 2,
+            indentUnit: 2,
+            lineWrapping: true,
+            readOnly: false,
+            autoCloseBrackets: true,
+            selectionPointer: true,
+            extraKeys: {
+                "Cmd-F": "findPersistent",
+                "Ctrl-Space": "autocomplete",
+                "Ctrl-I": "indentAuto"
+            },
+            styleActiveLine: true
+        });
+        editor.on("change", function (instance, change) {
+            const message = {
+                type: 'onChange',
+                value: getContent()
+            };
+            window.parent.postMessage(message, '*');
+        });
+
+        function setTabInsertSpaces(flag) {
+            // See http://codemirror.net/doc/manual.html#keymaps
+            if (flag) {
+                CodeMirror.keyMap["basic"]["Tab"] = function (cm) {
+                    var spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+                    cm.replaceSelection(spaces, "end", "+input");
+                };
+            } else {
+                CodeMirror.keyMap["basic"]["Tab"] = "defaultTab";
+            }
+        }
+
+        function setContent(content) {
+            editor.doc.setValue(content);
+            editor.doc.clearHistory();
+            editor.doc.markClean();
+        }
+
+        function getContent() {
+            return editor.doc.getValue();
+        }
+
+        function scroll(scrollFactor) {
+            isScrollingFromScript = true;
+            window.scrollTo(0, document.body.scrollHeight * scrollFactor);
+            requestAnimationFrame(() => isScrollingFromScript = false);
+        }
+
+        window.onscroll = function () {
+            if (!isScrollingFromScript) {
+                const message = {
+                    type: 'leftScroll',
+                    value: { y0: window.scrollY / document.body.scrollHeight }
+                };
+                window.parent.postMessage(message, '*');
+            }
+        };
+
+        setTabInsertSpaces(true);
+
+        window.addEventListener('message', (event) => {
+            //console.log(event.data);
+            if (event.data) {
+                if (event.data.type === 'onUpdate') {
+                    setContent(event.data.value);
+                }
+            }
+        });
+
+        if (editor) {
+            const message = {
+                type: 'onReady'
+            };
+            window.parent.postMessage(message, '*');
+            //console.log("post onReady");
+        }
+
+        window.addEventListener('click', function (event) {
+            // 发送点击事件的消息到父页面
+            window.parent.postMessage({ clicked: true }, '*');
+        });
+
+    </script>
+</body>
+
+</html>

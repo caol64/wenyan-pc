@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 Lei Cao
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // import { resolveResource } from '@tauri-apps/api/path'
 const { resolveResource } = window.__TAURI__.path;
 // import { readTextFile } from '@tauri-apps/api/fs'
@@ -84,6 +100,7 @@ window.addEventListener('message', async (event) => {
         } else if (event.data.clicked) {
             hideThemeOverlay();
             hideMenu();
+            hideBubble();
         } else if (event.data.type === 'onReadyCss') {
             loadCustomTheme();
         } else if (event.data.type === 'onChangeCss') {
@@ -404,7 +421,7 @@ async function showCssEditor(customTheme) {
     }
     selectedCustomTheme = customTheme ? customTheme : '';
     const iframe = document.getElementById('cssLeftFrame');
-    iframe.src = '/css_left.html';
+    iframe.src = '/css_editor.html';
     if (selectedCustomTheme) {
         const footer = document.getElementById('footerButtonContainer');
         const btn = document.createElement('button');
@@ -412,7 +429,7 @@ async function showCssEditor(customTheme) {
         btn.classList.add('modal__btn', 'modal__btn-delete');
         btn.addEventListener('click', () => deleteCustomTheme());
         btn.innerHTML = '删除';
-        footer.appendChild(btn);
+        footer.insertBefore(btn, footer.firstChild);
     }
     MicroModal.show('modal-1');
     hideThemeOverlay();
@@ -627,3 +644,21 @@ listen('tauri://file-drop', async(event) => {
         console.error("Error reading file:", error);
     }
 });
+
+function openHelpBubble() {
+    const bubbleBox = document.getElementById('bubbleBox');
+    const isVisible = bubbleBox.style.display === 'block';
+    bubbleBox.style.display = isVisible ? 'none' : 'block';
+}
+
+document.addEventListener('click', (event) => {
+    const helpButton = document.getElementById('helpButton');
+    const bubbleBox = document.getElementById('bubbleBox');
+    if (!bubbleBox.contains(event.target) && !helpButton.contains(event.target)) {
+        bubbleBox.style.display = 'none';
+    }
+});
+
+function hideBubble() {
+    document.getElementById('bubbleBox').style.display = 'none';
+}
