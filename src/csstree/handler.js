@@ -181,7 +181,7 @@ function parseCss(css, compatibilityMode) {
                 list.remove(item);
                 return;
             }
-            const lastElement = node.prelude.children.head.data.children.tail.data;           
+            const lastElement = node.prelude.children.head.data.children.tail.data;
             if (lastElement.type === 'PseudoElementSelector') {
                 if (!node.block.children.some((child) => child.property === 'content')) {
                     node.block.children.prepend(
@@ -232,28 +232,6 @@ function parseCss(css, compatibilityMode) {
                                 { type: 'Dimension', value: '1', unit: 'px' },
                                 { type: 'Identifier', name: 'solid' },
                                 { type: 'Hash', value: 'd8d8d8' }
-                            ] }
-                        })
-                    );
-                }
-                if (!node.block.children.some((child) => child.property === 'font-weight')) {
-                    node.block.children.prepend(
-                        list.createItem({
-                            type: 'Declaration',
-                            property: 'font-weight',
-                            value: { type: 'Value', children: [
-                                { type: 'Identifier', name: 'bold' }
-                            ] }
-                        })
-                    );
-                }
-                if (!node.block.children.some((child) => child.property === 'background-color')) {
-                    node.block.children.prepend(
-                        list.createItem({
-                            type: 'Declaration',
-                            property: 'background-color',
-                            value: { type: 'Value', children: [
-                                { type: 'Hash', value: 'f0f0f0' }
                             ] }
                         })
                     );
