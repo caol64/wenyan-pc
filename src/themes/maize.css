@@ -14,9 +14,7 @@
 #wenyan {
     font-family: var(--sans-serif-font);
     line-height: 1.75;
-}
-#wenyan * {
-    box-sizing: border-box;
+    font-size: 16px;
 }
 #wenyan p,
 #wenyan pre {
@@ -45,7 +43,7 @@
 #wenyan h2 {
     font-size: 1.3em;
 }
-#wenyan h2 span {
+#wenyan h2 > span {
     font-weight: bold;
     color: #333;
     padding: 3px 10px 1px;
