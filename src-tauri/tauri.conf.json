@@ -17,7 +17,8 @@
             },
             "dialog": {
                 "save": true,
-                "open": true
+                "open": true,
+                "message": true
             },
             "fs": {
                 "scope": [

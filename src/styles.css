@@ -180,6 +180,7 @@ body {
     top: 35px;
     left: 20px;
     z-index: 100;
+    padding: 4px 16px;
 }
 
 .dropdown-content {
@@ -191,9 +192,10 @@ body {
     top: 35px;
     right: 20px;
     z-index: 100;
+    padding: 4px 16px;
 }
 .dropdown-link {
-    padding: 12px 16px;
+    padding: 8px 0;
     display: block;
     font-size: 13px;
     text-decoration: none;

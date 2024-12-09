@@ -22,7 +22,7 @@ const { readTextFile, writeBinaryFile } = window.__TAURI__.fs;
 const { appWindow } = window.__TAURI__.window;
 
 const { invoke } = window.__TAURI__.tauri;
-const { save, open } = window.__TAURI__.dialog;
+const { save, open, message } = window.__TAURI__.dialog;
 const { fetch: tauriFetch, ResponseType } = window.__TAURI__.http;
 const { listen } = window.__TAURI__.event;
 
@@ -602,6 +602,7 @@ async function openMarkdownFile() {
             iframeWindow.setContent(fileContent);
         } catch (error) {
             console.error("Error reading file:", error);
+            await message(`${error}`, '文件读取失败');
         }
     }
 }
@@ -625,6 +626,7 @@ async function openCssFile() {
             iframeWindow.loadCss(fileContent);
         } catch (error) {
             console.error("Error reading file:", error);
+            await message(`${error}`, '文件读取失败');
         }
     }
 }
