@@ -142,6 +142,7 @@ async function load() {
             onUpdate();
         } catch (error) {
             console.error('Error reading file:', error);
+            await message(`${error}`, 'Error reading file');
         }
     }
 }
