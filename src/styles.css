@@ -62,7 +62,7 @@ body {
     top: 35px;
     right: 20px;
     width: 200px;
-    height: 250px;
+    height: 220px;
     background-color: #ffffff;
     display: flex;
     opacity: 1;
@@ -233,6 +233,7 @@ li span svg {
 }
 
 .border-li {
-    margin-top: 5px;
+    margin-top: 3px;
+    padding-top: 3px;
     border-top: 1px solid #f0f0f0;
 }

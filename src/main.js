@@ -61,6 +61,11 @@ const builtinThemes = [
         id: 'purple',
         name: 'Purple',
         author: 'hliu202'
+    },
+    {
+        id: 'phycat',
+        name: '物理猫-薄荷',
+        author: 'sumruler'
     }
 ];
 
@@ -346,6 +351,7 @@ async function exportLongImage() {
             // console.log(img.src);
         } catch (error) {
             console.error(`Failed to process image ${index}:`, error);
+            await message(`${error}`, 'Error exporting image.');
         }
     });
     let elements = clonedWenyan.querySelectorAll('mjx-container');
@@ -370,37 +376,39 @@ async function exportLongImage() {
             html2canvas(clonedWenyan, {
                 logging: false
             })
-                .then((canvas) => {
-                    // 将 Canvas 转换为 JPEG 图像数据
-                    canvas.toBlob(
-                        async (blob) => {
-                            const filePath = await save({
-                                filters: [
-                                    {
-                                        name: 'Image',
-                                        extensions: ['jpeg']
-                                    }
-                                ]
+            .then((canvas) => {
+                // 将 Canvas 转换为 JPEG 图像数据
+                canvas.toBlob(
+                    async (blob) => {
+                        const filePath = await save({
+                            filters: [
+                                {
+                                    name: 'Image',
+                                    extensions: ['jpeg']
+                                }
+                            ]
+                        });
+                        if (filePath) {
+                            blob.arrayBuffer().then(async (arrayBuffer) => {
+                                // console.log(arrayBuffer); // ArrayBuffer 内容
+                                await writeBinaryFile(filePath, arrayBuffer);
                             });
-                            if (filePath) {
-                                blob.arrayBuffer().then(async (arrayBuffer) => {
-                                    // console.log(arrayBuffer); // ArrayBuffer 内容
-                                    await writeBinaryFile(filePath, arrayBuffer);
-                                });
-                            }
-                        },
-                        'image/jpeg',
-                        0.9
-                    ); // 0.9 表示 JPEG 压缩系数
-                    iframeDocument.body.removeChild(clonedWenyan);
-                })
-                .catch((error) => {
-                    console.error('Error capturing with html2canvas:', error);
-                    iframeDocument.body.removeChild(clonedWenyan);
-                });
+                        }
+                    },
+                    'image/jpeg',
+                    0.9
+                ); // 0.9 表示 JPEG 压缩系数
+                iframeDocument.body.removeChild(clonedWenyan);
+            })
+            .catch((error) => {
+                console.error('Error capturing with html2canvas:', error);
+                iframeDocument.body.removeChild(clonedWenyan);
+                message(`${error}`, 'Error capturing with image');
+            });
         })
         .catch((error) => {
             console.error('An error occurred during the image processing:', error);
+            message(`${error}`, 'Error during the image processing');
         });
 }
 
@@ -472,7 +480,7 @@ async function loadCustomThemes() {
         });
         // console.log(customThemes);
         if (customThemes && customThemes.length > 0) {
-            customThemes.forEach((i) => {
+            customThemes.forEach((i, index) => {
                 const li = document.createElement('li');
                 li.setAttribute('id', `customTheme${i.id}`);
                 const span1 = document.createElement('span');
@@ -482,8 +490,15 @@ async function loadCustomThemes() {
                 span2.addEventListener('click', () => showCssEditor(`${i.id}`));
                 li.appendChild(span1);
                 li.appendChild(span2);
+                if (index === 0) {
+                    li.classList.add('border-li');
+                }
                 ul.appendChild(li);
             });
+            const height = calcHeight(customThemes.length);
+            document.getElementById('themeOverlay').setAttribute("style", `height: ${height}px;`);
+        } else {
+            document.getElementById('themeOverlay').removeAttribute("style");
         }
         const listItems = ul.querySelectorAll('li');
         listItems.forEach((item) => {
@@ -645,6 +660,7 @@ listen('tauri://file-drop', async(event) => {
         }
     } catch (error) {
         console.error("Error reading file:", error);
+        await message(`${error}`, '文件读取失败');
     }
 });
 
@@ -664,4 +680,8 @@ document.addEventListener('click', (event) => {
 
 function hideBubble() {
     document.getElementById('bubbleBox').style.display = 'none';
+}
+
+function calcHeight(customThemeCount) {
+    return 220 + (Math.min(customThemeCount, 2) * 25);
 }
