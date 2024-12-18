@@ -142,6 +142,9 @@ async function load() {
                     const themeResponse = await fetch(`themes/${selectedTheme}.css`);
                     customThemeContent = await themeResponse.text();
                 }
+            } else {
+                const themeResponse = await fetch(`themes/${selectedTheme}.css`);
+                customThemeContent = await themeResponse.text();
             }
             document.getElementById(selectedTheme).classList.add('selected');
             onUpdate();
@@ -683,5 +686,5 @@ function hideBubble() {
 }
 
 function calcHeight(customThemeCount) {
-    return 220 + (Math.min(customThemeCount, 2) * 25);
+    return 225 + (Math.min(customThemeCount, 2) * 25);
 }
