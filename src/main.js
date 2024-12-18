@@ -686,5 +686,5 @@ function hideBubble() {
 }
 
 function calcHeight(customThemeCount) {
-    return 225 + (Math.min(customThemeCount, 2) * 25);
+    return 240 + (Math.min(customThemeCount, 2) * 25);
 }
