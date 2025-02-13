@@ -333,8 +333,11 @@ async function openAbout() {
 
 async function exportLongImage() {
     if (window.chrome && window.chrome.webview) {
-        console.log("window.chrome.webview");
-        window.chrome.webview.postMessage({ method: "Page.captureScreenshot", format: "jpeg" });
+        try {
+            window.chrome.webview.postMessage({ method: "Page.captureScreenshot", format: "jpeg" });
+        } catch (error) {
+            await message(`${error}`, 'Error export Long Image');
+        }
     } else {
         const iframe = document.getElementById('rightFrame');
         const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
@@ -429,6 +432,38 @@ function arrayBufferToBase64(buffer) {
         binary += String.fromCharCode(bytes[i]);
     }
     return btoa(binary);
+}
+
+if (window.chrome && window.chrome.webview) {
+    window.chrome.webview.addEventListener("message", (event) => {
+        if (event.data.method === "Page.captureScreenshot") {
+            try {
+                const screenshotData = event.data.payload;
+
+                // 将 Base64 数据转换为 Blob
+                const byteCharacters = atob(screenshotData);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: "image/jpeg" });
+    
+                // 弹出保存对话框
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "screenshot.jpg";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+    
+                // 更新状态
+                document.getElementById("status").innerText = "截图已保存为 screenshot.jpg";
+            } catch (error) {
+                message(`${error}`, 'Error captureScreenshot');
+            }
+        }
+    });
 }
 
 async function showCssEditor(customTheme) {
