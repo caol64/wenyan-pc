@@ -42,7 +42,8 @@
 
         p {
             text-align: center;
-            margin: 8px 0;
+            margin: 4px 0;
+            font-size: 12px;
         }
 
         a {
@@ -68,18 +69,20 @@
 
 <body>
     <div class="centered-container">
+        <img src="icon/wenyan.svg" width="48px" height="48px" style="margin-bottom: 8px;" />
         <p id="version"></p>
-        <p id="feedback-link">问题反馈：<a href="#">https://yuzhi.tech/contact</a></p>
-        <p>联系邮箱：<a href="mailto:support@yuzhi.tech">support@yuzhi.tech</a></p>
+        <p>问题反馈：<a href="https://yuzhi.tech/contact" class="external-link">https://yuzhi.tech/contact</a></p>
+        <p>❤️打赏：<a href="https://yuzhi.tech/sponsor" class="external-link">https://yuzhi.tech/sponsor</a></p>
         <p>© 2024 Lei Cao. All rights reserved.</p>
     </div>
     <script>
-        // const { shell } = window.__TAURI__.shell;
-        // document.getElementById('feedback-link').addEventListener('click', async (event) => {
-        //     event.preventDefault(); // 阻止默认行为
-        //     // 使用 Tauri 的 shell 模块打开链接
-        //     await shell.open("https://yuzhi.tech/contact");
-        // });
+        const { open } = window.__TAURI__.shell;
+        document.querySelectorAll('.external-link').forEach(link => {
+            link.addEventListener('click', async (event) => {
+                event.preventDefault();
+                await open(link.href);
+            });
+        });
     </script>
 </body>
 

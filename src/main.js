@@ -320,6 +320,7 @@ async function changeTheme(theme) {
 function showMoreMenu() {
     const dropdown = document.getElementById('dropdown');
     dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    hideThemeOverlay()
 }
 
 function showMainMenu() {
@@ -331,6 +332,11 @@ async function openAbout() {
     appWindow.emit('open-about');
 }
 
+async function openSettings() {
+    MicroModal.show('modal-settings');
+    hideMenu()
+}
+
 async function exportLongImage() {
     if (window.chrome && window.chrome.webview) {
         try {
@@ -339,99 +345,8 @@ async function exportLongImage() {
             await message(`${error}`, 'Error export Long Image');
         }
     } else {
-        const iframe = document.getElementById('rightFrame');
-        const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-        const clonedWenyan = iframeDocument.getElementById('wenyan').cloneNode(true);
-        const images = clonedWenyan.querySelectorAll('img');
-        const promises = Array.from(images).map(async (img, index) => {
-            try {
-                // 获取图片二进制数据
-                const response = await tauriFetch(img.src, {
-                    method: 'GET',
-                    responseType: ResponseType.Binary
-                });
-                const arrayBuffer = await response.data;
-
-                // 将 ArrayBuffer 转换为 Base64 字符串
-                const base64String = arrayBufferToBase64(arrayBuffer);
-                const mimeType = response.headers['content-type'] || 'image/png'; // 获取 MIME 类型
-
-                // 替换 img.src
-                img.src = `data:${mimeType};base64,${base64String}`;
-                // console.log(img.src);
-            } catch (error) {
-                console.error(`Failed to process image ${index}:`, error);
-                await message(`${error}`, 'Error exporting image.');
-            }
-        });
-        let elements = clonedWenyan.querySelectorAll('mjx-container');
-        elements.forEach((element) => {
-            const svg = element.querySelector('svg');
-            svg.style.width = svg.getAttribute('width');
-            svg.style.height = svg.getAttribute('height');
-            svg.removeAttribute('width');
-            svg.removeAttribute('height');
-            const parent = element.parentElement;
-            element.remove();
-            parent.appendChild(svg);
-            if (parent.classList.contains('block-equation')) {
-                parent.setAttribute('style', 'text-align: center; margin-bottom: 1rem;');
-            }
-        });
-        Promise.all(promises)
-            .then(() => {
-                clonedWenyan.classList.add('invisible');
-                // console.log(clonedWenyan.outerHTML);
-                iframeDocument.body.appendChild(clonedWenyan);
-                html2canvas(clonedWenyan, {
-                    logging: false
-                })
-                .then((canvas) => {
-                    // 将 Canvas 转换为 JPEG 图像数据
-                    canvas.toBlob(
-                        async (blob) => {
-                            const filePath = await save({
-                                filters: [
-                                    {
-                                        name: 'Image',
-                                        extensions: ['jpeg']
-                                    }
-                                ]
-                            });
-                            if (filePath) {
-                                blob.arrayBuffer().then(async (arrayBuffer) => {
-                                    // console.log(arrayBuffer); // ArrayBuffer 内容
-                                    await writeBinaryFile(filePath, arrayBuffer);
-                                });
-                            }
-                        },
-                        'image/jpeg',
-                        0.9
-                    ); // 0.9 表示 JPEG 压缩系数
-                    iframeDocument.body.removeChild(clonedWenyan);
-                })
-                .catch((error) => {
-                    console.error('Error capturing with html2canvas:', error);
-                    iframeDocument.body.removeChild(clonedWenyan);
-                    message(`${error}`, 'Error capturing with image');
-                });
-            })
-            .catch((error) => {
-                console.error('An error occurred during the image processing:', error);
-                message(`${error}`, 'Error during the image processing');
-            });
+        await message('未安装WebView2环境，无法导出图片。');
     }
-}
-
-// 将 ArrayBuffer 转换为 Base64 字符串的辅助函数
-function arrayBufferToBase64(buffer) {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
 }
 
 if (window.chrome && window.chrome.webview) {
@@ -483,7 +398,7 @@ async function showCssEditor(customTheme) {
         btn.innerHTML = '删除';
         footer.insertBefore(btn, footer.firstChild);
     }
-    MicroModal.show('modal-1');
+    MicroModal.show('modal-css-editor');
     hideThemeOverlay();
 }
 
@@ -581,7 +496,7 @@ async function saveCustomTheme() {
             values: ['自定义主题', customThemeContent, new Date().toISOString()]
         });
     }
-    MicroModal.close('modal-1');
+    MicroModal.close('modal-css-editor');
     await loadCustomThemes();
     document.getElementById(selectedTheme).classList.add('selected');
     changeTheme(selectedTheme);
@@ -595,7 +510,7 @@ async function deleteCustomTheme() {
             values: [selectedCustomTheme]
         });
     }
-    MicroModal.close('modal-1');
+    MicroModal.close('modal-css-editor');
     await loadCustomThemes();
     selectedTheme = 'gzh_default';
     document.getElementById(selectedTheme).classList.add('selected');

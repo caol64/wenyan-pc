@@ -10,10 +10,15 @@
     -webkit-text-size-adjust: 100%;
 }
 
-body {
-    width: 100%;
+html, body {
+    width: 100vw;
     height: 100vh;
-    font-size: 16px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: transparent;
+}
+
+body {
     margin: 0;
 }
 
@@ -199,6 +204,7 @@ body {
     display: block;
     font-size: 13px;
     text-decoration: none;
+    color: #000;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -216,15 +222,11 @@ body {
     }
 }
 
-#about-btn {
+.dropdown-link:hover {
     color: #000;
 }
 
-#about-btn:hover {
-    color: #000;
-}
-
-#about-btn:active {
+.dropdown-link:active {
     color: #000;
 }
 

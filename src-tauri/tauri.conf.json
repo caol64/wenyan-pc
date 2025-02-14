@@ -31,6 +31,10 @@
             "path": {
                 "all": true
             },
+            "shell": {
+                "all": false,
+                "open": true
+            },
             "window": {
                 "all": false,
                 "close": true,
@@ -46,6 +50,7 @@
         "windows": [
             {
                 "title": "文颜",
+                "transparent": true,
                 "decorations": false,
                 "width": 1200,
                 "height": 800,
