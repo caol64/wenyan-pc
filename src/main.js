@@ -605,6 +605,17 @@ async function openCssFile() {
     }
 }
 
+const imgType = ['bmp', 'png', 'jpeg', 'jpg', 'gif', 'mp4'];
+
+function isImage(fileUrl) {
+    if (!fileUrl) {
+        return false;
+    }
+
+    const fileExtension = fileUrl.substring(fileUrl.lastIndexOf('.') + 1).toLowerCase();
+    return imgType.includes(fileExtension);
+}
+
 listen('tauri://file-drop', async(event) => {
     try {
         if (event && event.payload) {
@@ -614,6 +625,10 @@ listen('tauri://file-drop', async(event) => {
                 const iframe = document.getElementById('leftFrame');
                 const iframeWindow = iframe.contentWindow;
                 iframeWindow.setContent(fileContent);
+            } else if (isImage(fileUrl)) {
+
+            } else {
+                await message('不支持的文件类型。');
             }
         }
     } catch (error) {
@@ -642,4 +657,38 @@ function hideBubble() {
 
 function calcHeight(customThemeCount) {
     return 240 + (Math.min(customThemeCount, 2) * 25);
+}
+
+async function saveSettings() {
+    const iframe = document.getElementById("settingsFrame");
+    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    const appIdInput = iframeDocument.getElementById("appId");
+    const appSecretInput = iframeDocument.getElementById("appSecret");
+    const isEnabledInput = iframeDocument.getElementById("isEnabled");
+    const records = await invoke('plugin:sql|select', {
+        db: 'sqlite:data.db',
+        query: 'SELECT * FROM Settings WHERE id = 1',
+        values: []
+    });
+    let gzhImageHostObj = this.gzhImageHost;
+    if (records) {
+        gzhImageHostObj = JSON.parse(records[0]['content']);
+    }
+    gzhImageHostObj['appId'] = appIdInput.value;
+    gzhImageHostObj['appSecret'] = appSecretInput.value;
+    gzhImageHostObj['isEnabled'] = isEnabledInput.value === "true";
+    if (records) {
+        await invoke('plugin:sql|execute', {
+            db: 'sqlite:data.db',
+            query: 'UPDATE Settings SET content = ?, createdAt = ? WHERE id = 1;',
+            values: [JSON.stringify(gzhImageHostObj), new Date().toISOString()]
+        });
+    } else {
+        await invoke('plugin:sql|execute', {
+            db: 'sqlite:data.db',
+            query: 'INSERT INTO Settings VALUES (id, desc, content, createdAt) VALUES (1, "gzhImageHost", ?, ?);',
+            values: [JSON.stringify(gzhImageHostObj), new Date().toISOString()]
+        });
+    }
+    await message("保存成功");
 }

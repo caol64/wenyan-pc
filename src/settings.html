@@ -68,6 +68,13 @@
             padding: 24px;
         }
 
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            justify-content: space-between;
+        }
+
         .section {
             background: white;
             padding: 16px;
@@ -78,41 +85,62 @@
 
         .section h3 {
             font-size: 16px;
-            margin-bottom: 12px;
-        }
-
-        .radio-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .radio-group label {
-            display: flex;
-            align-items: center;
-            font-size: 14px;
-            cursor: pointer;
+            font-weight: bold;
         }
 
         .radio-group input {
             margin-right: 8px;
         }
 
-        /* Copilot 设置 */
-        .copilot-settings {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            font-size: 14px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #409eff;
         }
 
-        .copilot-settings img {
-            width: 24px;
-            height: 24px;
+        /* 开关样式 */
+        .toggle {
+            width: 40px;
+            height: 20px;
+            background: #ddd;
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle::before {
+            content: "";
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        /* 开启状态 */
+        .toggle.on {
+            background: #409eff;
+        }
+
+        .toggle.on::before {
+            transform: translateX(20px);
         }
 
     </style>
@@ -120,30 +148,79 @@
 <body>
     <!-- 侧边栏 -->
     <div class="sidebar">
-        <div class="nav-item">图片上传</div>
+        <div class="nav-item">图床设置</div>
     </div>
 
     <!-- 右侧内容 -->
     <div class="content">
+        <div class="header">
+            <h3>公众号图床</h3>
+            <div id="gzhToggle" class="toggle"></div>
+        </div>
         <div class="section">
-            <h3>边栏可见性</h3>
-            <div class="radio-group">
-                <label><input type="radio" name="sidebar" checked> 始终启用</label>
-                <label><input type="radio" name="sidebar"> 自动隐藏</label>
-                <label><input type="radio" name="sidebar"> 关</label>
+            <div class="form-group">
+                <label for="appID">开发者ID(AppID)</label>
+                <input type="text" id="appId" placeholder="如：wx6e1234567890efa3">
             </div>
+            <div class="form-group">
+                <label for="appSecret">开发者密码(AppSecret)</label>
+                <input type="text" id="appSecret" placeholder="如：d9f1abcdef01234567890abcdef82397">
+            </div>
+            <input type="hidden" id="isEnabled">
         </div>
 
-        <div class="section">
-            <h3>应用和通知设置</h3>
-            <div class="copilot-settings">
-                <div style="display: flex; align-items: center;">
-                    <img src="copilot-logo.svg" alt="Copilot">
-                    <span style="margin-left: 8px;">Copilot</span>
-                </div>
-                <span>></span>
-            </div>
-        </div>
     </div>
+
+    <script>
+        const { invoke } = window.parent.__TAURI__.tauri;
+        let gzhImageHostObj = null;
+        // 监听开关点击事件
+        document.querySelector(".toggle").addEventListener("click", function() {
+            toggleIsEnabled();
+        });
+        function toggleIsEnabled() {
+            const isEnabledValue = document.getElementById("isEnabled").value;
+            setIsEnabled(!Boolean(isEnabledValue));
+        }
+        function setIsEnabled(isEnabled) {
+            document.getElementById("isEnabled").value = isEnabled;
+            if (isEnabled) {
+                document.getElementById("gzhToggle").classList.add("on");
+            } else {
+                document.getElementById("gzhToggle").classList.remove('on');
+            }
+        }
+    </script>
+    <script type="module" defer>
+        import { gzhImageHost } from "./models.js";
+        gzhImageHostObj = gzhImageHost;
+        await invoke('plugin:sql|load', {
+            db: 'sqlite:data.db'
+        });
+        await invoke('plugin:sql|execute', {
+            db: 'sqlite:data.db',
+            query: `CREATE TABLE IF NOT EXISTS Settings (
+                id INTEGER PRIMARY KEY,
+                desc TEXT NOT NULL,
+                content TEXT NOT NULL,
+                createdAt TEXT NOT NULL
+            );
+            INSERT OR IGNORE INTO Settings (id, desc, content, createdAt) VALUES (1, 'gzhImageHost', ?, ?);
+        `,
+            values: [JSON.stringify(gzhImageHost), new Date().toISOString()]
+        });
+        const records = await invoke('plugin:sql|select', {
+            db: 'sqlite:data.db',
+            query: 'SELECT * FROM Settings WHERE id = 1',
+            values: []
+        });
+        if (records) {
+            gzhImageHostObj = JSON.parse(records[0]['content']);
+        }
+        document.getElementById("appId").value = gzhImageHostObj['appId'];
+        document.getElementById("appSecret").value = gzhImageHostObj['appSecret'];
+        document.getElementById("isEnabled").value = gzhImageHostObj['isEnabled'];
+        setIsEnabled(gzhImageHostObj['isEnabled']);
+    </script>
 </body>
 </html>

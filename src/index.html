@@ -8,6 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文颜</title>
     <script src="html2canvas/html2canvas.min.js"></script>
+    <script type="module" src="models.js">
+        import { gzhImageHost } from "./models.js";
+    </script>
     <script src="main.js"></script>
     <script src="micromodal/micromodal.min.js"></script>
 </head>
@@ -202,12 +205,12 @@
             <div class="modal__overlay" tabindex="-1">
                 <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
                     <main class="modal__content settings-page" id="modal-settings-content">
-                        <iframe src="/settings.html" id="settingsFrame" style="width: 650px;"></iframe>
+                        <iframe src="/settings.html" id="settingsFrame" style="width: 650px; height: 400px;"></iframe>
                     </main>
                     <footer class="modal__footer">
                         <div style="margin-left: auto;">
-                            <button class="modal__btn modal__btn-primary" onclick="saveCustomTheme()">保存</button>
-                            <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">取消</button>
+                            <button class="modal__btn modal__btn-primary" onclick="saveSettings()">保存</button>
+                            <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">关闭</button>
                         </div>
                     </footer>
                 </div>

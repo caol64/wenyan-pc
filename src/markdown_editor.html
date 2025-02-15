@@ -50,6 +50,24 @@
             window.parent.postMessage(message, '*');
         });
 
+        editor.on("dragstart", function(editor, event) {
+            console.log('dragstart');
+            //event.preventDefault();
+            //event.codemirrorIgnore = true;
+        });
+        editor.on("dragenter", function(editor, event) {
+            console.log('dragenter');
+        });
+        editor.on("dragover", function(editor, event) {
+            //console.log('dragover');
+            event.preventDefault();
+            //event.codemirrorIgnore = true;
+        });
+        editor.on("drop", function(editor, event) {
+            console.log('drop');
+            console.log(editor.doc.getCursor());
+        });
+
         function setTabInsertSpaces(flag) {
             // See http://codemirror.net/doc/manual.html#keymaps
             if (flag) {
