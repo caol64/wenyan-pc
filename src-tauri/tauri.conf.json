@@ -13,7 +13,8 @@
             "all": false,
             "http": {
                 "all": true,
-                "scope": ["https://**"]
+                "request": true,
+                "scope": ["http://**", "https://**"]
             },
             "dialog": {
                 "save": true,
@@ -55,7 +56,8 @@
                 "width": 1200,
                 "height": 800,
                 "minWidth": 840,
-                "minHeight": 580
+                "minHeight": 580,
+                "fileDropEnabled": false
             }
         ],
         "macOSPrivateApi": true,

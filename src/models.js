@@ -2,6 +2,6 @@ export const gzhImageHost = {
     appId: "",
     appSecret: "",
     accessToken: "",
-    expireTime: "",
+    expireTime: 0,
     isEnabled: false
 };

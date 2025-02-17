@@ -23,8 +23,7 @@ const { appWindow } = window.__TAURI__.window;
 
 const { invoke } = window.__TAURI__.tauri;
 const { save, open, message } = window.__TAURI__.dialog;
-const { fetch: tauriFetch, ResponseType } = window.__TAURI__.http;
-const { listen } = window.__TAURI__.event;
+const { ResponseType, getClient } = window.__TAURI__.http;
 
 const builtinThemes = [
     {
@@ -81,6 +80,7 @@ let leftReady = false;
 let rightReady = false;
 let customThemeContent = '';
 let selectedCustomTheme = '';
+let gzhImageHostObj = {isEnabled: false};
 
 window.addEventListener('message', async (event) => {
     if (event.data) {
@@ -111,6 +111,8 @@ window.addEventListener('message', async (event) => {
         } else if (event.data.type === 'onChangeCss') {
             customThemeContent = event.data.value;
             updateThemePreview();
+        } else if (event.data.type === 'onError') {
+            await message(event.data.value);
         }
     }
 });
@@ -148,6 +150,10 @@ async function load() {
             }
             document.getElementById(selectedTheme).classList.add('selected');
             onUpdate();
+            const gzhImageHostStored = localStorage.getItem('gzhImageHost');
+            if (gzhImageHostStored) {
+                gzhImageHostObj = JSON.parse(gzhImageHostStored);
+            }
         } catch (error) {
             console.error('Error reading file:', error);
             await message(`${error}`, 'Error reading file');
@@ -338,47 +344,97 @@ async function openSettings() {
 }
 
 async function exportLongImage() {
-    if (window.chrome && window.chrome.webview) {
+    const iframe = document.getElementById('rightFrame');
+    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    const clonedWenyan = iframeDocument.getElementById('wenyan').cloneNode(true);
+    const images = clonedWenyan.querySelectorAll('img');
+    const promises = Array.from(images).map(async (img, index) => {
         try {
-            window.chrome.webview.postMessage({ method: "Page.captureScreenshot", format: "jpeg" });
+            // 获取图片二进制数据
+            const client = await getClient();
+            const response = await client.get(img.src, {
+                responseType: ResponseType.Binary
+            });
+            const arrayBuffer = await response.data;
+
+            // 将 ArrayBuffer 转换为 Base64 字符串
+            const base64String = arrayBufferToBase64(arrayBuffer);
+            const mimeType = response.headers['content-type'] || 'image/png'; // 获取 MIME 类型
+
+            // 替换 img.src
+            img.src = `data:${mimeType};base64,${base64String}`;
+            // console.log(img.src);
         } catch (error) {
-            await message(`${error}`, 'Error export Long Image');
-        }
-    } else {
-        await message('未安装WebView2环境，无法导出图片。');
-    }
-}
-
-if (window.chrome && window.chrome.webview) {
-    window.chrome.webview.addEventListener("message", (event) => {
-        if (event.data.method === "Page.captureScreenshot") {
-            try {
-                const screenshotData = event.data.payload;
-
-                // 将 Base64 数据转换为 Blob
-                const byteCharacters = atob(screenshotData);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: "image/jpeg" });
-    
-                // 弹出保存对话框
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = "screenshot.jpg";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-    
-                // 更新状态
-                document.getElementById("status").innerText = "截图已保存为 screenshot.jpg";
-            } catch (error) {
-                message(`${error}`, 'Error captureScreenshot');
-            }
+            console.error(`Failed to process image ${index}:`, error);
+            await message(`${error}`, 'Error exporting image.');
         }
     });
+    let elements = clonedWenyan.querySelectorAll('mjx-container');
+    elements.forEach((element) => {
+        const svg = element.querySelector('svg');
+        svg.style.width = svg.getAttribute('width');
+        svg.style.height = svg.getAttribute('height');
+        svg.removeAttribute('width');
+        svg.removeAttribute('height');
+        const parent = element.parentElement;
+        element.remove();
+        parent.appendChild(svg);
+        if (parent.classList.contains('block-equation')) {
+            parent.setAttribute('style', 'text-align: center; margin-bottom: 1rem;');
+        }
+    });
+    Promise.all(promises)
+        .then(() => {
+            clonedWenyan.classList.add('invisible');
+            // console.log(clonedWenyan.outerHTML);
+            iframeDocument.body.appendChild(clonedWenyan);
+            html2canvas(clonedWenyan, {
+                logging: false
+            })
+            .then((canvas) => {
+                // 将 Canvas 转换为 JPEG 图像数据
+                canvas.toBlob(
+                    async (blob) => {
+                        const filePath = await save({
+                            filters: [
+                                {
+                                    name: 'Image',
+                                    extensions: ['jpeg']
+                                }
+                            ]
+                        });
+                        if (filePath) {
+                            blob.arrayBuffer().then(async (arrayBuffer) => {
+                                // console.log(arrayBuffer); // ArrayBuffer 内容
+                                await writeBinaryFile(filePath, arrayBuffer);
+                            });
+                        }
+                    },
+                    'image/jpeg',
+                    0.9
+                ); // 0.9 表示 JPEG 压缩系数
+                iframeDocument.body.removeChild(clonedWenyan);
+            })
+            .catch((error) => {
+                console.error('Error capturing with html2canvas:', error);
+                iframeDocument.body.removeChild(clonedWenyan);
+                message(`${error}`, 'Error capturing with image');
+            });
+        })
+        .catch((error) => {
+            console.error('An error occurred during the image processing:', error);
+            message(`${error}`, 'Error during the image processing');
+        });
+}
+
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
 }
 
 async function showCssEditor(customTheme) {
@@ -605,38 +661,6 @@ async function openCssFile() {
     }
 }
 
-const imgType = ['bmp', 'png', 'jpeg', 'jpg', 'gif', 'mp4'];
-
-function isImage(fileUrl) {
-    if (!fileUrl) {
-        return false;
-    }
-
-    const fileExtension = fileUrl.substring(fileUrl.lastIndexOf('.') + 1).toLowerCase();
-    return imgType.includes(fileExtension);
-}
-
-listen('tauri://file-drop', async(event) => {
-    try {
-        if (event && event.payload) {
-            const fileUrl = event.payload[0];
-            if (fileUrl.endsWith('.md') || fileUrl.endsWith('.markdown')) {
-                const fileContent = await readTextFile(fileUrl);
-                const iframe = document.getElementById('leftFrame');
-                const iframeWindow = iframe.contentWindow;
-                iframeWindow.setContent(fileContent);
-            } else if (isImage(fileUrl)) {
-
-            } else {
-                await message('不支持的文件类型。');
-            }
-        }
-    } catch (error) {
-        console.error("Error reading file:", error);
-        await message(`${error}`, '文件读取失败');
-    }
-});
-
 function openHelpBubble() {
     const bubbleBox = document.getElementById('bubbleBox');
     const isVisible = bubbleBox.style.display === 'block';
@@ -665,30 +689,9 @@ async function saveSettings() {
     const appIdInput = iframeDocument.getElementById("appId");
     const appSecretInput = iframeDocument.getElementById("appSecret");
     const isEnabledInput = iframeDocument.getElementById("isEnabled");
-    const records = await invoke('plugin:sql|select', {
-        db: 'sqlite:data.db',
-        query: 'SELECT * FROM Settings WHERE id = 1',
-        values: []
-    });
-    let gzhImageHostObj = this.gzhImageHost;
-    if (records) {
-        gzhImageHostObj = JSON.parse(records[0]['content']);
-    }
     gzhImageHostObj['appId'] = appIdInput.value;
     gzhImageHostObj['appSecret'] = appSecretInput.value;
     gzhImageHostObj['isEnabled'] = isEnabledInput.value === "true";
-    if (records) {
-        await invoke('plugin:sql|execute', {
-            db: 'sqlite:data.db',
-            query: 'UPDATE Settings SET content = ?, createdAt = ? WHERE id = 1;',
-            values: [JSON.stringify(gzhImageHostObj), new Date().toISOString()]
-        });
-    } else {
-        await invoke('plugin:sql|execute', {
-            db: 'sqlite:data.db',
-            query: 'INSERT INTO Settings VALUES (id, desc, content, createdAt) VALUES (1, "gzhImageHost", ?, ?);',
-            values: [JSON.stringify(gzhImageHostObj), new Date().toISOString()]
-        });
-    }
+    localStorage.setItem('gzhImageHost', JSON.stringify(gzhImageHostObj));
     await message("保存成功");
 }

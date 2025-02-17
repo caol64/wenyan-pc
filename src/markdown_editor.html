@@ -12,12 +12,39 @@
 
     <script src="codemirror/modes/markdown/markdown.js"></script>
     <script src="codemirror/modes/xml/xml.js"></script>
-
+    <script src="./gzh.js"></script>
 </head>
 
 <body>
-    <script>
+    <style>
+        /* 遮罩层 */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
 
+        /* 旋转加载动画 */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        const imgType = ['image/bmp', 'image/png', 'image/jpeg', 'image/gif', 'video/mp4'];
         CodeMirror.keyMap["default"]["Cmd-/"] = "toggleComment";  // Add-on
         let isScrollingFromScript = false;
         var editor = CodeMirror(document.body, {
@@ -50,22 +77,25 @@
             window.parent.postMessage(message, '*');
         });
 
-        editor.on("dragstart", function(editor, event) {
-            console.log('dragstart');
-            //event.preventDefault();
-            //event.codemirrorIgnore = true;
+        editor.on("paste", async function(cm, event) {
+            const files = event.clipboardData.files;
+            if (files) {
+                const file = files[0];
+                if (file && file.type && imgType.includes(file.type)) {
+                    event.preventDefault();
+                    const url = await uploadLocalImage(file);
+                    const insertedText = `![](${url})`;
+                    editor.replaceSelection(insertedText);
+                }
+            }
         });
-        editor.on("dragenter", function(editor, event) {
-            console.log('dragenter');
-        });
-        editor.on("dragover", function(editor, event) {
-            //console.log('dragover');
+
+        editor.on("drop", async function(cm, event) {
             event.preventDefault();
-            //event.codemirrorIgnore = true;
-        });
-        editor.on("drop", function(editor, event) {
-            console.log('drop');
-            console.log(editor.doc.getCursor());
+            const files = event.dataTransfer.files;
+            if (files) {
+                handleFiles(files, event);
+            }
         });
 
         function setTabInsertSpaces(flag) {
@@ -130,7 +160,107 @@
             window.parent.postMessage({ clicked: true }, '*');
         });
 
+        async function handleFiles(files, event) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type === "text/markdown") {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const content = e.target.result;
+                        setContent(content);
+                    };
+                    reader.onerror = function(e) {
+                        throwError(`读取文件出错: ${e.target.error}`);
+                    };
+                    reader.readAsText(file);
+                } else if (imgType.includes(file.type)) {
+                    const url = await uploadLocalImage(file);
+                    const insertedText = `![](${url})`;
+                    let x = event.pageX;
+                    let y = event.pageY;
+                    editor.setCursor(editor.coordsChar({left:x,top:y}));
+                    editor.replaceRange(insertedText, editor.getCursor());
+                    // 移动光标到插入文本的末尾
+                    const newCursor = {
+                        line: editor.getCursor().line,
+                        ch: editor.getCursor().ch + insertedText.length,
+                    };
+                    editor.setCursor(newCursor);
+                } else {
+                    throwError('不支持的文件类型');
+                }
+
+                if (i > 0) {
+                    break; // 暂时只支持一个文件
+                }
+            }
+        }
+
+        async function uploadLocalImage(file) {
+            let gzhImageHostObj = localStorage.getItem('gzhImageHost');
+            if (!gzhImageHostObj) {
+                throwError('未正确配置图床');
+                return;
+            }
+            gzhImageHostObj = JSON.parse(gzhImageHostObj);
+            if (!gzhImageHostObj || !gzhImageHostObj.isEnabled) {
+                throwError('未正确配置图床');
+                return;
+            }
+            showOverlay();
+            try {
+                if (!(gzhImageHostObj.accessToken && gzhImageHostObj.expireTime > Date.now())) {
+                    const accessTokenObj = new AccessToken(gzhImageHostObj.appId, gzhImageHostObj.appSecret);
+                    accessTokenObj.fetchAccessToken()
+                        .then(data => {
+                            console.log("Access Token:", data.access_token);
+                            console.log("有效期（秒）:", data.expires_in);
+                            gzhImageHostObj.accessToken = data.access_token;
+                            gzhImageHostObj.expireTime = Date.now() + data.expires_in * 1000;
+                            localStorage.setItem('gzhImageHost', JSON.stringify(gzhImageHostObj));
+                        })
+                        .catch(error => {
+                            console.error("获取 Access Token 失败:", error);
+                            throwError(`${error}`);
+                        });
+                }
+                if (!gzhImageHostObj.accessToken) {
+                    throwError('未获取到有效的Access Token');
+                    return;
+                }
+                console.log(gzhImageHostObj);
+                const uploader = new WeChatMaterialUploader(gzhImageHostObj.accessToken);
+                const resp = await uploader.uploadImage(file);
+                return resp.url.replace("http://", "https://");
+            } catch (error) {
+                throwError(`${error}`);
+            } finally {
+                hideOverlay(); // 隐藏遮罩层
+            }
+        }
+
+        function throwError(msg) {
+            const message = {
+                type: 'onError',
+                value: msg
+            };
+            window.parent.postMessage(message, '*');
+        }
+
+        // 显示遮罩层
+        function showOverlay() {
+            document.getElementById("overlay").style.display = "flex";
+        }
+
+        // 隐藏遮罩层
+        function hideOverlay() {
+            document.getElementById("overlay").style.display = "none";
+        }
+
     </script>
+    <div class="overlay" id="overlay">
+        <div class="loader"></div>
+    </div>
 </body>
 
 </html>
