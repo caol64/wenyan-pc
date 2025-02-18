@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+
+        /* 左侧导航栏 */
+        .sidebar {
+            width: 200px;
+            background-color: #fff;
+            padding: 16px;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .image-host-item {
+            padding: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            border-radius: 4px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .image-host-item:hover {
+            background: #f0f0f0;
+        }
+
+        .image-host-item .arrow {
+            margin-right: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .image-host-item.expanded .arrow {
+            transform: rotate(90deg);
+        }
+
+        /* 子菜单 */
+        .sub-menu {
+            list-style: none;
+            display: none;
+            padding-left: 20px;
+        }
+
+        .sub-menu .sub-item {
+            padding: 6px 8px;
+            font-size: 13px;
+            color: #666;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .sub-menu .sub-item:hover,
+        .sub-menu .sub-item.active {
+            background: #eaeaea;
+        }
+
+        /* 右侧内容 */
+        .content {
+            flex: 1;
+            padding: 24px;
+            margin-left: 200px;
+        }
+
+        .content-container {
+            display: none;
+        }
+        .content-container.show {
+            display: block;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            justify-content: space-between;
+        }
+
+        .section {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #409eff;
+        }
+
+        /* 开关样式 */
+        .toggle {
+            width: 40px;
+            height: 20px;
+            background: #ddd;
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle::before {
+            content: "";
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        .toggle.on {
+            background: #409eff;
+        }
+
+        .toggle.on::before {
+            transform: translateX(20px);
+        }
+
+    </style>
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+        <div class="image-host-item" id="treeToggle">
+            <span class="arrow">▶</span> 图床设置
+        </div>
+        <ul class="sub-menu" id="imageHostSubMenu">
+            <li id="menu-gzh" class="sub-item" onclick="selectMenuItem(this)">公众号图床</li>
+            <!--  <li id="menu-cos" class="sub-item" onclick="selectMenuItem(this)">腾讯云COS</li>
+            <li id="menu-oss" class="sub-item" onclick="selectMenuItem(this)">阿里云OSS</li>  -->
+        </ul>
+    </div>
+
+    <!-- 右侧内容 -->
+    <div class="content">
+        <div id="content-menu-gzh" class="content-container">
+            <div class="header">
+                <h3>公众号图床</h3>
+                <div id="gzhToggle" class="toggle"></div>
+            </div>
+            <div class="section">
+                <div class="form-group">
+                    <label for="appId">开发者ID(AppID)</label>
+                    <input type="text" id="appId" placeholder="如：wx6e1234567890efa3">
+                </div>
+                <div class="form-group">
+                    <label for="appSecret">开发者密码(AppSecret)</label>
+                    <input type="text" id="appSecret" placeholder="如：d9f1abcdef01234567890abcdef82397">
+                </div>
+                <input type="hidden" id="isEnabled">
+            </div>
+        </div>
+
+        <!--  <div id="content-menu-cos" class="content-container">
+            <div class="header">
+                <h3>腾讯云COS</h3>
+                <div id="gzhToggle" class="toggle"></div>
+            </div>
+            <div class="section">
+                <div class="form-group">
+                    <label for="appId">开发者ID(AppID)</label>
+                    <input type="text" id="appId" placeholder="如：wx6e1234567890efa3">
+                </div>
+                <div class="form-group">
+                    <label for="appSecret">开发者密码(AppSecret)</label>
+                    <input type="text" id="appSecret" placeholder="如：d9f1abcdef01234567890abcdef82397">
+                </div>
+                <input type="hidden" id="isEnabled">
+            </div>
+        </div>
+
+        <div id="content-menu-oss" class="content-container">
+            <div class="header">
+                <h3>阿里云OSS</h3>
+                <div id="gzhToggle" class="toggle"></div>
+            </div>
+            <div class="section">
+                <div class="form-group">
+                    <label for="appId">开发者ID(AppID)</label>
+                    <input type="text" id="appId" placeholder="如：wx6e1234567890efa3">
+                </div>
+                <div class="form-group">
+                    <label for="appSecret">开发者密码(AppSecret)</label>
+                    <input type="text" id="appSecret" placeholder="如：d9f1abcdef01234567890abcdef82397">
+                </div>
+                <input type="hidden" id="isEnabled">
+            </div>
+        </div>  -->
+
+    </div>
+
+    <script>
+        // 监听开关点击事件
+        document.querySelector(".toggle").addEventListener("click", function() {
+            toggleIsEnabled();
+        });
+        // 监听折叠展开
+        document.getElementById("treeToggle").addEventListener("click", function () {
+            const imageHostSubMenu = document.getElementById("imageHostSubMenu");
+            const arrow = this.querySelector(".arrow");
+            
+            if (imageHostSubMenu.style.display === "none" || imageHostSubMenu.style.display === "") {
+                imageHostSubMenu.style.display = "block";
+                arrow.style.transform = "rotate(90deg)";
+            } else {
+                imageHostSubMenu.style.display = "none";
+                arrow.style.transform = "rotate(0deg)";
+            }
+        });
+        window.addEventListener("load", (event) => {
+            const imageHostSubMenu = document.getElementById("imageHostSubMenu");
+            const arrow = document.querySelector(".arrow");
+            imageHostSubMenu.style.display = "block";
+            arrow.style.transform = "rotate(90deg)";
+            document.getElementById("menu-gzh").classList.add("active");
+            document.getElementById("content-menu-gzh").classList.add("show");
+        });
+        function toggleIsEnabled() {
+            const isEnabledValue = document.getElementById("isEnabled").value;
+            setIsEnabled(isEnabledValue !== "true");
+        }
+        function setIsEnabled(isEnabled) {
+            document.getElementById("isEnabled").value = isEnabled.toString();
+            if (isEnabled) {
+                document.getElementById("gzhToggle").classList.add("on");
+            } else {
+                document.getElementById("gzhToggle").classList.remove('on');
+            }
+        }
+        function selectMenuItem(element) {
+            document.querySelectorAll(".sub-item").forEach(item => item.classList.remove("active"));
+            element.classList.add("active");
+            document.querySelectorAll(".content-container").forEach(item => item.classList.remove("show"));
+            document.getElementById(`content-${element.id}`).classList.add("show");
+        }
+    </script>
+    <script src="utils.js"></script>
+    <script defer>
+        let imageHosts = getCustomImageHosts();
+        document.getElementById("appId").value = imageHosts[0].appId;
+        document.getElementById("appSecret").value = imageHosts[0].appSecret;
+        document.getElementById("isEnabled").value = imageHosts[0].isEnabled;
+        setIsEnabled(imageHosts[0].isEnabled);
+    </script>
+</body>
+</html>

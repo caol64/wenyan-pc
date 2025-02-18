@@ -19,6 +19,7 @@ let postprocessMarkdown = "";
 let isScrollingFromScript = false;
 let customCss = "";
 let highlightCss = "";
+
 // ------- marked.js默认配置开始 -------
 // 处理frontMatter的函数
 function preprocess(markdown) {
@@ -62,6 +63,17 @@ renderer.paragraph = function(paragraph) {
     }
 };
 
+renderer.image = function(img, title, text) {
+    const href = img.href;
+    if (!text) {
+        text = "";
+    }
+    if (href.startsWith('https://mmbiz.qpic.cn')) {
+        return `<img src="${href}" data-src="${href}" alt="${text}" title="${title || text}">`;
+    }
+    return `<img src="${href}" alt="${text}" title="${title || text}">`;
+};
+
 // 配置 marked.js 使用自定义的 Renderer
 marked.use({
     renderer: renderer
@@ -88,6 +100,7 @@ function setContent(content) {
     container.setAttribute("class", "preview");
     document.body.appendChild(container);
     MathJax.typeset();
+    handleImages(container);
 }
 function setPreviewMode(mode) {
     document.getElementById("style")?.remove();
@@ -127,6 +140,7 @@ function getContent() {
         img.setAttribute("src", dataURL);
         parent.appendChild(img);
     });
+    revertImages(clonedWenyan);
     return clonedWenyan.outerHTML;
 }
 function getContentWithMathImg() {
@@ -143,6 +157,7 @@ function getContentWithMathImg() {
         img.setAttribute("style", "margin: 0 auto; width: auto; max-width: 100%;");
         parent.appendChild(img);
     });
+    revertImages(clonedWenyan);
     return clonedWenyan.outerHTML;
 }
 function getContentForGzh() {
@@ -260,6 +275,7 @@ function getContentForGzh() {
     //     }
     //     element.parentNode.replaceChild(preElement, element);
     // });
+    revertImages(clonedWenyan);
     clonedWenyan.setAttribute("data-provider", "WenYan");
     return `${clonedWenyan.outerHTML.replace(/class="mjx-solid"/g, 'fill="none" stroke-width="70"')}`;
 }
@@ -329,6 +345,7 @@ function getContentForMedium() {
         element.remove();
         parent.innerHTML = math;
     });
+    revertImages(clonedWenyan);
     return clonedWenyan.outerHTML;
 }
 function getPostprocessMarkdown() {
@@ -565,7 +582,9 @@ window.addEventListener('click', function(event) {
     // 发送点击事件的消息到父页面
     window.parent.postMessage({ clicked: true }, '*');
 });
-const message = {
-    type: 'onRightReady'
-};
-window.parent.postMessage(message, '*');
+window.addEventListener("load", (event) => {
+    const message = {
+        type: 'onRightReady'
+    };
+    window.parent.postMessage(message, '*');
+});

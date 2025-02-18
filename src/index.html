@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文颜</title>
     <script src="html2canvas/html2canvas.min.js"></script>
+    <script src="utils.js"></script>
     <script src="main.js"></script>
     <script src="micromodal/micromodal.min.js"></script>
 </head>
@@ -99,11 +100,12 @@
             </ul>
         </div>
         <div id="dropdown" class="dropdown-content">
-            <a href="#" id="about-btn" class="dropdown-link" onclick="openMarkdownFile()">打开文件...</a>
-            <a href="#" id="about-btn" class="dropdown-link" onclick="openAbout()">关于</a>
+            <a href="#" class="dropdown-link" onclick="openMarkdownFile()">打开文件...</a>
+            <a href="#" class="dropdown-link" onclick="openSettings()">设置</a>
+            <a href="#" class="dropdown-link" onclick="openAbout()">关于</a>
         </div>
         <div id="mainMenu" class="main-menu">
-            <a href="#" id="about-btn" class="dropdown-link" onclick="openMarkdownFile()">打开文件...</a>
+            <a href="#" class="dropdown-link" onclick="openMarkdownFile()">打开文件...</a>
         </div>
         <svg style="display: none;">
             <symbol id="desktopIcon" viewBox="0 0 48 48">
@@ -168,14 +170,14 @@
                 <path d="M40.9991 6.00098L29.0044 17.9958" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
             </symbol>
         </svg>
-        <div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
+        <div class="modal micromodal-slide" id="modal-css-editor" aria-hidden="true">
             <div class="modal__overlay" tabindex="-1">
-                <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
-                    <main class="modal__content" id="modal-1-content">
+                <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-css-editor-title">
+                    <main class="modal__content" id="modal-css-editor-content">
                         <iframe id="cssLeftFrame"></iframe>
                         <iframe src="/css_preview.html" id="cssRightFrame"></iframe>
                     </main>
-                    <footer id="modalFooter" class="modal__footer">
+                    <footer class="modal__footer">
                         <div id="footerButtonContainer" style="display: flex; align-items: center; gap: 8px;">
                             <button class="modal__btn" aria-label="Import CSS file" onclick="openCssFile()">导入</button>
                             <svg id="helpButton" onclick="openHelpBubble()" style="cursor: pointer;" width="14" height="14" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 44C29.5228 44 34.5228 41.7614 38.1421 38.1421C41.7614 34.5228 44 29.5228 44 24C44 18.4772 41.7614 13.4772 38.1421 9.85786C34.5228 6.23858 29.5228 4 24 4C18.4772 4 13.4772 6.23858 9.85786 9.85786C6.23858 13.4772 4 18.4772 4 24C4 29.5228 6.23858 34.5228 9.85786 38.1421C13.4772 41.7614 18.4772 44 24 44Z" fill="none" stroke="#333" stroke-width="4" stroke-linejoin="round"/><path d="M24 28.6248V24.6248C27.3137 24.6248 30 21.9385 30 18.6248C30 15.3111 27.3137 12.6248 24 12.6248C20.6863 12.6248 18 15.3111 18 18.6248" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path fill-rule="evenodd" clip-rule="evenodd" d="M24 37.6248C25.3807 37.6248 26.5 36.5055 26.5 35.1248C26.5 33.7441 25.3807 32.6248 24 32.6248C22.6193 32.6248 21.5 33.7441 21.5 35.1248C21.5 36.5055 22.6193 37.6248 24 37.6248Z" fill="#333"/></svg>
@@ -194,6 +196,21 @@
                         <p>主题分享：</p>
                         <p>https://github.com/caol64/wenyan/discussions/13</p>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal micromodal-slide" id="modal-settings" aria-hidden="true">
+            <div class="modal__overlay" tabindex="-1">
+                <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
+                    <main class="modal__content settings-page" id="modal-settings-content">
+                        <iframe src="/settings.html" id="settingsFrame" style="width: 650px; height: 400px;"></iframe>
+                    </main>
+                    <footer class="modal__footer">
+                        <div style="margin-left: auto;">
+                            <button class="modal__btn modal__btn-primary" onclick="saveSettings()">保存</button>
+                            <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">关闭</button>
+                        </div>
+                    </footer>
                 </div>
             </div>
         </div>

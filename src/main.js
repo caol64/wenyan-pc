@@ -17,14 +17,13 @@
 // import { resolveResource } from '@tauri-apps/api/path'
 const { resolveResource } = window.__TAURI__.path;
 // import { readTextFile } from '@tauri-apps/api/fs'
-const { readTextFile, writeBinaryFile } = window.__TAURI__.fs;
+// const { readTextFile, writeBinaryFile } = window.__TAURI__.fs;
 // import { appWindow } from '@tauri-apps/api/window'
 const { appWindow } = window.__TAURI__.window;
 
 const { invoke } = window.__TAURI__.tauri;
 const { save, open, message } = window.__TAURI__.dialog;
-const { fetch: tauriFetch, ResponseType } = window.__TAURI__.http;
-const { listen } = window.__TAURI__.event;
+// const { ResponseType, getClient } = window.__TAURI__.http;
 
 const builtinThemes = [
     {
@@ -87,13 +86,13 @@ window.addEventListener('message', async (event) => {
         if (event.data.type === 'onReady') {
             leftReady = true;
             load();
-        } else if (event.data.type === 'onChange') {
-            content = event.data.value;
-            localStorage.setItem('lastArticle', content);
-            onContentChange();
         } else if (event.data.type === 'onRightReady') {
             rightReady = true;
             load();
+        } else if (event.data.type === 'onChange') {
+            content = event.data.value;
+            setLastArticle(content);
+            onContentChange();
         } else if (event.data.type === 'leftScroll') {
             const iframe = document.getElementById('rightFrame');
             const iframeWindow = iframe.contentWindow;
@@ -111,6 +110,8 @@ window.addEventListener('message', async (event) => {
         } else if (event.data.type === 'onChangeCss') {
             customThemeContent = event.data.value;
             updateThemePreview();
+        } else if (event.data.type === 'onError') {
+            await message(event.data.value);
         }
     }
 });
@@ -121,7 +122,7 @@ async function load() {
             let lastArticle = localStorage.getItem('lastArticle');
             if (!lastArticle) {
                 const resourcePath = await resolveResource('resources/example.md');
-                lastArticle = await readTextFile(resourcePath);
+                lastArticle = await readAsText(resourcePath);
             }
             content = lastArticle;
             const iframe = document.getElementById('leftFrame');
@@ -162,7 +163,7 @@ async function onUpdate() {
         const highlightCss = await highlightResponse.text();
         const message = {
             type: 'onUpdate',
-            content: content,
+            // content: content,
             highlightCss: highlightCss,
             previewMode: previewMode,
             themeValue: customThemeContent
@@ -320,6 +321,7 @@ async function changeTheme(theme) {
 function showMoreMenu() {
     const dropdown = document.getElementById('dropdown');
     dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    hideThemeOverlay()
 }
 
 function showMainMenu() {
@@ -331,139 +333,83 @@ async function openAbout() {
     appWindow.emit('open-about');
 }
 
+async function openSettings() {
+    MicroModal.show('modal-settings');
+    hideMenu()
+}
+
 async function exportLongImage() {
-    if (window.chrome && window.chrome.webview) {
+    const iframe = document.getElementById('rightFrame');
+    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    const clonedWenyan = iframeDocument.getElementById('wenyan').cloneNode(true);
+    const images = clonedWenyan.querySelectorAll('img');
+    const promises = Array.from(images).map(async (img, index) => {
         try {
-            window.chrome.webview.postMessage({ method: "Page.captureScreenshot", format: "jpeg" });
-        } catch (error) {
-            await message(`${error}`, 'Error export Long Image');
-        }
-    } else {
-        const iframe = document.getElementById('rightFrame');
-        const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-        const clonedWenyan = iframeDocument.getElementById('wenyan').cloneNode(true);
-        const images = clonedWenyan.querySelectorAll('img');
-        const promises = Array.from(images).map(async (img, index) => {
-            try {
-                // 获取图片二进制数据
-                const response = await tauriFetch(img.src, {
-                    method: 'GET',
-                    responseType: ResponseType.Binary
-                });
-                const arrayBuffer = await response.data;
-
-                // 将 ArrayBuffer 转换为 Base64 字符串
-                const base64String = arrayBufferToBase64(arrayBuffer);
-                const mimeType = response.headers['content-type'] || 'image/png'; // 获取 MIME 类型
-
+            if (!img.src.startsWith('data:')) {
                 // 替换 img.src
-                img.src = `data:${mimeType};base64,${base64String}`;
-                // console.log(img.src);
-            } catch (error) {
-                console.error(`Failed to process image ${index}:`, error);
-                await message(`${error}`, 'Error exporting image.');
+                img.src = await downloadImage(img.src);
             }
-        });
-        let elements = clonedWenyan.querySelectorAll('mjx-container');
-        elements.forEach((element) => {
-            const svg = element.querySelector('svg');
-            svg.style.width = svg.getAttribute('width');
-            svg.style.height = svg.getAttribute('height');
-            svg.removeAttribute('width');
-            svg.removeAttribute('height');
-            const parent = element.parentElement;
-            element.remove();
-            parent.appendChild(svg);
-            if (parent.classList.contains('block-equation')) {
-                parent.setAttribute('style', 'text-align: center; margin-bottom: 1rem;');
-            }
-        });
-        Promise.all(promises)
-            .then(() => {
-                clonedWenyan.classList.add('invisible');
-                // console.log(clonedWenyan.outerHTML);
-                iframeDocument.body.appendChild(clonedWenyan);
-                html2canvas(clonedWenyan, {
-                    logging: false
-                })
-                .then((canvas) => {
-                    // 将 Canvas 转换为 JPEG 图像数据
-                    canvas.toBlob(
-                        async (blob) => {
-                            const filePath = await save({
-                                filters: [
-                                    {
-                                        name: 'Image',
-                                        extensions: ['jpeg']
-                                    }
-                                ]
-                            });
-                            if (filePath) {
-                                blob.arrayBuffer().then(async (arrayBuffer) => {
-                                    // console.log(arrayBuffer); // ArrayBuffer 内容
-                                    await writeBinaryFile(filePath, arrayBuffer);
-                                });
-                            }
-                        },
-                        'image/jpeg',
-                        0.9
-                    ); // 0.9 表示 JPEG 压缩系数
-                    iframeDocument.body.removeChild(clonedWenyan);
-                })
-                .catch((error) => {
-                    console.error('Error capturing with html2canvas:', error);
-                    iframeDocument.body.removeChild(clonedWenyan);
-                    message(`${error}`, 'Error capturing with image');
-                });
-            })
-            .catch((error) => {
-                console.error('An error occurred during the image processing:', error);
-                message(`${error}`, 'Error during the image processing');
-            });
-    }
-}
-
-// 将 ArrayBuffer 转换为 Base64 字符串的辅助函数
-function arrayBufferToBase64(buffer) {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-}
-
-if (window.chrome && window.chrome.webview) {
-    window.chrome.webview.addEventListener("message", (event) => {
-        if (event.data.method === "Page.captureScreenshot") {
-            try {
-                const screenshotData = event.data.payload;
-
-                // 将 Base64 数据转换为 Blob
-                const byteCharacters = atob(screenshotData);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: "image/jpeg" });
-    
-                // 弹出保存对话框
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = "screenshot.jpg";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-    
-                // 更新状态
-                document.getElementById("status").innerText = "截图已保存为 screenshot.jpg";
-            } catch (error) {
-                message(`${error}`, 'Error captureScreenshot');
-            }
+        } catch (error) {
+            console.error(`Failed to process image ${index}:`, error);
+            await message(`${error}`, 'Error exporting image.');
         }
     });
+    let elements = clonedWenyan.querySelectorAll('mjx-container');
+    elements.forEach((element) => {
+        const svg = element.querySelector('svg');
+        svg.style.width = svg.getAttribute('width');
+        svg.style.height = svg.getAttribute('height');
+        svg.removeAttribute('width');
+        svg.removeAttribute('height');
+        const parent = element.parentElement;
+        element.remove();
+        parent.appendChild(svg);
+        if (parent.classList.contains('block-equation')) {
+            parent.setAttribute('style', 'text-align: center; margin-bottom: 1rem;');
+        }
+    });
+    Promise.all(promises)
+        .then(() => {
+            clonedWenyan.classList.add('invisible');
+            // console.log(clonedWenyan.outerHTML);
+            iframeDocument.body.appendChild(clonedWenyan);
+            html2canvas(clonedWenyan, {
+                logging: false
+            })
+            .then((canvas) => {
+                // 将 Canvas 转换为 JPEG 图像数据
+                canvas.toBlob(
+                    async (blob) => {
+                        const filePath = await save({
+                            filters: [
+                                {
+                                    name: 'Image',
+                                    extensions: ['jpeg']
+                                }
+                            ]
+                        });
+                        if (filePath) {
+                            blob.arrayBuffer().then(async (arrayBuffer) => {
+                                // console.log(arrayBuffer); // ArrayBuffer 内容
+                                await writeAsBinary(filePath, arrayBuffer);
+                            });
+                        }
+                    },
+                    'image/jpeg',
+                    0.9
+                ); // 0.9 表示 JPEG 压缩系数
+                iframeDocument.body.removeChild(clonedWenyan);
+            })
+            .catch((error) => {
+                console.error('Error capturing with html2canvas:', error);
+                iframeDocument.body.removeChild(clonedWenyan);
+                message(`${error}`, 'Error capturing with image');
+            });
+        })
+        .catch((error) => {
+            console.error('An error occurred during the image processing:', error);
+            message(`${error}`, 'Error during the image processing');
+        });
 }
 
 async function showCssEditor(customTheme) {
@@ -483,7 +429,7 @@ async function showCssEditor(customTheme) {
         btn.innerHTML = '删除';
         footer.insertBefore(btn, footer.firstChild);
     }
-    MicroModal.show('modal-1');
+    MicroModal.show('modal-css-editor');
     hideThemeOverlay();
 }
 
@@ -581,7 +527,7 @@ async function saveCustomTheme() {
             values: ['自定义主题', customThemeContent, new Date().toISOString()]
         });
     }
-    MicroModal.close('modal-1');
+    MicroModal.close('modal-css-editor');
     await loadCustomThemes();
     document.getElementById(selectedTheme).classList.add('selected');
     changeTheme(selectedTheme);
@@ -595,7 +541,7 @@ async function deleteCustomTheme() {
             values: [selectedCustomTheme]
         });
     }
-    MicroModal.close('modal-1');
+    MicroModal.close('modal-css-editor');
     await loadCustomThemes();
     selectedTheme = 'gzh_default';
     document.getElementById(selectedTheme).classList.add('selected');
@@ -655,7 +601,7 @@ async function openMarkdownFile() {
     
     if (selected) {
         try {
-            const fileContent = await readTextFile(selected);
+            const fileContent = await readAsText(selected);
             const iframe = document.getElementById('leftFrame');
             const iframeWindow = iframe.contentWindow;
             iframeWindow.setContent(fileContent);
@@ -679,7 +625,7 @@ async function openCssFile() {
     
     if (selected) {
         try {
-            const fileContent = await readTextFile(selected);
+            const fileContent = await readAsText(selected);
             const iframe = document.getElementById('cssLeftFrame');
             const iframeWindow = iframe.contentWindow;
             iframeWindow.loadCss(fileContent);
@@ -689,23 +635,6 @@ async function openCssFile() {
         }
     }
 }
-
-listen('tauri://file-drop', async(event) => {
-    try {
-        if (event && event.payload) {
-            const fileUrl = event.payload[0];
-            if (fileUrl.endsWith('.md') || fileUrl.endsWith('.markdown')) {
-                const fileContent = await readTextFile(fileUrl);
-                const iframe = document.getElementById('leftFrame');
-                const iframeWindow = iframe.contentWindow;
-                iframeWindow.setContent(fileContent);
-            }
-        }
-    } catch (error) {
-        console.error("Error reading file:", error);
-        await message(`${error}`, '文件读取失败');
-    }
-});
 
 function openHelpBubble() {
     const bubbleBox = document.getElementById('bubbleBox');
@@ -727,4 +656,18 @@ function hideBubble() {
 
 function calcHeight(customThemeCount) {
     return 240 + (Math.min(customThemeCount, 2) * 25);
+}
+
+async function saveSettings() {
+    const iframe = document.getElementById("settingsFrame");
+    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    const appIdInput = iframeDocument.getElementById("appId");
+    const appSecretInput = iframeDocument.getElementById("appSecret");
+    const isEnabledInput = iframeDocument.getElementById("isEnabled");
+    let imageHosts = getCustomImageHosts();
+    imageHosts[0].appId = appIdInput.value;
+    imageHosts[0].appSecret = appSecretInput.value;
+    imageHosts[0].isEnabled = isEnabledInput.value === "true";
+    saveCustomImageHosts(imageHosts);
+    await message("保存成功");
 }
