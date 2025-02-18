@@ -80,6 +80,9 @@
             ],
             "copyright": "© 2024 Lei Cao. All rights reserved.",
             "windows": {
+                "wix": {
+                    "language": "zh-CN"
+                },
                 "nsis": {
                     "languages": [
                         "SimpChinese",
