@@ -12,7 +12,8 @@
 
     <script src="codemirror/modes/markdown/markdown.js"></script>
     <script src="codemirror/modes/xml/xml.js"></script>
-    <script src="./gzh.js"></script>
+    <script src="./utils.js"></script>
+    <script src="./uploader.js"></script>
 </head>
 
 <body>
@@ -84,8 +85,10 @@
                 if (file && file.type && imgType.includes(file.type)) {
                     event.preventDefault();
                     const url = await uploadLocalImage(file);
-                    const insertedText = `![](${url})`;
-                    editor.replaceSelection(insertedText);
+                    if (url) {
+                        const insertedText = `![](${url})`;
+                        editor.replaceSelection(insertedText);
+                    }
                 }
             }
         });
@@ -139,7 +142,6 @@
         setTabInsertSpaces(true);
 
         window.addEventListener('message', (event) => {
-            //console.log(event.data);
             if (event.data) {
                 if (event.data.type === 'onUpdate') {
                     setContent(event.data.value);
@@ -152,7 +154,6 @@
                 type: 'onReady'
             };
             window.parent.postMessage(message, '*');
-            //console.log("post onReady");
         }
 
         window.addEventListener('click', function (event) {
@@ -175,17 +176,19 @@
                     reader.readAsText(file);
                 } else if (imgType.includes(file.type)) {
                     const url = await uploadLocalImage(file);
-                    const insertedText = `![](${url})`;
-                    let x = event.pageX;
-                    let y = event.pageY;
-                    editor.setCursor(editor.coordsChar({left:x,top:y}));
-                    editor.replaceRange(insertedText, editor.getCursor());
-                    // 移动光标到插入文本的末尾
-                    const newCursor = {
-                        line: editor.getCursor().line,
-                        ch: editor.getCursor().ch + insertedText.length,
-                    };
-                    editor.setCursor(newCursor);
+                    if (url) {
+                        const insertedText = `![](${url})`;
+                        let x = event.pageX;
+                        let y = event.pageY;
+                        editor.setCursor(editor.coordsChar({left:x,top:y}));
+                        editor.replaceRange(insertedText, editor.getCursor());
+                        // 移动光标到插入文本的末尾
+                        const newCursor = {
+                            line: editor.getCursor().line,
+                            ch: editor.getCursor().ch + insertedText.length,
+                        };
+                        editor.setCursor(newCursor);
+                    }
                 } else {
                     throwError('不支持的文件类型');
                 }
@@ -197,41 +200,31 @@
         }
 
         async function uploadLocalImage(file) {
-            let gzhImageHostObj = localStorage.getItem('gzhImageHost');
-            if (!gzhImageHostObj) {
-                throwError('未正确配置图床');
-                return;
-            }
-            gzhImageHostObj = JSON.parse(gzhImageHostObj);
-            if (!gzhImageHostObj || !gzhImageHostObj.isEnabled) {
-                throwError('未正确配置图床');
+            let imageHost = getEnabledImageHost();
+            if (!imageHost) {
+                throwError('未启用图床');
                 return;
             }
             showOverlay();
             try {
-                if (!(gzhImageHostObj.accessToken && gzhImageHostObj.expireTime > Date.now())) {
-                    const accessTokenObj = new AccessToken(gzhImageHostObj.appId, gzhImageHostObj.appSecret);
-                    accessTokenObj.fetchAccessToken()
-                        .then(data => {
-                            console.log("Access Token:", data.access_token);
-                            console.log("有效期（秒）:", data.expires_in);
-                            gzhImageHostObj.accessToken = data.access_token;
-                            gzhImageHostObj.expireTime = Date.now() + data.expires_in * 1000;
-                            localStorage.setItem('gzhImageHost', JSON.stringify(gzhImageHostObj));
-                        })
-                        .catch(error => {
-                            console.error("获取 Access Token 失败:", error);
-                            throwError(`${error}`);
-                        });
+                if (!(imageHost.accessToken && imageHost.expireTime > Date.now())) {
+                    const accessTokenObj = new AccessToken(imageHost.appId, imageHost.appSecret);
+                    const resp = await(accessTokenObj.fetchAccessToken());
+                    imageHost.accessToken = resp.accessToken;
+                    imageHost.expireTime = Date.now() + resp.expiresIn * 1000;
+                    let imageHosts = getCustomImageHosts();
+                    imageHosts[0] = imageHost;
+                    saveCustomImageHosts(imageHosts);
                 }
-                if (!gzhImageHostObj.accessToken) {
+                if (!imageHost.accessToken) {
                     throwError('未获取到有效的Access Token');
                     return;
                 }
-                console.log(gzhImageHostObj);
-                const uploader = new WeChatMaterialUploader(gzhImageHostObj.accessToken);
+                const uploader = new WeChatMaterialUploader(imageHost.accessToken);
                 const resp = await uploader.uploadImage(file);
-                return resp.url.replace("http://", "https://");
+                result = resp.url.replace("http://", "https://");
+                deleteCache(result);
+                return result;
             } catch (error) {
                 throwError(`${error}`);
             } finally {

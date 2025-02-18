@@ -1,4 +1,18 @@
-const { ResponseType: tauriResponse, Body, getClient } = parent.window.__TAURI__.http;
+/*
+ * Copyright 2024 Lei Cao
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 class AccessToken {
     constructor(appId, appSecret) {
@@ -17,13 +31,13 @@ class AccessToken {
         try {
             const client = await getClient();
             const response = await client.get(`${this.apiUrl}?grant_type=client_credential&appid=${this.appId}&secret=${this.appSecret}`, {
-                responseType: tauriResponse.JSON
+                responseType: Response.JSON
             });
             const data = await response.data;
             if (data.access_token) {
                 this.accessToken = data.access_token;
                 this.expiresIn = data.expires_in;
-                return data;
+                return this;
             } else if (data.errcode) {
                 throw new Error(`获取 Access Token 失败，错误码：${data.errcode}，${data.errmsg}`);
             } else {
@@ -53,7 +67,7 @@ class WeChatMaterialUploader {
                 url: this.apiUrl + `&type=${type}`,
                 method: 'POST',
                 body: body,
-                responseType: tauriResponse.JSON,
+                responseType: Response.JSON,
                 headers: {
                     "Content-Type": "multipart/form-data"
                 }

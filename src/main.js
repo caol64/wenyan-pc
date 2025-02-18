@@ -17,13 +17,13 @@
 // import { resolveResource } from '@tauri-apps/api/path'
 const { resolveResource } = window.__TAURI__.path;
 // import { readTextFile } from '@tauri-apps/api/fs'
-const { readTextFile, writeBinaryFile } = window.__TAURI__.fs;
+// const { readTextFile, writeBinaryFile } = window.__TAURI__.fs;
 // import { appWindow } from '@tauri-apps/api/window'
 const { appWindow } = window.__TAURI__.window;
 
 const { invoke } = window.__TAURI__.tauri;
 const { save, open, message } = window.__TAURI__.dialog;
-const { ResponseType, getClient } = window.__TAURI__.http;
+// const { ResponseType, getClient } = window.__TAURI__.http;
 
 const builtinThemes = [
     {
@@ -80,20 +80,19 @@ let leftReady = false;
 let rightReady = false;
 let customThemeContent = '';
 let selectedCustomTheme = '';
-let gzhImageHostObj = {isEnabled: false};
 
 window.addEventListener('message', async (event) => {
     if (event.data) {
         if (event.data.type === 'onReady') {
             leftReady = true;
             load();
-        } else if (event.data.type === 'onChange') {
-            content = event.data.value;
-            localStorage.setItem('lastArticle', content);
-            onContentChange();
         } else if (event.data.type === 'onRightReady') {
             rightReady = true;
             load();
+        } else if (event.data.type === 'onChange') {
+            content = event.data.value;
+            setLastArticle(content);
+            onContentChange();
         } else if (event.data.type === 'leftScroll') {
             const iframe = document.getElementById('rightFrame');
             const iframeWindow = iframe.contentWindow;
@@ -123,7 +122,7 @@ async function load() {
             let lastArticle = localStorage.getItem('lastArticle');
             if (!lastArticle) {
                 const resourcePath = await resolveResource('resources/example.md');
-                lastArticle = await readTextFile(resourcePath);
+                lastArticle = await readAsText(resourcePath);
             }
             content = lastArticle;
             const iframe = document.getElementById('leftFrame');
@@ -150,10 +149,6 @@ async function load() {
             }
             document.getElementById(selectedTheme).classList.add('selected');
             onUpdate();
-            const gzhImageHostStored = localStorage.getItem('gzhImageHost');
-            if (gzhImageHostStored) {
-                gzhImageHostObj = JSON.parse(gzhImageHostStored);
-            }
         } catch (error) {
             console.error('Error reading file:', error);
             await message(`${error}`, 'Error reading file');
@@ -168,7 +163,7 @@ async function onUpdate() {
         const highlightCss = await highlightResponse.text();
         const message = {
             type: 'onUpdate',
-            content: content,
+            // content: content,
             highlightCss: highlightCss,
             previewMode: previewMode,
             themeValue: customThemeContent
@@ -350,20 +345,10 @@ async function exportLongImage() {
     const images = clonedWenyan.querySelectorAll('img');
     const promises = Array.from(images).map(async (img, index) => {
         try {
-            // 获取图片二进制数据
-            const client = await getClient();
-            const response = await client.get(img.src, {
-                responseType: ResponseType.Binary
-            });
-            const arrayBuffer = await response.data;
-
-            // 将 ArrayBuffer 转换为 Base64 字符串
-            const base64String = arrayBufferToBase64(arrayBuffer);
-            const mimeType = response.headers['content-type'] || 'image/png'; // 获取 MIME 类型
-
-            // 替换 img.src
-            img.src = `data:${mimeType};base64,${base64String}`;
-            // console.log(img.src);
+            if (!img.src.startsWith('data:')) {
+                // 替换 img.src
+                img.src = await downloadImage(img.src);
+            }
         } catch (error) {
             console.error(`Failed to process image ${index}:`, error);
             await message(`${error}`, 'Error exporting image.');
@@ -406,7 +391,7 @@ async function exportLongImage() {
                         if (filePath) {
                             blob.arrayBuffer().then(async (arrayBuffer) => {
                                 // console.log(arrayBuffer); // ArrayBuffer 内容
-                                await writeBinaryFile(filePath, arrayBuffer);
+                                await writeAsBinary(filePath, arrayBuffer);
                             });
                         }
                     },
@@ -425,16 +410,6 @@ async function exportLongImage() {
             console.error('An error occurred during the image processing:', error);
             message(`${error}`, 'Error during the image processing');
         });
-}
-
-function arrayBufferToBase64(buffer) {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
 }
 
 async function showCssEditor(customTheme) {
@@ -626,7 +601,7 @@ async function openMarkdownFile() {
     
     if (selected) {
         try {
-            const fileContent = await readTextFile(selected);
+            const fileContent = await readAsText(selected);
             const iframe = document.getElementById('leftFrame');
             const iframeWindow = iframe.contentWindow;
             iframeWindow.setContent(fileContent);
@@ -650,7 +625,7 @@ async function openCssFile() {
     
     if (selected) {
         try {
-            const fileContent = await readTextFile(selected);
+            const fileContent = await readAsText(selected);
             const iframe = document.getElementById('cssLeftFrame');
             const iframeWindow = iframe.contentWindow;
             iframeWindow.loadCss(fileContent);
@@ -689,9 +664,10 @@ async function saveSettings() {
     const appIdInput = iframeDocument.getElementById("appId");
     const appSecretInput = iframeDocument.getElementById("appSecret");
     const isEnabledInput = iframeDocument.getElementById("isEnabled");
-    gzhImageHostObj['appId'] = appIdInput.value;
-    gzhImageHostObj['appSecret'] = appSecretInput.value;
-    gzhImageHostObj['isEnabled'] = isEnabledInput.value === "true";
-    localStorage.setItem('gzhImageHost', JSON.stringify(gzhImageHostObj));
+    let imageHosts = getCustomImageHosts();
+    imageHosts[0].appId = appIdInput.value;
+    imageHosts[0].appSecret = appSecretInput.value;
+    imageHosts[0].isEnabled = isEnabledInput.value === "true";
+    saveCustomImageHosts(imageHosts);
     await message("保存成功");
 }

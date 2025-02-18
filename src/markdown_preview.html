@@ -3,7 +3,6 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="referer" content="no-referrer">
         <title>WenYan</title>
         <script src="marked/marked.min.js"></script>
         <script type="module">
@@ -13,15 +12,6 @@
         <script src="highlight/highlight.min.js"></script>
         <script src="marked/marked_hljs.umd.min.js"></script>
         <script>
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker 注册成功:', registration);
-                    })
-                    .catch(error => {
-                        console.error('Service Worker 注册失败:', error);
-                    });
-            }
             function addContainer(math, doc) {
                 const tag = math.display ? 'section' : 'span';
                 const cls = math.display ? 'block-equation' : 'inline-equation';
@@ -46,6 +36,7 @@
         </script>
         <script src="mathjax/tex-svg-full.min.js"></script>
         <script src="csstree/csstree.js"></script>
+        <script src="utils.js"></script>
         <script src="right.js" defer></script>
     </head>
     <body>
