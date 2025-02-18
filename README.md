@@ -12,11 +12,6 @@
 
 现在你可以通过「文颜」将本地图片上传到公共图床了。[阅读文档](https://yuzhi.tech/docs/wenyan/upload)。
 
-<video controls>
-    <source src="https://yuzhi.tech/img/wenyan/upload1.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-</video>
-
 ## 功能
 
 本项目的核心功能是将编辑好的`markdown`文章转换成适配各个发布平台的格式，通过一键复制，可以直接粘贴到平台的文本编辑器，无需再做额外调整。
