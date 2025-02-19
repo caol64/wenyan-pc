@@ -185,8 +185,8 @@
 #bubbleBox {
     position: fixed;
     bottom: 50px;
-    left: 40px;
-    width: 400px;
+    left: 150px;
+    width: 200px;
     padding: 15px;
     background: #fff;
     border-radius: 10px;
@@ -206,5 +206,5 @@
 }
 
 #bubbleBox p {
-    font-size: 14px;
+    font-size: 12px;
 }

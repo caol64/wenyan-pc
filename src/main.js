@@ -24,6 +24,7 @@ const { appWindow } = window.__TAURI__.window;
 const { invoke } = window.__TAURI__.tauri;
 const { save, open, message } = window.__TAURI__.dialog;
 // const { ResponseType, getClient } = window.__TAURI__.http;
+const { open: openShell } = window.__TAURI__.shell;
 
 const builtinThemes = [
     {

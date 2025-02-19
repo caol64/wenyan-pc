@@ -189,12 +189,9 @@
                     </footer>
                     <div id="bubbleBox">
                         <p>欢迎使用自定义主题功能</p>
-                        <p>使用教程：</p>
-                        <p>https://babyno.top/posts/2024/11/wenyan-supports-customized-themes/</p>
-                        <p>功能讨论：</p>
-                        <p>https://github.com/caol64/wenyan/discussions/9</p>
-                        <p>主题分享：</p>
-                        <p>https://github.com/caol64/wenyan/discussions/13</p>
+                        <p><a href="https://babyno.top/posts/2024/11/wenyan-supports-customized-themes/" class="external-link">使用教程</a></p>
+                        <p><a href="https://github.com/caol64/wenyan/discussions/9" class="external-link">功能讨论</a></p>
+                        <p><a href="https://github.com/caol64/wenyan/discussions/13" class="external-link">主题分享</a></p>
                     </div>
                 </div>
             </div>
@@ -232,6 +229,12 @@
         await loadCustomThemes();
         MicroModal.init();
     })();
+    document.querySelectorAll('.external-link').forEach(link => {
+        link.addEventListener('click', async (event) => {
+            event.preventDefault();
+            await openShell(link.href);
+        });
+    });
 </script>
 
 </html>
