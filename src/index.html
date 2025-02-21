@@ -8,8 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文颜</title>
     <script src="html2canvas/html2canvas.min.js"></script>
-    <script src="utils.js"></script>
-    <script src="main.js"></script>
     <script src="micromodal/micromodal.min.js"></script>
 </head>
 
@@ -214,6 +212,8 @@
     </div>
 </body>
 
+<script src="utils.js"></script>
+<script src="main.js"></script>
 <script>
     document.getElementById('titlebar-minimize').addEventListener('click', () => appWindow.minimize());
     document.getElementById('titlebar-maximize').addEventListener('click', () => appWindow.toggleMaximize());
@@ -229,12 +229,6 @@
         await loadCustomThemes();
         MicroModal.init();
     })();
-    document.querySelectorAll('.external-link').forEach(link => {
-        link.addEventListener('click', async (event) => {
-            event.preventDefault();
-            await openShell(link.href);
-        });
-    });
 </script>
 
 </html>

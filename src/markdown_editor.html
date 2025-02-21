@@ -45,7 +45,6 @@
         }
     </style>
     <script>
-        const imgType = ['image/bmp', 'image/png', 'image/jpeg', 'image/gif', 'video/mp4'];
         CodeMirror.keyMap["default"]["Cmd-/"] = "toggleComment";  // Add-on
         let isScrollingFromScript = false;
         var editor = CodeMirror(document.body, {
@@ -200,31 +199,10 @@
         }
 
         async function uploadLocalImage(file) {
-            let imageHost = getEnabledImageHost();
-            if (!imageHost) {
-                throwError('未启用图床');
-                return;
-            }
-            showOverlay();
             try {
-                if (!(imageHost.accessToken && imageHost.expireTime > Date.now())) {
-                    const accessTokenObj = new AccessToken(imageHost.appId, imageHost.appSecret);
-                    const resp = await(accessTokenObj.fetchAccessToken());
-                    imageHost.accessToken = resp.accessToken;
-                    imageHost.expireTime = Date.now() + resp.expiresIn * 1000;
-                    let imageHosts = getCustomImageHosts();
-                    imageHosts[0] = imageHost;
-                    saveCustomImageHosts(imageHosts);
-                }
-                if (!imageHost.accessToken) {
-                    throwError('未获取到有效的Access Token');
-                    return;
-                }
-                const uploader = new WeChatMaterialUploader(imageHost.accessToken);
-                const resp = await uploader.uploadImage(file);
-                result = resp.url.replace("http://", "https://");
-                deleteCache(result);
-                return result;
+                showOverlay();
+                const uploader = new Uploader();
+                return await uploader.uploadImage(file);
             } catch (error) {
                 throwError(`${error}`);
             } finally {

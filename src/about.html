@@ -45,18 +45,6 @@
             margin: 4px 0;
             font-size: 12px;
         }
-
-        a {
-            color: black;
-        }
-
-        a:hover {
-            color: black;
-        }
-
-        a:active {
-            color: black;
-        }
     </style>
     <script>
         const { getVersion } = window.__TAURI__.app;
@@ -75,15 +63,7 @@
         <p>❤️打赏：<a href="https://yuzhi.tech/sponsor" class="external-link">https://yuzhi.tech/sponsor</a></p>
         <p>© 2024 Lei Cao. All rights reserved.</p>
     </div>
-    <script>
-        const { open } = window.__TAURI__.shell;
-        document.querySelectorAll('.external-link').forEach(link => {
-            link.addEventListener('click', async (event) => {
-                event.preventDefault();
-                await open(link.href);
-            });
-        });
-    </script>
+    <script src="utils.js"></script>
 </body>
 
 </html>

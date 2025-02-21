@@ -16,6 +16,8 @@
 
 const { ResponseType, Body, getClient } = window.parent.__TAURI__.http;
 const { readTextFile, writeBinaryFile } = window.parent.__TAURI__.fs;
+const { open: openShell } = window.parent.__TAURI__.shell;
+const imgType = ['image/bmp', 'image/png', 'image/jpeg', 'image/gif', 'video/mp4'];
 
 const gzhImageHost = {
     type: "gzh",
@@ -114,8 +116,9 @@ async function setLastArticle(content) {
 
 async function handleImages(container) {
     container.querySelectorAll('img').forEach(async (element) => {
-        const dataSrc = element.getAttribute('data-src');
+        const dataSrc = element.getAttribute('src');
         if (dataSrc && dataSrc.startsWith('https://mmbiz.qpic.cn')) {
+            element.setAttribute('data-src', dataSrc);
             element.src = await downloadImage(dataSrc);
         }
     });
@@ -128,4 +131,25 @@ function revertImages(container) {
             element.src = dataSrc;
         }
     });
+}
+
+document.querySelectorAll('.external-link').forEach(link => {
+    link.addEventListener('click', async (event) => {
+        event.preventDefault();
+        await openShell(link.href);
+    });
+});
+
+function stringToMap(str) {
+    const map = new Map();
+    if (str) {
+        const keyValuePairs = str.trim().split(" ");
+        for (const pair of keyValuePairs) {
+            const [key, value] = pair.split("=");
+            if (key && value) {
+                map.set(key, value);
+            }
+        }
+    }
+    return map;
 }

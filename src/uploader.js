@@ -14,30 +14,35 @@
  * limitations under the License.
  */
 
-class AccessToken {
-    constructor(appId, appSecret) {
-        this.appId = appId;
-        this.appSecret = appSecret;
-        this.apiUrl = "https://api.weixin.qq.com/cgi-bin/token";
-        this.accessToken = null;
-        this.expiresIn = null;
+class Uploader {
+    async uploadImage(file) {
+        let imageHost = getEnabledImageHost();
+        if (!imageHost) {
+            throw new Error('未启用图床');
+        }
+        if (imageHost.type === "gzh") {
+            const uploader = new WechatUploader(imageHost);
+            return await uploader.uploadImage(file);
+        }
+    }
+}
+
+class WechatUploader {
+    constructor(imageHost) {
+        this.tokenUrl = "https://api.weixin.qq.com/cgi-bin/token";
+        this.apiUrl = `https://api.weixin.qq.com/cgi-bin/material/add_material`;
+        this.imageHost = imageHost;
     }
 
-    /**
-     * 获取 access_token
-     * @returns {Promise<{access_token: string, expires_in: number}>}
-     */
     async fetchAccessToken() {
         try {
             const client = await getClient();
-            const response = await client.get(`${this.apiUrl}?grant_type=client_credential&appid=${this.appId}&secret=${this.appSecret}`, {
+            const response = await client.get(`${this.apiUrl}?grant_type=client_credential&appid=${this.imageHost.appId}&secret=${this.imageHost.appSecret}`, {
                 responseType: Response.JSON
             });
             const data = await response.data;
             if (data.access_token) {
-                this.accessToken = data.access_token;
-                this.expiresIn = data.expires_in;
-                return this;
+                return data;
             } else if (data.errcode) {
                 throw new Error(`获取 Access Token 失败，错误码：${data.errcode}，${data.errmsg}`);
             } else {
@@ -48,23 +53,26 @@ class AccessToken {
         }
     }
 
-}
-
-class WeChatMaterialUploader {
-    constructor(accessToken) {
-        this.accessToken = accessToken;
-        this.apiUrl = `https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${this.accessToken}`;
-    }
-
     async uploadMaterial(type, file) {
         try {
+            if (!(this.imageHost.accessToken && this.imageHost.expireTime > Date.now())) {
+                const resp = await(this.fetchAccessToken());
+                this.imageHost.accessToken = resp.access_token;
+                this.imageHost.expireTime = Date.now() + resp.expires_in * 1000;
+                let imageHosts = getCustomImageHosts();
+                imageHosts[0] = this.imageHost;
+                saveCustomImageHosts(imageHosts);
+            }
+            if (!this.imageHost.accessToken) {
+                throw new Error('未获取到有效的Access Token');
+            }
             const filePart = await readBinaryFile(file);
             const body = Body.form({
                 media: filePart
             });
             const client = await getClient();
             const response = await client.request({
-                url: this.apiUrl + `&type=${type}`,
+                url: this.apiUrl + `?access_token=${this.imageHost.accessToken}` + `&type=${type}`,
                 method: 'POST',
                 body: body,
                 responseType: Response.JSON,
@@ -76,7 +84,9 @@ class WeChatMaterialUploader {
             if (data.errcode) {
                 throw new Error(`上传失败，错误码：${data.errcode}，错误信息：${data.errmsg}`);
             }
-            return data;
+            const result = data.url.replace("http://", "https://");
+            deleteCache(result);
+            return result;
         } catch (error) {
             throw error; // 抛出错误
         }

@@ -81,6 +81,10 @@
             padding: 24px;
             margin-left: 200px;
         }
+        .content p {
+            font-size: 13px;
+            line-height: 1.75;
+        }
 
         .content-container {
             display: none;
@@ -189,6 +193,12 @@
                     <input type="text" id="appSecret" placeholder="如：d9f1abcdef01234567890abcdef82397">
                 </div>
                 <input type="hidden" id="isEnabled">
+                <div class="form-group" align="right">
+                    <p>请务必开启“IP白名单”</p>
+                    <p>
+                        <a href="https://yuzhi.tech/docs/wenyan/upload" class="external-link">使用帮助</a>
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -230,6 +240,7 @@
 
     </div>
 
+    <script src="utils.js"></script>
     <script>
         // 监听开关点击事件
         document.querySelector(".toggle").addEventListener("click", function() {
@@ -274,8 +285,17 @@
             document.querySelectorAll(".content-container").forEach(item => item.classList.remove("show"));
             document.getElementById(`content-${element.id}`).classList.add("show");
         }
+        async function saveSettings() {
+            const appIdInput = document.getElementById("appId");
+            const appSecretInput = document.getElementById("appSecret");
+            const isEnabledInput = document.getElementById("isEnabled");
+            let imageHosts = getCustomImageHosts();
+            imageHosts[0].appId = appIdInput.value;
+            imageHosts[0].appSecret = appSecretInput.value;
+            imageHosts[0].isEnabled = isEnabledInput.value === "true";
+            saveCustomImageHosts(imageHosts);
+        }
     </script>
-    <script src="utils.js"></script>
     <script defer>
         let imageHosts = getCustomImageHosts();
         document.getElementById("appId").value = imageHosts[0].appId;

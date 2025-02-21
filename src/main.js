@@ -24,7 +24,6 @@ const { appWindow } = window.__TAURI__.window;
 const { invoke } = window.__TAURI__.tauri;
 const { save, open, message } = window.__TAURI__.dialog;
 // const { ResponseType, getClient } = window.__TAURI__.http;
-const { open: openShell } = window.__TAURI__.shell;
 
 const builtinThemes = [
     {
@@ -661,14 +660,6 @@ function calcHeight(customThemeCount) {
 
 async function saveSettings() {
     const iframe = document.getElementById("settingsFrame");
-    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    const appIdInput = iframeDocument.getElementById("appId");
-    const appSecretInput = iframeDocument.getElementById("appSecret");
-    const isEnabledInput = iframeDocument.getElementById("isEnabled");
-    let imageHosts = getCustomImageHosts();
-    imageHosts[0].appId = appIdInput.value;
-    imageHosts[0].appSecret = appSecretInput.value;
-    imageHosts[0].isEnabled = isEnabledInput.value === "true";
-    saveCustomImageHosts(imageHosts);
+    await iframe.contentWindow.saveSettings();
     await message("保存成功");
 }
