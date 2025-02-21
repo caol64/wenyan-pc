@@ -5,17 +5,17 @@
 
  :root {
     /* 标题后小图标，借鉴自思源笔记主题——Savor */
-    --h1-r-graphic: url("http://cdn.phycat.cn/img/mdicon/green/h1_icon.svg")
+    --h1-r-graphic: url("https://cdn.phycat.cn/img/mdicon/green/h1_icon.svg")
         no-repeat center;
-    --h2-r-graphic: url("http://cdn.phycat.cn/img/mdicon/green/h2_icon.svg")
+    --h2-r-graphic: url("https://cdn.phycat.cn/img/mdicon/green/h2_icon.svg")
         no-repeat center;
-    --h3-r-graphic: url("http://cdn.phycat.cn/img/mdicon/green/h3_icon.svg")
+    --h3-r-graphic: url("https://cdn.phycat.cn/img/mdicon/green/h3_icon.svg")
         no-repeat center;
-    --h4-r-graphic: url("http://cdn.phycat.cn/img/mdicon/green/h4_icon.svg")
+    --h4-r-graphic: url("https://cdn.phycat.cn/img/mdicon/green/h4_icon.svg")
         no-repeat center;
-    --h5-r-graphic: url("http://cdn.phycat.cn/img/mdicon/green/h5_icon.svg")
+    --h5-r-graphic: url("https://cdn.phycat.cn/img/mdicon/green/h5_icon.svg")
         no-repeat center;
-    --h6-r-graphic: url("http://cdn.phycat.cn/img/mdicon/green/h6_icon.svg")
+    --h6-r-graphic: url("https://cdn.phycat.cn/img/mdicon/green/h6_icon.svg")
         no-repeat center;
 
     /* 是否开启网格背景？1 是；0 否 */
@@ -240,7 +240,7 @@ li.md-list-item {
   margin:0;
 }
 #wenyan blockquote {
-    font-size:0.9em;
+    font-size:12px;
     margin-left: 12px;
     text-align:justify;
     padding: 12px;
@@ -298,7 +298,7 @@ li.md-list-item {
 }
 #wenyan pre {
     border-radius: 5px;
-    font-size:0.8em;
+    font-size:12px;
     line-height: 2;
     margin: 1em 0.5em;
     padding: 1em;
@@ -324,7 +324,7 @@ li.md-list-item {
 }
 #wenyan table td,
 #wenyan table th {
-    font-size: 0.75em;
+    font-size: 10px;
     padding: 9px 12px;
     line-height: 22px;
     color: #222;
