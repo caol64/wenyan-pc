@@ -31,7 +31,7 @@
             top: 0;
         }
 
-        .image-host-item {
+        .setting-item {
             padding: 8px;
             cursor: pointer;
             font-size: 14px;
@@ -42,16 +42,12 @@
             align-items: center;
         }
 
-        .image-host-item:hover {
-            background: #f0f0f0;
-        }
-
-        .image-host-item .arrow {
+        .setting-item .arrow {
             margin-right: 8px;
             transition: transform 0.3s ease;
         }
 
-        .image-host-item.expanded .arrow {
+        .setting-item.expanded .arrow {
             transform: rotate(90deg);
         }
 
@@ -62,7 +58,7 @@
             padding-left: 20px;
         }
 
-        .sub-menu .sub-item {
+        .sub-item {
             padding: 6px 8px;
             font-size: 13px;
             color: #666;
@@ -70,8 +66,8 @@
             cursor: pointer;
         }
 
-        .sub-menu .sub-item:hover,
-        .sub-menu .sub-item.active {
+        .sub-item:hover,
+        .sub-item.active {
             background: #eaeaea;
         }
 
@@ -118,16 +114,32 @@
             margin-bottom: 5px;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 5px;
+            font-size: 12px;
+            background-color: white;
+            appearance: none;
+            height: 32px;
         }
 
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             border-color: #409eff;
+            box-shadow: 0 0 2px rgba(64, 158, 255, 0.5);
+        }
+
+        .form-group select {
+            background-image: url("data:image/svg+xml;utf8,<svg fill='%23999' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'><path d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 12px;
+            padding-right: 30px;
+            cursor: pointer;
         }
 
         /* 开关样式 */
@@ -166,19 +178,22 @@
 <body>
     <!-- 侧边栏 -->
     <div class="sidebar">
-        <div class="image-host-item" id="treeToggle">
+        <div class="setting-item" id="treeToggle">
             <span class="arrow">▶</span> 图床设置
         </div>
         <ul class="sub-menu" id="imageHostSubMenu">
-            <li id="menu-gzh" class="sub-item" onclick="selectMenuItem(this)">公众号图床</li>
+            <li id="itemGzh" class="sub-item" onclick="selectMenuItem(this)">公众号图床</li>
             <!--  <li id="menu-cos" class="sub-item" onclick="selectMenuItem(this)">腾讯云COS</li>
             <li id="menu-oss" class="sub-item" onclick="selectMenuItem(this)">阿里云OSS</li>  -->
         </ul>
+        <div class="setting-item">
+            <div id="itemCodeblock" style="width: 100%;" class="sub-item" onclick="selectMenuItem(this)">代码块设置</div>
+        </div>
     </div>
 
     <!-- 右侧内容 -->
     <div class="content">
-        <div id="content-menu-gzh" class="content-container">
+        <div id="content-itemGzh" class="content-container">
             <div class="header">
                 <h3>公众号图床</h3>
                 <div id="gzhToggle" class="toggle"></div>
@@ -192,7 +207,7 @@
                     <label for="appSecret">开发者密码(AppSecret)</label>
                     <input type="text" id="appSecret" placeholder="如：d9f1abcdef01234567890abcdef82397">
                 </div>
-                <input type="hidden" id="isEnabled">
+                <input type="hidden" id="gzhToggleIsEnabled">
                 <div class="form-group" align="right">
                     <p>请务必开启“IP白名单”</p>
                     <p>
@@ -202,49 +217,34 @@
             </div>
         </div>
 
-        <!--  <div id="content-menu-cos" class="content-container">
+        <div id="content-itemCodeblock" class="content-container">
             <div class="header">
-                <h3>腾讯云COS</h3>
-                <div id="gzhToggle" class="toggle"></div>
+                <h3>代码块设置</h3>
             </div>
             <div class="section">
                 <div class="form-group">
-                    <label for="appId">开发者ID(AppID)</label>
-                    <input type="text" id="appId" placeholder="如：wx6e1234567890efa3">
+                    <label for="codeblockSelect">高亮主题</label>
+                    <select id="codeblockSelect">
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="appSecret">开发者密码(AppSecret)</label>
-                    <input type="text" id="appSecret" placeholder="如：d9f1abcdef01234567890abcdef82397">
+                    <label for="appSecret">Mac 风格</label>
+                    <div id="macStyleToggle" class="toggle"></div>
                 </div>
-                <input type="hidden" id="isEnabled">
+                <input type="hidden" id="macStyleToggleIsEnabled">
             </div>
         </div>
-
-        <div id="content-menu-oss" class="content-container">
-            <div class="header">
-                <h3>阿里云OSS</h3>
-                <div id="gzhToggle" class="toggle"></div>
-            </div>
-            <div class="section">
-                <div class="form-group">
-                    <label for="appId">开发者ID(AppID)</label>
-                    <input type="text" id="appId" placeholder="如：wx6e1234567890efa3">
-                </div>
-                <div class="form-group">
-                    <label for="appSecret">开发者密码(AppSecret)</label>
-                    <input type="text" id="appSecret" placeholder="如：d9f1abcdef01234567890abcdef82397">
-                </div>
-                <input type="hidden" id="isEnabled">
-            </div>
-        </div>  -->
 
     </div>
 
     <script src="utils.js"></script>
     <script>
+        let activedItem = '';
         // 监听开关点击事件
-        document.querySelector(".toggle").addEventListener("click", function() {
-            toggleIsEnabled();
+        document.querySelectorAll(".toggle").forEach(function(element) {
+            element.addEventListener("click", function() {
+                toggleIsEnabled(this);
+            });
         });
         // 监听折叠展开
         document.getElementById("treeToggle").addEventListener("click", function () {
@@ -264,19 +264,19 @@
             const arrow = document.querySelector(".arrow");
             imageHostSubMenu.style.display = "block";
             arrow.style.transform = "rotate(90deg)";
-            document.getElementById("menu-gzh").classList.add("active");
-            document.getElementById("content-menu-gzh").classList.add("show");
+            document.getElementById("itemGzh").classList.add("active");
+            document.getElementById("content-itemGzh").classList.add("show");
         });
-        function toggleIsEnabled() {
-            const isEnabledValue = document.getElementById("isEnabled").value;
-            setIsEnabled(isEnabledValue !== "true");
+        function toggleIsEnabled(e) {
+            const isEnabledValue = document.getElementById(`${e.id}IsEnabled`).value;
+            setIsEnabled(isEnabledValue !== "true", e);
         }
-        function setIsEnabled(isEnabled) {
-            document.getElementById("isEnabled").value = isEnabled.toString();
+        function setIsEnabled(isEnabled, e) {
+            document.getElementById(`${e.id}IsEnabled`).value = isEnabled.toString();
             if (isEnabled) {
-                document.getElementById("gzhToggle").classList.add("on");
+                document.getElementById(e.id).classList.add("on");
             } else {
-                document.getElementById("gzhToggle").classList.remove('on');
+                document.getElementById(e.id).classList.remove('on');
             }
         }
         function selectMenuItem(element) {
@@ -284,24 +284,50 @@
             element.classList.add("active");
             document.querySelectorAll(".content-container").forEach(item => item.classList.remove("show"));
             document.getElementById(`content-${element.id}`).classList.add("show");
+            activedItem = element.id;
         }
         async function saveSettings() {
-            const appIdInput = document.getElementById("appId");
-            const appSecretInput = document.getElementById("appSecret");
-            const isEnabledInput = document.getElementById("isEnabled");
-            let imageHosts = getCustomImageHosts();
-            imageHosts[0].appId = appIdInput.value;
-            imageHosts[0].appSecret = appSecretInput.value;
-            imageHosts[0].isEnabled = isEnabledInput.value === "true";
-            saveCustomImageHosts(imageHosts);
+            if (activedItem === 'itemGzh') {
+                const appIdInput = document.getElementById("appId");
+                const appSecretInput = document.getElementById("appSecret");
+                const isEnabledInput = document.getElementById("gzhToggleIsEnabled");
+                let imageHosts = getCustomImageHosts();
+                imageHosts[0].appId = appIdInput.value;
+                imageHosts[0].appSecret = appSecretInput.value;
+                imageHosts[0].isEnabled = isEnabledInput.value === "true";
+                saveCustomImageHosts(imageHosts);
+            } else if (activedItem === 'itemCodeblock') {
+                const hightlightTheme = document.getElementById("codeblockSelect").value;
+                const isMacStyle = document.getElementById("macStyleToggleIsEnabled").value === "true";
+                let codeblockSettings = getCodeblockSettings();
+                codeblockSettings.hightlightTheme = hightlightTheme;
+                codeblockSettings.isMacStyle = isMacStyle;
+                saveCodeblockSettings(codeblockSettings);
+                const message = {
+                    type: 'onHighlightChange',
+                    value: hightlightTheme,
+                    macStyle: isMacStyle
+                };
+                window.parent.postMessage(message, '*');
+            }
         }
     </script>
     <script defer>
-        let imageHosts = getCustomImageHosts();
+        const imageHosts = getCustomImageHosts();
         document.getElementById("appId").value = imageHosts[0].appId;
         document.getElementById("appSecret").value = imageHosts[0].appSecret;
-        document.getElementById("isEnabled").value = imageHosts[0].isEnabled;
-        setIsEnabled(imageHosts[0].isEnabled);
+        document.getElementById("gzhToggleIsEnabled").value = imageHosts[0].isEnabled;
+        setIsEnabled(imageHosts[0].isEnabled, document.getElementById('gzhToggle'));
+        const codeblockSelect = document.getElementById('codeblockSelect');
+        highlightThemes.forEach(theme => {
+            const option = document.createElement('option');
+            option.value = theme.id;
+            option.text = theme.id;
+            codeblockSelect.appendChild(option);
+        });
+        const codeblockSettings = getCodeblockSettings();
+        document.getElementById("codeblockSelect").value = codeblockSettings.hightlightTheme;
+        setIsEnabled(codeblockSettings.isMacStyle, document.getElementById('macStyleToggle'));
     </script>
 </body>
 </html>

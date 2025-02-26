@@ -19,6 +19,7 @@ let postprocessMarkdown = "";
 let isScrollingFromScript = false;
 let customCss = "";
 let highlightCss = "";
+let macStyle = false;
 
 // ------- marked.js默认配置开始 -------
 // 处理frontMatter的函数
@@ -190,7 +191,7 @@ function getContentWithMathImg() {
     revertImages(clonedWenyan);
     return clonedWenyan.outerHTML;
 }
-function getContentForGzh() {
+async function getContentForGzh() {
     const ast = csstree.parse(customCss, {
         context: 'stylesheet',
         positions: false,
@@ -208,6 +209,20 @@ function getContentForGzh() {
     });
 
     ast.children.appendList(ast1.children);
+
+    if (macStyle) {
+        const macStyleResponse = await fetch('mac_style.css');
+        const macStyleCss = await macStyleResponse.text();
+        
+        const ast2 = csstree.parse(macStyleCss, {
+            context: 'stylesheet',
+            positions: false,
+            parseAtrulePrelude: false,
+            parseCustomProperty: false,
+            parseValue: false
+        });
+        ast.children.appendList(ast2.children);
+    }
 
     const wenyan = document.getElementById("wenyan");
     const clonedWenyan = wenyan.cloneNode(true);
@@ -579,6 +594,12 @@ window.addEventListener('message', (event) => {
             }
             if (event.data.themeValue) {
                 setCustomTheme(`${event.data.themeValue}`);
+            }
+            macStyle = event.data.macStyle;
+            if (macStyle) {
+                setStylesheet('macStyle', 'mac_style.css');
+            } else {
+                document.getElementById("macStyle")?.remove();
             }
         } else if (event.data.type === 'onContentChange') {
             setContent(event.data.content);

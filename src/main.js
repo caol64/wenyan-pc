@@ -71,7 +71,7 @@ const builtinThemes = [
 // let greetInputEl;
 // let greetMsgEl;
 let selectedTheme = 'gzh_default';
-let highlightStyle = 'highlight/styles/github.min.css';
+let highlightStyle = 'github';
 let previewMode = 'style.css';
 let content = '';
 let isFootnotes = false;
@@ -80,6 +80,7 @@ let leftReady = false;
 let rightReady = false;
 let customThemeContent = '';
 let selectedCustomTheme = '';
+let macStyle = false;
 
 window.addEventListener('message', async (event) => {
     if (event.data) {
@@ -112,6 +113,10 @@ window.addEventListener('message', async (event) => {
             updateThemePreview();
         } else if (event.data.type === 'onError') {
             await message(event.data.value);
+        } else if (event.data.type === 'onHighlightChange') {
+            highlightStyle = event.data.value;
+            macStyle = event.data.macStyle;
+            onUpdate();
         }
     }
 });
@@ -148,6 +153,9 @@ async function load() {
                 customThemeContent = await themeResponse.text();
             }
             document.getElementById(selectedTheme).classList.add('selected');
+            let codeblockSettings = getCodeblockSettings();
+            highlightStyle = codeblockSettings.hightlightTheme;
+            macStyle = codeblockSettings.isMacStyle;
             onUpdate();
         } catch (error) {
             console.error('Error reading file:', error);
@@ -159,14 +167,15 @@ async function load() {
 async function onUpdate() {
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
-        const highlightResponse = await fetch(highlightStyle);
+        const highlightResponse = await fetch(`highlight/styles/${highlightStyle}.min.css`);
         const highlightCss = await highlightResponse.text();
         const message = {
             type: 'onUpdate',
             // content: content,
             highlightCss: highlightCss,
             previewMode: previewMode,
-            themeValue: customThemeContent
+            themeValue: customThemeContent,
+            macStyle: macStyle
         };
         iframe.contentWindow.postMessage(message, '*');
     }
@@ -250,7 +259,7 @@ async function onCopy(button) {
     const iframeWindow = iframe.contentWindow;
     let htmlValue = '';
     if (platform === 'gzh') {
-        htmlValue = iframeWindow.getContentForGzh();
+        htmlValue = await iframeWindow.getContentForGzh();
     } else if (platform === 'zhihu') {
         htmlValue = iframeWindow.getContentWithMathImg();
     } else if (platform === 'juejin') {
@@ -301,12 +310,13 @@ async function changeTheme(theme) {
     }
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
-        const highlightResponse = await fetch(highlightStyle);
+        const highlightResponse = await fetch(`highlight/styles/${highlightStyle}.min.css`);
         const highlightCss = await highlightResponse.text();
         const message = {
             type: 'onUpdate',
             highlightCss: highlightCss,
-            themeValue: customThemeContent
+            themeValue: customThemeContent,
+            macStyle: macStyle
         };
         if (platform == 'zhihu') {
             delete message.highlightCss;
