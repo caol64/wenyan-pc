@@ -71,7 +71,7 @@ const builtinThemes = [
 // let greetInputEl;
 // let greetMsgEl;
 let selectedTheme = 'gzh_default';
-let highlightStyle = 'github';
+let codeblockSettings = getCodeblockSettings();
 let previewMode = 'style.css';
 let content = '';
 let isFootnotes = false;
@@ -80,7 +80,6 @@ let leftReady = false;
 let rightReady = false;
 let customThemeContent = '';
 let selectedCustomTheme = '';
-let macStyle = false;
 
 window.addEventListener('message', async (event) => {
     if (event.data) {
@@ -114,8 +113,7 @@ window.addEventListener('message', async (event) => {
         } else if (event.data.type === 'onError') {
             await message(event.data.value);
         } else if (event.data.type === 'onHighlightChange') {
-            highlightStyle = event.data.value;
-            macStyle = event.data.macStyle;
+            codeblockSettings = event.data.value;
             onUpdate();
         }
     }
@@ -153,9 +151,6 @@ async function load() {
                 customThemeContent = await themeResponse.text();
             }
             document.getElementById(selectedTheme).classList.add('selected');
-            let codeblockSettings = getCodeblockSettings();
-            highlightStyle = codeblockSettings.hightlightTheme;
-            macStyle = codeblockSettings.isMacStyle;
             onUpdate();
         } catch (error) {
             console.error('Error reading file:', error);
@@ -167,7 +162,7 @@ async function load() {
 async function onUpdate() {
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
-        const highlightResponse = await fetch(`highlight/styles/${highlightStyle}.min.css`);
+        const highlightResponse = await fetch(`highlight/styles/${codeblockSettings.hightlightTheme}.min.css`);
         const highlightCss = await highlightResponse.text();
         const message = {
             type: 'onUpdate',
@@ -175,7 +170,7 @@ async function onUpdate() {
             highlightCss: highlightCss,
             previewMode: previewMode,
             themeValue: customThemeContent,
-            macStyle: macStyle
+            codeblockSettings: codeblockSettings
         };
         iframe.contentWindow.postMessage(message, '*');
     }
@@ -310,13 +305,13 @@ async function changeTheme(theme) {
     }
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
-        const highlightResponse = await fetch(`highlight/styles/${highlightStyle}.min.css`);
+        const highlightResponse = await fetch(`highlight/styles/${codeblockSettings.hightlightTheme}.min.css`);
         const highlightCss = await highlightResponse.text();
         const message = {
             type: 'onUpdate',
             highlightCss: highlightCss,
             themeValue: customThemeContent,
-            macStyle: macStyle
+            codeblockSettings: codeblockSettings
         };
         if (platform == 'zhihu') {
             delete message.highlightCss;

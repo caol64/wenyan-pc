@@ -63,7 +63,9 @@ const defaultImageHosts = [
 
 const defaultCodeblockSettings = {
     hightlightTheme: "github",
-    isMacStyle: false
+    isMacStyle: false,
+    fontSize: "12px",
+    fontFamily: null
 };
 
 const cache = {};

@@ -104,6 +104,12 @@
             margin-bottom: 16px;
         }
 
+        .one-line-form-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .form-group {
             margin-bottom: 15px;
         }
@@ -173,6 +179,24 @@
             transform: translateX(20px);
         }
 
+        #tipsButton {
+            width: 20px;
+            height: 20px;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+
+        #tipsBubble {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            z-index: 1000;
+            font-size: 12px;
+            width: 250px;
+        }
     </style>
 </head>
 <body>
@@ -222,14 +246,41 @@
                 <h3>代码块设置</h3>
             </div>
             <div class="section">
+                <div class="form-group one-line-form-group">
+                    <label for="macStyleToggle">Mac 风格</label>
+                    <div id="macStyleToggle" class="toggle"></div>
+                </div>
                 <div class="form-group">
-                    <label for="codeblockSelect">高亮主题</label>
-                    <select id="codeblockSelect">
+                    <label for="codeblockThemeSelect">高亮主题</label>
+                    <select id="codeblockThemeSelect">
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="appSecret">Mac 风格</label>
-                    <div id="macStyleToggle" class="toggle"></div>
+                    <label for="codeblockFontSizeSelect">字体大小</label>
+                    <select id="codeblockFontSizeSelect">
+                        <option value="12px">12px</option>
+                        <option value="13px">13px</option>
+                        <option value="14px">14px</option>
+                        <option value="15px">15px</option>
+                        <option value="16px">16px</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="one-line-form-group" style="justify-content: start;">
+                        <label for="codeblockFontFamily">字体</label>
+                        <span id="tipsButton">
+                            <svg width="14" height="14" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 44C29.5228 44 34.5228 41.7614 38.1421 38.1421C41.7614 34.5228 44 29.5228 44 24C44 18.4772 41.7614 13.4772 38.1421 9.85786C34.5228 6.23858 29.5228 4 24 4C18.4772 4 13.4772 6.23858 9.85786 9.85786C6.23858 13.4772 4 18.4772 4 24C4 29.5228 6.23858 34.5228 9.85786 38.1421C13.4772 41.7614 18.4772 44 24 44Z" fill="none" stroke="#333" stroke-width="4" stroke-linejoin="round"/><path d="M24 28.6248V24.6248C27.3137 24.6248 30 21.9385 30 18.6248C30 15.3111 27.3137 12.6248 24 12.6248C20.6863 12.6248 18 15.3111 18 18.6248" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path fill-rule="evenodd" clip-rule="evenodd" d="M24 37.6248C25.3807 37.6248 26.5 36.5055 26.5 35.1248C26.5 33.7441 25.3807 32.6248 24 32.6248C22.6193 32.6248 21.5 33.7441 21.5 35.1248C21.5 36.5055 22.6193 37.6248 24 37.6248Z" fill="#333"/></svg>
+                        </span>
+                        <div id="tipsBubble">
+                            你可以在这里设置你本机上已经安装的字体，但请注意：这里设置的字体只会影响你本地预览、导出图片时的显示，并不会影响公众号发布后用户看到的字体。具体说明请参阅“使用帮助”。
+                        </div>
+                    </div>
+                    <input type="text" id="codeblockFontFamily" placeholder="如：JetBrains Mono">
+                </div>
+                <div class="form-group" align="right">
+                    <p>
+                        <a href="https://yuzhi.tech/docs/wenyan/codeblock" class="external-link">使用帮助</a>
+                    </p>
                 </div>
                 <input type="hidden" id="macStyleToggleIsEnabled">
             </div>
@@ -297,20 +348,40 @@
                 imageHosts[0].isEnabled = isEnabledInput.value === "true";
                 saveCustomImageHosts(imageHosts);
             } else if (activedItem === 'itemCodeblock') {
-                const hightlightTheme = document.getElementById("codeblockSelect").value;
                 const isMacStyle = document.getElementById("macStyleToggleIsEnabled").value === "true";
+                const hightlightTheme = document.getElementById("codeblockThemeSelect").value;
+                const fontSize = document.getElementById("codeblockFontSizeSelect").value;
+                const fontFamily = document.getElementById("codeblockFontFamily").value;
                 let codeblockSettings = getCodeblockSettings();
                 codeblockSettings.hightlightTheme = hightlightTheme;
                 codeblockSettings.isMacStyle = isMacStyle;
+                codeblockSettings.fontSize = fontSize;
+                if (fontFamily && fontFamily.trim() !== "") {
+                    codeblockSettings.fontFamily = fontFamily;
+                } else {
+                    codeblockSettings.fontFamily = null;
+                }
                 saveCodeblockSettings(codeblockSettings);
                 const message = {
                     type: 'onHighlightChange',
-                    value: hightlightTheme,
-                    macStyle: isMacStyle
+                    value: codeblockSettings
                 };
                 window.parent.postMessage(message, '*');
             }
         }
+        const tipsButton = document.getElementById('tipsButton');
+        const tipsBubble = document.getElementById('tipsBubble');
+
+        tipsButton.addEventListener('mouseenter', () => {
+            tipsBubble.style.display = 'block';
+            const rect = tipsButton.getBoundingClientRect();
+            tipsBubble.style.left = rect.right + 5 + 'px';
+            tipsBubble.style.top = rect.top + 'px';
+        });
+
+        tipsButton.addEventListener('mouseleave', () => {
+            tipsBubble.style.display = 'none';
+        });
     </script>
     <script defer>
         const imageHosts = getCustomImageHosts();
@@ -318,16 +389,20 @@
         document.getElementById("appSecret").value = imageHosts[0].appSecret;
         document.getElementById("gzhToggleIsEnabled").value = imageHosts[0].isEnabled;
         setIsEnabled(imageHosts[0].isEnabled, document.getElementById('gzhToggle'));
-        const codeblockSelect = document.getElementById('codeblockSelect');
+        const codeblockThemeSelect = document.getElementById('codeblockThemeSelect');
         highlightThemes.forEach(theme => {
             const option = document.createElement('option');
             option.value = theme.id;
             option.text = theme.id;
-            codeblockSelect.appendChild(option);
+            codeblockThemeSelect.appendChild(option);
         });
         const codeblockSettings = getCodeblockSettings();
-        document.getElementById("codeblockSelect").value = codeblockSettings.hightlightTheme;
+        document.getElementById("codeblockThemeSelect").value = codeblockSettings.hightlightTheme;
         setIsEnabled(codeblockSettings.isMacStyle, document.getElementById('macStyleToggle'));
+        document.getElementById("codeblockFontSizeSelect").value = codeblockSettings.fontSize;
+        if (codeblockSettings.fontFamily && codeblockSettings.fontFamily.trim() !== "") {
+            document.getElementById("codeblockFontFamily").value = codeblockSettings.fontFamily;
+        }
     </script>
 </body>
 </html>
