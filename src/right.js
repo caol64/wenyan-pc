@@ -595,13 +595,9 @@ function modifyCodeblockCss(customCss, newFontSize, newFontFamily) {
             if (node.prelude.type === 'SelectorList') {
                 const selectors = node.prelude.children.toArray().map(sel => csstree.generate(sel));
 
-                if (selectors.includes('#wenyan pre code')) {
-                    console.log(newFontFamily);
+                if (selectors && selectors[0] === '#wenyan pre code') {
                     if (newFontFamily && newFontFamily.trim() !== "") {
-                        console.log(newFontFamily);
-                        
                         let fontFamilyDecl = null;
-
                         csstree.walk(node.block, function(decl) {
                             if (decl.type === 'Declaration' && decl.property === 'font-family') {
                                 fontFamilyDecl = decl;
@@ -624,23 +620,20 @@ function modifyCodeblockCss(customCss, newFontSize, newFontFamily) {
                     return;
                 }
 
-                if (selectors.includes('#wenyan pre')) {
-                    console.log(newFontSize);
+                if (selectors && selectors[0] === '#wenyan pre') {
                     let hasFontSize = false;
-
                     csstree.walk(node.block, function(decl) {
                         if (decl.type === 'Declaration' && decl.property === 'font-size') {
                             decl.value = csstree.parse(`${newFontSize}`, { context: 'value' });
                             hasFontSize = true;
                         }
                     });
-
                     if (!hasFontSize) {
                         node.block.children.prepend(
                             list.createItem({
                                 type: 'Declaration',
                                 property: 'font-size',
-                                value: { type: 'Value', children: [{ type: 'String', value: newFontSize }] }
+                                value: { type: 'Value', children: [{ type: 'Dimension', value: newFontSize.replace("px", ""), unit: 'px' }] }
                             })
                         );
                     }
