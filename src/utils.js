@@ -19,6 +19,36 @@ const { readTextFile, writeBinaryFile } = window.parent.__TAURI__.fs;
 const { open: openShell } = window.parent.__TAURI__.shell;
 const imgType = ['image/bmp', 'image/png', 'image/jpeg', 'image/gif', 'video/mp4'];
 
+const highlightThemes = [
+    {
+        id: 'atom-one-dark'
+    },
+    {
+        id: 'atom-one-light'
+    },
+    {
+        id: 'dracula'
+    },
+    {
+        id: 'github-dark'
+    },
+    {
+        id: 'github'
+    },
+    {
+        id: 'monokai'
+    },
+    {
+        id: 'solarized-dark'
+    },
+    {
+        id: 'solarized-light'
+    },
+    {
+        id: 'xcode'
+    }
+];
+
 const gzhImageHost = {
     type: "gzh",
     appId: "",
@@ -30,6 +60,13 @@ const gzhImageHost = {
 const defaultImageHosts = [
     gzhImageHost
 ];
+
+const defaultCodeblockSettings = {
+    hightlightTheme: "github",
+    isMacStyle: false,
+    fontSize: "12px",
+    fontFamily: null
+};
 
 const cache = {};
 
@@ -152,4 +189,18 @@ function stringToMap(str) {
         }
     }
     return map;
+}
+
+function getCodeblockSettings() {
+    let codeblockSettings = localStorage.getItem('codeblockSettings');
+    if (codeblockSettings) {
+        codeblockSettings = JSON.parse(codeblockSettings);
+    } else {
+        codeblockSettings = defaultCodeblockSettings;
+    }
+    return codeblockSettings;
+}
+
+function saveCodeblockSettings(codeblockSettings) {
+    localStorage.setItem('codeblockSettings', JSON.stringify(codeblockSettings));
 }

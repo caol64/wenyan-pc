@@ -31,7 +31,7 @@
             top: 0;
         }
 
-        .image-host-item {
+        .setting-item {
             padding: 8px;
             cursor: pointer;
             font-size: 14px;
@@ -42,16 +42,12 @@
             align-items: center;
         }
 
-        .image-host-item:hover {
-            background: #f0f0f0;
-        }
-
-        .image-host-item .arrow {
+        .setting-item .arrow {
             margin-right: 8px;
             transition: transform 0.3s ease;
         }
 
-        .image-host-item.expanded .arrow {
+        .setting-item.expanded .arrow {
             transform: rotate(90deg);
         }
 
@@ -62,7 +58,7 @@
             padding-left: 20px;
         }
 
-        .sub-menu .sub-item {
+        .sub-item {
             padding: 6px 8px;
             font-size: 13px;
             color: #666;
@@ -70,8 +66,8 @@
             cursor: pointer;
         }
 
-        .sub-menu .sub-item:hover,
-        .sub-menu .sub-item.active {
+        .sub-item:hover,
+        .sub-item.active {
             background: #eaeaea;
         }
 
@@ -108,6 +104,12 @@
             margin-bottom: 16px;
         }
 
+        .one-line-form-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .form-group {
             margin-bottom: 15px;
         }
@@ -118,16 +120,32 @@
             margin-bottom: 5px;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 5px;
+            font-size: 12px;
+            background-color: white;
+            appearance: none;
+            height: 32px;
         }
 
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             border-color: #409eff;
+            box-shadow: 0 0 2px rgba(64, 158, 255, 0.5);
+        }
+
+        .form-group select {
+            background-image: url("data:image/svg+xml;utf8,<svg fill='%23999' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'><path d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 12px;
+            padding-right: 30px;
+            cursor: pointer;
         }
 
         /* 开关样式 */
@@ -161,24 +179,46 @@
             transform: translateX(20px);
         }
 
+        #tipsButton {
+            width: 20px;
+            height: 20px;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+
+        #tipsBubble {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            z-index: 1000;
+            font-size: 12px;
+            width: 250px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <!-- 侧边栏 -->
     <div class="sidebar">
-        <div class="image-host-item" id="treeToggle">
+        <div class="setting-item" id="treeToggle">
             <span class="arrow">▶</span> 图床设置
         </div>
         <ul class="sub-menu" id="imageHostSubMenu">
-            <li id="menu-gzh" class="sub-item" onclick="selectMenuItem(this)">公众号图床</li>
+            <li id="itemGzh" class="sub-item" onclick="selectMenuItem(this)">公众号图床</li>
             <!--  <li id="menu-cos" class="sub-item" onclick="selectMenuItem(this)">腾讯云COS</li>
             <li id="menu-oss" class="sub-item" onclick="selectMenuItem(this)">阿里云OSS</li>  -->
         </ul>
+        <div class="setting-item">
+            <div id="itemCodeblock" style="width: 100%;" class="sub-item" onclick="selectMenuItem(this)">代码块设置</div>
+        </div>
     </div>
 
     <!-- 右侧内容 -->
     <div class="content">
-        <div id="content-menu-gzh" class="content-container">
+        <div id="content-itemGzh" class="content-container">
             <div class="header">
                 <h3>公众号图床</h3>
                 <div id="gzhToggle" class="toggle"></div>
@@ -192,7 +232,7 @@
                     <label for="appSecret">开发者密码(AppSecret)</label>
                     <input type="text" id="appSecret" placeholder="如：d9f1abcdef01234567890abcdef82397">
                 </div>
-                <input type="hidden" id="isEnabled">
+                <input type="hidden" id="gzhToggleIsEnabled">
                 <div class="form-group" align="right">
                     <p>请务必开启“IP白名单”</p>
                     <p>
@@ -202,49 +242,61 @@
             </div>
         </div>
 
-        <!--  <div id="content-menu-cos" class="content-container">
+        <div id="content-itemCodeblock" class="content-container">
             <div class="header">
-                <h3>腾讯云COS</h3>
-                <div id="gzhToggle" class="toggle"></div>
+                <h3>代码块设置</h3>
             </div>
             <div class="section">
-                <div class="form-group">
-                    <label for="appId">开发者ID(AppID)</label>
-                    <input type="text" id="appId" placeholder="如：wx6e1234567890efa3">
+                <div class="form-group one-line-form-group">
+                    <label for="macStyleToggle">Mac 风格</label>
+                    <div id="macStyleToggle" class="toggle"></div>
                 </div>
                 <div class="form-group">
-                    <label for="appSecret">开发者密码(AppSecret)</label>
-                    <input type="text" id="appSecret" placeholder="如：d9f1abcdef01234567890abcdef82397">
+                    <label for="codeblockThemeSelect">高亮主题</label>
+                    <select id="codeblockThemeSelect">
+                    </select>
                 </div>
-                <input type="hidden" id="isEnabled">
+                <div class="form-group">
+                    <label for="codeblockFontSizeSelect">字体大小</label>
+                    <select id="codeblockFontSizeSelect">
+                        <option value="12px">12px</option>
+                        <option value="13px">13px</option>
+                        <option value="14px">14px</option>
+                        <option value="15px">15px</option>
+                        <option value="16px">16px</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="one-line-form-group" style="justify-content: start;">
+                        <label for="codeblockFontFamily">字体</label>
+                        <span id="tipsButton">
+                            <svg width="14" height="14" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 44C29.5228 44 34.5228 41.7614 38.1421 38.1421C41.7614 34.5228 44 29.5228 44 24C44 18.4772 41.7614 13.4772 38.1421 9.85786C34.5228 6.23858 29.5228 4 24 4C18.4772 4 13.4772 6.23858 9.85786 9.85786C6.23858 13.4772 4 18.4772 4 24C4 29.5228 6.23858 34.5228 9.85786 38.1421C13.4772 41.7614 18.4772 44 24 44Z" fill="none" stroke="#333" stroke-width="4" stroke-linejoin="round"/><path d="M24 28.6248V24.6248C27.3137 24.6248 30 21.9385 30 18.6248C30 15.3111 27.3137 12.6248 24 12.6248C20.6863 12.6248 18 15.3111 18 18.6248" stroke="#333" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path fill-rule="evenodd" clip-rule="evenodd" d="M24 37.6248C25.3807 37.6248 26.5 36.5055 26.5 35.1248C26.5 33.7441 25.3807 32.6248 24 32.6248C22.6193 32.6248 21.5 33.7441 21.5 35.1248C21.5 36.5055 22.6193 37.6248 24 37.6248Z" fill="#333"/></svg>
+                        </span>
+                        <div id="tipsBubble">
+                            你可以在这里设置你本机上已经安装的字体，但请注意：这里设置的字体只会影响你本地预览、导出图片时的显示，并不会影响公众号发布后用户看到的字体。具体说明请参阅“使用帮助”。
+                        </div>
+                    </div>
+                    <input type="text" id="codeblockFontFamily" placeholder="如：JetBrains Mono">
+                </div>
+                <div class="form-group" align="right">
+                    <p>
+                        <a href="https://yuzhi.tech/docs/wenyan/codeblock" class="external-link">使用帮助</a>
+                    </p>
+                </div>
+                <input type="hidden" id="macStyleToggleIsEnabled">
             </div>
         </div>
-
-        <div id="content-menu-oss" class="content-container">
-            <div class="header">
-                <h3>阿里云OSS</h3>
-                <div id="gzhToggle" class="toggle"></div>
-            </div>
-            <div class="section">
-                <div class="form-group">
-                    <label for="appId">开发者ID(AppID)</label>
-                    <input type="text" id="appId" placeholder="如：wx6e1234567890efa3">
-                </div>
-                <div class="form-group">
-                    <label for="appSecret">开发者密码(AppSecret)</label>
-                    <input type="text" id="appSecret" placeholder="如：d9f1abcdef01234567890abcdef82397">
-                </div>
-                <input type="hidden" id="isEnabled">
-            </div>
-        </div>  -->
 
     </div>
 
     <script src="utils.js"></script>
     <script>
+        let activedItem = '';
         // 监听开关点击事件
-        document.querySelector(".toggle").addEventListener("click", function() {
-            toggleIsEnabled();
+        document.querySelectorAll(".toggle").forEach(function(element) {
+            element.addEventListener("click", function() {
+                toggleIsEnabled(this);
+            });
         });
         // 监听折叠展开
         document.getElementById("treeToggle").addEventListener("click", function () {
@@ -264,19 +316,19 @@
             const arrow = document.querySelector(".arrow");
             imageHostSubMenu.style.display = "block";
             arrow.style.transform = "rotate(90deg)";
-            document.getElementById("menu-gzh").classList.add("active");
-            document.getElementById("content-menu-gzh").classList.add("show");
+            document.getElementById("itemGzh").classList.add("active");
+            document.getElementById("content-itemGzh").classList.add("show");
         });
-        function toggleIsEnabled() {
-            const isEnabledValue = document.getElementById("isEnabled").value;
-            setIsEnabled(isEnabledValue !== "true");
+        function toggleIsEnabled(e) {
+            const isEnabledValue = document.getElementById(`${e.id}IsEnabled`).value;
+            setIsEnabled(isEnabledValue !== "true", e);
         }
-        function setIsEnabled(isEnabled) {
-            document.getElementById("isEnabled").value = isEnabled.toString();
+        function setIsEnabled(isEnabled, e) {
+            document.getElementById(`${e.id}IsEnabled`).value = isEnabled.toString();
             if (isEnabled) {
-                document.getElementById("gzhToggle").classList.add("on");
+                document.getElementById(e.id).classList.add("on");
             } else {
-                document.getElementById("gzhToggle").classList.remove('on');
+                document.getElementById(e.id).classList.remove('on');
             }
         }
         function selectMenuItem(element) {
@@ -284,24 +336,74 @@
             element.classList.add("active");
             document.querySelectorAll(".content-container").forEach(item => item.classList.remove("show"));
             document.getElementById(`content-${element.id}`).classList.add("show");
+            activedItem = element.id;
         }
         async function saveSettings() {
-            const appIdInput = document.getElementById("appId");
-            const appSecretInput = document.getElementById("appSecret");
-            const isEnabledInput = document.getElementById("isEnabled");
-            let imageHosts = getCustomImageHosts();
-            imageHosts[0].appId = appIdInput.value;
-            imageHosts[0].appSecret = appSecretInput.value;
-            imageHosts[0].isEnabled = isEnabledInput.value === "true";
-            saveCustomImageHosts(imageHosts);
+            if (activedItem === 'itemGzh') {
+                const appIdInput = document.getElementById("appId");
+                const appSecretInput = document.getElementById("appSecret");
+                const isEnabledInput = document.getElementById("gzhToggleIsEnabled");
+                let imageHosts = getCustomImageHosts();
+                imageHosts[0].appId = appIdInput.value;
+                imageHosts[0].appSecret = appSecretInput.value;
+                imageHosts[0].isEnabled = isEnabledInput.value === "true";
+                saveCustomImageHosts(imageHosts);
+            } else if (activedItem === 'itemCodeblock') {
+                const isMacStyle = document.getElementById("macStyleToggleIsEnabled").value === "true";
+                const hightlightTheme = document.getElementById("codeblockThemeSelect").value;
+                const fontSize = document.getElementById("codeblockFontSizeSelect").value;
+                const fontFamily = document.getElementById("codeblockFontFamily").value;
+                let codeblockSettings = getCodeblockSettings();
+                codeblockSettings.hightlightTheme = hightlightTheme;
+                codeblockSettings.isMacStyle = isMacStyle;
+                codeblockSettings.fontSize = fontSize;
+                if (fontFamily && fontFamily.trim() !== "") {
+                    codeblockSettings.fontFamily = fontFamily;
+                } else {
+                    codeblockSettings.fontFamily = null;
+                }
+                saveCodeblockSettings(codeblockSettings);
+                const message = {
+                    type: 'onHighlightChange',
+                    value: codeblockSettings
+                };
+                window.parent.postMessage(message, '*');
+            }
         }
+        const tipsButton = document.getElementById('tipsButton');
+        const tipsBubble = document.getElementById('tipsBubble');
+
+        tipsButton.addEventListener('mouseenter', () => {
+            tipsBubble.style.display = 'block';
+            const rect = tipsButton.getBoundingClientRect();
+            tipsBubble.style.left = rect.right + 5 + 'px';
+            tipsBubble.style.top = rect.top + 'px';
+        });
+
+        tipsButton.addEventListener('mouseleave', () => {
+            tipsBubble.style.display = 'none';
+        });
     </script>
     <script defer>
-        let imageHosts = getCustomImageHosts();
+        const imageHosts = getCustomImageHosts();
         document.getElementById("appId").value = imageHosts[0].appId;
         document.getElementById("appSecret").value = imageHosts[0].appSecret;
-        document.getElementById("isEnabled").value = imageHosts[0].isEnabled;
-        setIsEnabled(imageHosts[0].isEnabled);
+        document.getElementById("gzhToggleIsEnabled").value = imageHosts[0].isEnabled;
+        setIsEnabled(imageHosts[0].isEnabled, document.getElementById('gzhToggle'));
+        const codeblockThemeSelect = document.getElementById('codeblockThemeSelect');
+        highlightThemes.forEach(theme => {
+            const option = document.createElement('option');
+            option.value = theme.id;
+            option.text = theme.id;
+            codeblockThemeSelect.appendChild(option);
+        });
+        const codeblockSettings = getCodeblockSettings();
+        document.getElementById("codeblockThemeSelect").value = codeblockSettings.hightlightTheme;
+        setIsEnabled(codeblockSettings.isMacStyle, document.getElementById('macStyleToggle'));
+        document.getElementById("codeblockFontSizeSelect").value = codeblockSettings.fontSize;
+        if (codeblockSettings.fontFamily && codeblockSettings.fontFamily.trim() !== "") {
+            document.getElementById("codeblockFontFamily").value = codeblockSettings.fontFamily;
+        }
     </script>
 </body>
 </html>

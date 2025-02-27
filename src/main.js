@@ -71,7 +71,7 @@ const builtinThemes = [
 // let greetInputEl;
 // let greetMsgEl;
 let selectedTheme = 'gzh_default';
-let highlightStyle = 'highlight/styles/github.min.css';
+let codeblockSettings = getCodeblockSettings();
 let previewMode = 'style.css';
 let content = '';
 let isFootnotes = false;
@@ -112,6 +112,9 @@ window.addEventListener('message', async (event) => {
             updateThemePreview();
         } else if (event.data.type === 'onError') {
             await message(event.data.value);
+        } else if (event.data.type === 'onHighlightChange') {
+            codeblockSettings = event.data.value;
+            onUpdate();
         }
     }
 });
@@ -159,14 +162,15 @@ async function load() {
 async function onUpdate() {
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
-        const highlightResponse = await fetch(highlightStyle);
+        const highlightResponse = await fetch(`highlight/styles/${codeblockSettings.hightlightTheme}.min.css`);
         const highlightCss = await highlightResponse.text();
         const message = {
             type: 'onUpdate',
             // content: content,
             highlightCss: highlightCss,
             previewMode: previewMode,
-            themeValue: customThemeContent
+            themeValue: customThemeContent,
+            codeblockSettings: codeblockSettings
         };
         iframe.contentWindow.postMessage(message, '*');
     }
@@ -250,7 +254,7 @@ async function onCopy(button) {
     const iframeWindow = iframe.contentWindow;
     let htmlValue = '';
     if (platform === 'gzh') {
-        htmlValue = iframeWindow.getContentForGzh();
+        htmlValue = await iframeWindow.getContentForGzh();
     } else if (platform === 'zhihu') {
         htmlValue = iframeWindow.getContentWithMathImg();
     } else if (platform === 'juejin') {
@@ -301,12 +305,13 @@ async function changeTheme(theme) {
     }
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
-        const highlightResponse = await fetch(highlightStyle);
+        const highlightResponse = await fetch(`highlight/styles/${codeblockSettings.hightlightTheme}.min.css`);
         const highlightCss = await highlightResponse.text();
         const message = {
             type: 'onUpdate',
             highlightCss: highlightCss,
-            themeValue: customThemeContent
+            themeValue: customThemeContent,
+            codeblockSettings: codeblockSettings
         };
         if (platform == 'zhihu') {
             delete message.highlightCss;

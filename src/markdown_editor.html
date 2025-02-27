@@ -14,9 +14,6 @@
     <script src="codemirror/modes/xml/xml.js"></script>
     <script src="./utils.js"></script>
     <script src="./uploader.js"></script>
-</head>
-
-<body>
     <style>
         /* 遮罩层 */
         .overlay {
@@ -44,6 +41,9 @@
             100% { transform: rotate(360deg); }
         }
     </style>
+</head>
+
+<body>
     <script>
         CodeMirror.keyMap["default"]["Cmd-/"] = "toggleComment";  // Add-on
         let isScrollingFromScript = false;
