@@ -62,8 +62,8 @@ const defaultImageHosts = [
 ];
 
 const defaultCodeblockSettings = {
-    hightlightTheme: "github",
     isMacStyle: false,
+    hightlightTheme: "github",
     fontSize: "12px",
     fontFamily: null
 };

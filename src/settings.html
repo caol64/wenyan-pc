@@ -232,7 +232,6 @@
                     <label for="appSecret">开发者密码(AppSecret)</label>
                     <input type="text" id="appSecret" placeholder="如：d9f1abcdef01234567890abcdef82397">
                 </div>
-                <input type="hidden" id="gzhToggleIsEnabled">
                 <div class="form-group" align="right">
                     <p>请务必开启“IP白名单”</p>
                     <p>
@@ -283,7 +282,6 @@
                         <a href="https://yuzhi.tech/docs/wenyan/codeblock" class="external-link">使用帮助</a>
                     </p>
                 </div>
-                <input type="hidden" id="macStyleToggleIsEnabled">
             </div>
         </div>
 
@@ -292,10 +290,12 @@
     <script src="utils.js"></script>
     <script>
         let activedItem = '';
+        let imageHostsState = getCustomImageHosts();
+        let codeblockState = getCodeblockSettings();
         // 监听开关点击事件
         document.querySelectorAll(".toggle").forEach(function(element) {
             element.addEventListener("click", function() {
-                toggleIsEnabled(this);
+                toggleClicked(this);
             });
         });
         // 监听折叠展开
@@ -319,17 +319,18 @@
             document.getElementById("itemGzh").classList.add("active");
             document.getElementById("content-itemGzh").classList.add("show");
         });
-        function toggleIsEnabled(e) {
-            const isEnabledValue = document.getElementById(`${e.id}IsEnabled`).value;
-            setIsEnabled(isEnabledValue !== "true", e);
+        function toggleClicked(e) {
+            setToggleUI(!getToggleValue(e.id), e.id);
         }
-        function setIsEnabled(isEnabled, e) {
-            document.getElementById(`${e.id}IsEnabled`).value = isEnabled.toString();
+        function setToggleUI(isEnabled, id) {
             if (isEnabled) {
-                document.getElementById(e.id).classList.add("on");
+                document.getElementById(id).classList.add("on");
             } else {
-                document.getElementById(e.id).classList.remove('on');
+                document.getElementById(id).classList.remove('on');
             }
+        }
+        function getToggleValue(id) {
+            return document.getElementById(id).classList.contains("on");
         }
         function selectMenuItem(element) {
             document.querySelectorAll(".sub-item").forEach(item => item.classList.remove("active"));
@@ -340,32 +341,26 @@
         }
         async function saveSettings() {
             if (activedItem === 'itemGzh') {
-                const appIdInput = document.getElementById("appId");
-                const appSecretInput = document.getElementById("appSecret");
-                const isEnabledInput = document.getElementById("gzhToggleIsEnabled");
-                let imageHosts = getCustomImageHosts();
-                imageHosts[0].appId = appIdInput.value;
-                imageHosts[0].appSecret = appSecretInput.value;
-                imageHosts[0].isEnabled = isEnabledInput.value === "true";
-                saveCustomImageHosts(imageHosts);
+                imageHostsState[0].isEnabled = getToggleValue("gzhToggle");
+                imageHostsState[0].appId = document.getElementById("appId").value;
+                imageHostsState[0].appSecret = document.getElementById("appSecret").value;
+                imageHostsState[0].accessToken = null;
+                imageHostsState[0].expireTime = 0;
+                saveCustomImageHosts(imageHostsState);
             } else if (activedItem === 'itemCodeblock') {
-                const isMacStyle = document.getElementById("macStyleToggleIsEnabled").value === "true";
-                const hightlightTheme = document.getElementById("codeblockThemeSelect").value;
-                const fontSize = document.getElementById("codeblockFontSizeSelect").value;
+                codeblockState.isMacStyle = getToggleValue("macStyleToggle");
+                codeblockState.hightlightTheme = document.getElementById("codeblockThemeSelect").value;
+                codeblockState.fontSize = document.getElementById("codeblockFontSizeSelect").value;
                 const fontFamily = document.getElementById("codeblockFontFamily").value;
-                let codeblockSettings = getCodeblockSettings();
-                codeblockSettings.hightlightTheme = hightlightTheme;
-                codeblockSettings.isMacStyle = isMacStyle;
-                codeblockSettings.fontSize = fontSize;
                 if (fontFamily && fontFamily.trim() !== "") {
-                    codeblockSettings.fontFamily = fontFamily;
+                    codeblockState.fontFamily = fontFamily;
                 } else {
-                    codeblockSettings.fontFamily = null;
+                    codeblockState.fontFamily = null;
                 }
-                saveCodeblockSettings(codeblockSettings);
+                saveCodeblockSettings(codeblockState);
                 const message = {
                     type: 'onHighlightChange',
-                    value: codeblockSettings
+                    value: codeblockState
                 };
                 window.parent.postMessage(message, '*');
             }
@@ -383,13 +378,21 @@
         tipsButton.addEventListener('mouseleave', () => {
             tipsBubble.style.display = 'none';
         });
+        function updateGzhSettingsUI() {
+            setToggleUI(imageHostsState[0].isEnabled, "gzhToggle");
+            document.getElementById("appId").value = imageHostsState[0].appId;
+            document.getElementById("appSecret").value = imageHostsState[0].appSecret;
+        }
+        function updateCodeblockSettingsUI() {
+            setToggleUI(codeblockState.isMacStyle, "macStyleToggle");
+            document.getElementById("codeblockThemeSelect").value = codeblockState.hightlightTheme;
+            document.getElementById("codeblockFontSizeSelect").value = codeblockState.fontSize;
+            if (codeblockState.fontFamily && codeblockState.fontFamily.trim() !== "") {
+                document.getElementById("codeblockFontFamily").value = codeblockState.fontFamily;
+            }
+        }
     </script>
     <script defer>
-        const imageHosts = getCustomImageHosts();
-        document.getElementById("appId").value = imageHosts[0].appId;
-        document.getElementById("appSecret").value = imageHosts[0].appSecret;
-        document.getElementById("gzhToggleIsEnabled").value = imageHosts[0].isEnabled;
-        setIsEnabled(imageHosts[0].isEnabled, document.getElementById('gzhToggle'));
         const codeblockThemeSelect = document.getElementById('codeblockThemeSelect');
         highlightThemes.forEach(theme => {
             const option = document.createElement('option');
@@ -397,13 +400,8 @@
             option.text = theme.id;
             codeblockThemeSelect.appendChild(option);
         });
-        const codeblockSettings = getCodeblockSettings();
-        document.getElementById("codeblockThemeSelect").value = codeblockSettings.hightlightTheme;
-        setIsEnabled(codeblockSettings.isMacStyle, document.getElementById('macStyleToggle'));
-        document.getElementById("codeblockFontSizeSelect").value = codeblockSettings.fontSize;
-        if (codeblockSettings.fontFamily && codeblockSettings.fontFamily.trim() !== "") {
-            document.getElementById("codeblockFontFamily").value = codeblockSettings.fontFamily;
-        }
+        updateGzhSettingsUI();
+        updateCodeblockSettingsUI();
     </script>
 </body>
 </html>
