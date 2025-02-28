@@ -305,17 +305,15 @@ async function changeTheme(theme) {
     }
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
-        const highlightResponse = await fetch(`highlight/styles/${codeblockSettings.hightlightTheme}.min.css`);
+        const highlightThemePath = platform === 'gzh' ? `highlight/styles/${codeblockSettings.hightlightTheme}.min.css` : 'highlight/styles/github.min.css'
+        const highlightResponse = await fetch(highlightThemePath);
         const highlightCss = await highlightResponse.text();
         const message = {
             type: 'onUpdate',
             highlightCss: highlightCss,
             themeValue: customThemeContent,
-            codeblockSettings: codeblockSettings
+            codeblockSettings: platform === 'gzh' ? codeblockSettings : defaultCodeblockSettings
         };
-        if (platform == 'zhihu') {
-            delete message.highlightCss;
-        }
         iframe.contentWindow.postMessage(message, '*');
     }
     if (platform === 'gzh') {
