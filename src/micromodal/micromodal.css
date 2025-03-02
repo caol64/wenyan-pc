@@ -184,10 +184,10 @@
 /* 浮动框样式 */
 #bubbleBox {
     position: fixed;
-    bottom: 50px;
-    left: 150px;
+    bottom: 20px;
+    left: 100px;
     width: 200px;
-    padding: 15px;
+    padding: 0 15px;
     background: #fff;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);

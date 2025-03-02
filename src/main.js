@@ -104,7 +104,6 @@ window.addEventListener('message', async (event) => {
         } else if (event.data.clicked) {
             hideThemeOverlay();
             hideMenu();
-            hideBubble();
         } else if (event.data.type === 'onReadyCss') {
             loadCustomTheme();
         } else if (event.data.type === 'onChangeCss') {
@@ -639,23 +638,27 @@ async function openCssFile() {
     }
 }
 
-function openHelpBubble() {
-    const bubbleBox = document.getElementById('bubbleBox');
-    const isVisible = bubbleBox.style.display === 'block';
-    bubbleBox.style.display = isVisible ? 'none' : 'block';
-}
-
-document.addEventListener('click', (event) => {
-    const helpButton = document.getElementById('helpButton');
-    const bubbleBox = document.getElementById('bubbleBox');
-    if (!bubbleBox.contains(event.target) && !helpButton.contains(event.target)) {
-        bubbleBox.style.display = 'none';
-    }
+const helpButton = document.getElementById('helpButton');
+const bubbleBox = document.getElementById('bubbleBox');
+let hideTimeout;
+helpButton.addEventListener('mouseenter', () => {
+    clearTimeout(hideTimeout);
+    bubbleBox.style.display = 'block';
 });
 
-function hideBubble() {
-    document.getElementById('bubbleBox').style.display = 'none';
-}
+helpButton.addEventListener('mouseleave', () => {
+    hideTimeout = setTimeout(() => {
+        bubbleBox.style.display = 'none';
+    }, 200);
+});
+
+bubbleBox.addEventListener('mouseenter', () => {
+    clearTimeout(hideTimeout);
+});
+
+bubbleBox.addEventListener('mouseleave', () => {
+    bubbleBox.style.display = 'none';
+});
 
 function calcHeight(customThemeCount) {
     return 240 + (Math.min(customThemeCount, 2) * 25);
