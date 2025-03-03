@@ -19,6 +19,11 @@ fn write_text_to_clipboard(app: tauri::AppHandle, text: String) {
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_sql::Builder::new().build())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             let main_window = app.get_webview_window("main").unwrap();
