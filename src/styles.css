@@ -214,6 +214,10 @@ body {
     .titlebar button:hover {
         background-color: #a0a0a0; /* 鼠标悬浮时的背景颜色 */
     }
+    /* .body {
+        background-color: #191919;
+        color: #e0e0e0;
+    } */
 }
 
 .dropdown-link:hover {

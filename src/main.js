@@ -186,6 +186,10 @@ async function onContentChange() {
     }
 }
 
+async function onAppearanceChange(button) {
+    
+}
+
 async function onPeviewModeChange(button) {
     const useElement = button.querySelector('use');
     if (previewMode === 'style.css') {
