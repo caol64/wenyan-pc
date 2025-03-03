@@ -163,7 +163,7 @@
         async function handleFiles(files, event) {
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                if (file.type === "text/markdown") {
+                if (file.type === "text/markdown" || getFileExtension(file.name) === "md") { // 修复windows无法获得file.type
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         const content = e.target.result;

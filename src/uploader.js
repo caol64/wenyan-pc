@@ -37,7 +37,7 @@ class WechatUploader {
     async fetchAccessToken() {
         try {
             const client = await getClient();
-            const response = await client.get(`${this.apiUrl}?grant_type=client_credential&appid=${this.imageHost.appId}&secret=${this.imageHost.appSecret}`, {
+            const response = await client.get(`${this.tokenUrl}?grant_type=client_credential&appid=${this.imageHost.appId}&secret=${this.imageHost.appSecret}`, {
                 responseType: Response.JSON
             });
             const data = await response.data;
