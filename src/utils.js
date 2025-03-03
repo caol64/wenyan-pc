@@ -50,21 +50,19 @@ const highlightThemes = [
 ];
 
 const gzhImageHost = {
-    type: "gzh",
-    appId: "",
-    appSecret: "",
-    accessToken: "",
+    type: 'gzh',
+    appId: '',
+    appSecret: '',
+    accessToken: '',
     expireTime: 0,
     isEnabled: false
 };
-const defaultImageHosts = [
-    gzhImageHost
-];
+const defaultImageHosts = [gzhImageHost];
 
 const defaultCodeblockSettings = {
     isMacStyle: false,
-    hightlightTheme: "github",
-    fontSize: "12px",
+    hightlightTheme: 'github',
+    fontSize: '12px',
     fontFamily: null
 };
 
@@ -170,7 +168,7 @@ function revertImages(container) {
     });
 }
 
-document.querySelectorAll('.external-link').forEach(link => {
+document.querySelectorAll('.external-link').forEach((link) => {
     link.addEventListener('click', async (event) => {
         event.preventDefault();
         await openShell(link.href);
@@ -180,9 +178,9 @@ document.querySelectorAll('.external-link').forEach(link => {
 function stringToMap(str) {
     const map = new Map();
     if (str) {
-        const keyValuePairs = str.trim().split(" ");
+        const keyValuePairs = str.trim().split(' ');
         for (const pair of keyValuePairs) {
-            const [key, value] = pair.split("=");
+            const [key, value] = pair.split('=');
             if (key && value) {
                 map.set(key, value);
             }
@@ -203,4 +201,15 @@ function getCodeblockSettings() {
 
 function saveCodeblockSettings(codeblockSettings) {
     localStorage.setItem('codeblockSettings', JSON.stringify(codeblockSettings));
+}
+
+function getFileExtension(filename) {
+    if (!filename || typeof filename !== 'string') {
+        return '';
+    }
+    const lastDotIndex = filename.lastIndexOf('.');
+    if (lastDotIndex === -1 || lastDotIndex === 0) {
+        return '';
+    }
+    return filename.slice(lastDotIndex + 1);
 }
