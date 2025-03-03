@@ -18,7 +18,17 @@
     "core:window:allow-unmaximize",
     "core:window:allow-unminimize",
     "core:window:allow-start-dragging",
-    "http:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "http://**"
+        },
+        {
+          "url": "https://**"
+        }
+      ]
+    },
     "http:allow-fetch",
     "http:allow-fetch-cancel",
     "http:allow-fetch-read-body",
@@ -31,7 +41,9 @@
     {
       "identifier": "fs:scope",
       "allow": [
-        "**"
+        {
+          "path": "**"
+        }
       ]
     },
     "fs:allow-read-dir",
