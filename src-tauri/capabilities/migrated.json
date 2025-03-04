@@ -4,12 +4,13 @@
   "description": "permissions that were migrated from v1",
   "local": true,
   "windows": [
-    "main"
+    "main", "about"
   ],
   "permissions": [
     "core:default",
-    "clipboard-manager:default",
-    "clipboard:allow-read-files",
+    "core:app:allow-version",
+    "clipboard-manager:allow-write-html",
+    "clipboard-manager:allow-write-text",
     "core:window:allow-close",
     "core:window:allow-hide",
     "core:window:allow-show",

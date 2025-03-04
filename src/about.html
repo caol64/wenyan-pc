@@ -46,13 +46,6 @@
             font-size: 12px;
         }
     </style>
-    <script>
-        const { getVersion } = window.__TAURI__.app;
-        (async () => {
-            const version = await getVersion();
-            document.getElementById('version').textContent = `版本：windows v${version}`;
-        })();
-    </script>
 </head>
 
 <body>
@@ -64,6 +57,13 @@
         <p>© 2024 Lei Cao. All rights reserved.</p>
     </div>
     <script src="utils.js"></script>
+    <script>
+        const { getVersion } = window.__TAURI__.app;
+        (async () => {
+            const version = await getVersion();
+            document.getElementById('version').textContent = `版本：windows v${version}`;
+        })();
+    </script>
 </body>
 
 </html>

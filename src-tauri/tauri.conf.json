@@ -1,11 +1,11 @@
 {
     "$schema": "https://schema.tauri.app/config/2",
-    "build": {
-        "frontendDist": "../src"
-    },
     "productName": "文颜",
     "mainBinaryName": "文颜",
     "identifier": "com.yztech.WenYan",
+    "build": {
+        "frontendDist": "../src"
+    },
     "app": {
         "windows": [
             {
@@ -21,7 +21,8 @@
         ],
         "macOSPrivateApi": true,
         "security": {
-            "csp": null
+            "csp": null,
+            "capabilities": ["migrated"]
         },
         "withGlobalTauri": true
     },

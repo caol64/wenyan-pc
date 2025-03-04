@@ -14,17 +14,10 @@
  * limitations under the License.
  */
 
-// import { resolveResource } from '@tauri-apps/api/path'
 const { resolveResource } = window.__TAURI__.path;
-// import { readTextFile } from '@tauri-apps/api/fs'
-// const { readTextFile, writeBinaryFile } = window.__TAURI__.fs;
-// import { appWindow } from '@tauri-apps/api/window'
 const { getCurrentWindow } = window.__TAURI__.window;
-
-const { invoke } = window.__TAURI__.core;
-// import { invoke } from "@tauri-apps/api/core"
 const { save, open, message } = window.__TAURI__.dialog;
-// const { ResponseType, getClient } = window.__TAURI__.http;
+const { writeHtml, writeText } = window.__TAURI__.clipboardManager;
 
 const builtinThemes = [
     {
@@ -270,9 +263,9 @@ async function onCopy(button) {
     }
     // console.log(htmlValue);
     if (platform === 'juejin') {
-        await invoke('write_text_to_clipboard', { text: htmlValue });
+        await writeText(htmlValue);
     } else {
-        await invoke('write_html_to_clipboard', { text: htmlValue });
+        await writeHtml(htmlValue);
     }
     const useElement = button.querySelector('use');
     useElement.setAttribute('href', '#checkIcon');
@@ -455,25 +448,14 @@ async function loadCustomThemes() {
             li.appendChild(span2);
             ul.appendChild(li);
         });
-        await invoke('plugin:sql|load', {
-            db: 'sqlite:data.db'
-        });
-        await invoke('plugin:sql|execute', {
-            db: 'sqlite:data.db',
-            query: `CREATE TABLE IF NOT EXISTS CustomTheme (
+        await executeSql(`CREATE TABLE IF NOT EXISTS CustomTheme (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 content TEXT NOT NULL,
                 createdAt TEXT NOT NULL
             );
-        `,
-            values: []
-        });
-        const customThemes = await invoke('plugin:sql|select', {
-            db: 'sqlite:data.db',
-            query: 'SELECT * FROM CustomTheme',
-            values: []
-        });
+        `);
+        const customThemes = await querySql('SELECT * FROM CustomTheme');
         // console.log(customThemes);
         if (customThemes && customThemes.length > 0) {
             customThemes.forEach((i, index) => {
@@ -522,17 +504,13 @@ async function loadCustomThemes() {
 
 async function saveCustomTheme() {
     if (selectedCustomTheme) {
-        await invoke('plugin:sql|execute', {
-            db: 'sqlite:data.db',
-            query: 'UPDATE CustomTheme SET content = ?, createdAt = ? WHERE id = ?;',
-            values: [customThemeContent, new Date().toISOString(), selectedCustomTheme]
-        });
+        await executeSql('UPDATE CustomTheme SET content = $1, createdAt = $2 WHERE id = $3;',
+            [customThemeContent, new Date().toISOString(), selectedCustomTheme]
+        );
     } else {
-        await invoke('plugin:sql|execute', {
-            db: 'sqlite:data.db',
-            query: 'INSERT INTO CustomTheme (name, content, createdAt) VALUES (?, ?, ?);',
-            values: ['自定义主题', customThemeContent, new Date().toISOString()]
-        });
+        await executeSql('INSERT INTO CustomTheme (name, content, createdAt) VALUES ($1, $2, $3);',
+            ['自定义主题', customThemeContent, new Date().toISOString()]
+        );
     }
     MicroModal.close('modal-css-editor');
     await loadCustomThemes();
@@ -542,11 +520,9 @@ async function saveCustomTheme() {
 
 async function deleteCustomTheme() {
     if (selectedCustomTheme) {
-        await invoke('plugin:sql|execute', {
-            db: 'sqlite:data.db',
-            query: 'DELETE FROM CustomTheme WHERE id = ?;',
-            values: [selectedCustomTheme]
-        });
+        await executeSql('DELETE FROM CustomTheme WHERE id = $1;',
+            [selectedCustomTheme]
+        );
     }
     MicroModal.close('modal-css-editor');
     await loadCustomThemes();
@@ -578,11 +554,9 @@ async function loadCustomTheme() {
 }
 
 async function getCustomThemeById(id) {
-    const customTheme = await invoke('plugin:sql|select', {
-        db: 'sqlite:data.db',
-        query: 'SELECT * FROM CustomTheme WHERE id = ?;',
-        values: [id]
-    });
+    const customTheme = await querySql('SELECT * FROM CustomTheme WHERE id = $1;',
+        [id]
+    );
     if (customTheme && customTheme.length > 0) {
         return customTheme[0].content;
     }

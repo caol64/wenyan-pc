@@ -15,8 +15,9 @@
  */
 
 const { fetch: tauriFetch } = window.parent.__TAURI__.http;
-const { readTextFile, writeBinaryFile } = window.parent.__TAURI__.fs;
+const { readTextFile, writeFile } = window.parent.__TAURI__.fs;
 const { open: openShell } = window.parent.__TAURI__.shell;
+const Database = window.parent.__TAURI__.sql;
 const imgType = ['image/bmp', 'image/png', 'image/jpeg', 'image/gif', 'video/mp4'];
 
 const highlightThemes = [
@@ -139,7 +140,7 @@ async function readAsText(resourcePath) {
 }
 
 async function writeAsBinary(filePath, arrayBuffer) {
-    await writeBinaryFile(filePath, arrayBuffer);
+    await writeFile(filePath, arrayBuffer);
 }
 
 async function setLastArticle(content) {
@@ -209,4 +210,25 @@ function getFileExtension(filename) {
         return '';
     }
     return filename.slice(lastDotIndex + 1);
+}
+
+async function executeSql(sql, params) {
+    try {
+        const db = await Database.load('sqlite:data.db');
+        await db.execute(sql, params);
+        await db.close();
+    } catch (error) {
+        console.error('Error executing SQL:', error);
+    }
+}
+
+async function querySql(sql, params) {
+    try {
+        const db = await Database.load('sqlite:data.db');
+        const result = await db.select(sql, params);
+        await db.close();
+        return result;
+    } catch (error) {
+        console.error('Error executing SQL:', error);
+    }
 }
