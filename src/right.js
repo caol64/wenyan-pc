@@ -155,7 +155,7 @@ function setHighlight(css) {
         style.textContent = css;
         document.head.appendChild(style);
     } else {
-        css = "";
+        highlightCss = "";
     }
 }
 function getContent() {
