@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { ResponseType, Body, getClient } = window.parent.__TAURI__.http;
+const { fetch: tauriFetch } = window.parent.__TAURI__.http;
 const { readTextFile, writeBinaryFile } = window.parent.__TAURI__.fs;
 const { open: openShell } = window.parent.__TAURI__.shell;
 const imgType = ['image/bmp', 'image/png', 'image/jpeg', 'image/gif', 'video/mp4'];
@@ -86,11 +86,8 @@ async function downloadImage(src) {
         return cached;
     }
     // 获取图片二进制数据
-    const client = await getClient();
-    const response = await client.get(src, {
-        responseType: ResponseType.Binary
-    });
-    const arrayBuffer = await response.data;
+    const response = await tauriFetch(src);
+    const arrayBuffer = await response.arrayBuffer();
 
     // 将 ArrayBuffer 转换为 Base64 字符串
     const base64String = arrayBufferToBase64(arrayBuffer);
