@@ -19,9 +19,10 @@ const { resolveResource } = window.__TAURI__.path;
 // import { readTextFile } from '@tauri-apps/api/fs'
 // const { readTextFile, writeBinaryFile } = window.__TAURI__.fs;
 // import { appWindow } from '@tauri-apps/api/window'
-const { appWindow } = window.__TAURI__.window;
+const { getCurrentWindow } = window.__TAURI__.window;
 
-const { invoke } = window.__TAURI__.tauri;
+const { invoke } = window.__TAURI__.core;
+// import { invoke } from "@tauri-apps/api/core"
 const { save, open, message } = window.__TAURI__.dialog;
 // const { ResponseType, getClient } = window.__TAURI__.http;
 
@@ -336,7 +337,7 @@ function showMainMenu() {
 }
 
 async function openAbout() {
-    appWindow.emit('open-about');
+    getCurrentWindow().emit('open-about');
 }
 
 async function openSettings() {
