@@ -15,6 +15,8 @@ jobs:
 
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        ref: tauri-v2
 
     - name: Install dependencies
       run: npm install

@@ -39,7 +39,16 @@
         "resources": [
             "resources/*"
         ],
-        "copyright": "© 2024 Lei Cao. All rights reserved."
+        "copyright": "© 2024 Lei Cao. All rights reserved.",
+        "windows": {
+            "nsis": {
+                "languages": [
+                    "SimpChinese",
+                    "English"
+                ],
+                "displayLanguageSelector": true
+            }
+        }
     },
     "plugins": {}
 }

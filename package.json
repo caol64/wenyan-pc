@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "tauri-dev": "tauri dev",
-    "tauri": "tauri"
+    "tauri": "tauri build"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.3.1"
@@ -17,8 +17,6 @@
     "@tauri-apps/plugin-fs": "^2.2.0",
     "@tauri-apps/plugin-http": "^2.3.0",
     "@tauri-apps/plugin-shell": "^2.2.0",
-    "@tauri-apps/plugin-sql": "^2.2.0",
-    "@tauri-apps/plugin-store": "^2.2.0",
-    "tauri-plugin-clipboard-api": "^2.1.11"
+    "@tauri-apps/plugin-sql": "^2.2.0"
   }
 }
