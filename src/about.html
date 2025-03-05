@@ -59,9 +59,11 @@
     <script src="utils.js"></script>
     <script>
         const { getVersion } = window.__TAURI__.app;
+        const { type } = window.__TAURI__.os;
         (async () => {
             const version = await getVersion();
-            document.getElementById('version').textContent = `版本：windows v${version}`;
+            const currentPlatform = await type();
+            document.getElementById('version').textContent = `版本：${currentPlatform} v${version}`;
         })();
     </script>
 </body>

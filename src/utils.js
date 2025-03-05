@@ -19,7 +19,8 @@ const { readTextFile, writeFile } = window.parent.__TAURI__.fs;
 const { open: openShell } = window.parent.__TAURI__.shell;
 const Database = window.parent.__TAURI__.sql;
 const imgType = ['image/bmp', 'image/png', 'image/jpeg', 'image/gif', 'video/mp4'];
-let dbInstance;
+let dbInstance = null;
+let loadingPromise = null;
 
 const highlightThemes = [
     {
@@ -214,10 +215,16 @@ function getFileExtension(filename) {
 }
 
 async function getDb() {
-    if (!dbInstance) {
-        dbInstance = await Database.load('sqlite:data.db');
+    if (dbInstance) {
+        return dbInstance;
     }
-    return dbInstance;
+    if (!loadingPromise) {
+        loadingPromise = (async () => {
+            dbInstance = await Database.load('sqlite:data.db');
+            return dbInstance;
+        })();
+    }
+    return loadingPromise;
 }
 
 async function executeSql(sql, params) {
