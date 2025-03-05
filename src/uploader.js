@@ -36,11 +36,8 @@ class WechatUploader {
 
     async fetchAccessToken() {
         try {
-            const client = await getClient();
-            const response = await client.get(`${this.tokenUrl}?grant_type=client_credential&appid=${this.imageHost.appId}&secret=${this.imageHost.appSecret}`, {
-                responseType: Response.JSON
-            });
-            const data = await response.data;
+            const response = await tauriFetch(`${this.tokenUrl}?grant_type=client_credential&appid=${this.imageHost.appId}&secret=${this.imageHost.appSecret}`);
+            const data = await response.json();
             if (data.access_token) {
                 return data;
             } else if (data.errcode) {
@@ -66,21 +63,16 @@ class WechatUploader {
             if (!this.imageHost.accessToken) {
                 throw new Error('未获取到有效的Access Token');
             }
-            const filePart = await readBinaryFile(file);
-            const body = Body.form({
-                media: filePart
-            });
-            const client = await getClient();
-            const response = await client.request({
-                url: this.apiUrl + `?access_token=${this.imageHost.accessToken}` + `&type=${type}`,
+            const filePart = await file.arrayBuffer();
+            const formData = new FormData();
+            formData.append("media", new Blob([filePart]), file.name);
+            const url = `${this.apiUrl}?access_token=${this.imageHost.accessToken}&type=${type}`;
+
+            const response = await tauriFetch(url, {
                 method: 'POST',
-                body: body,
-                responseType: Response.JSON,
-                headers: {
-                    "Content-Type": "multipart/form-data"
-                }
+                body: formData
             });
-            const data = await response.data;
+            const data = await response.json();
             if (data.errcode) {
                 throw new Error(`上传失败，错误码：${data.errcode}，错误信息：${data.errmsg}`);
             }
@@ -96,17 +88,4 @@ class WechatUploader {
         return this.uploadMaterial('image', file);
     }
 
-}
-
-function readBinaryFile(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve({
-            file: new Uint8Array(reader.result),
-            mime: file.type,
-            fileName: file.name,
-        });
-        reader.onerror = reject;
-        reader.readAsArrayBuffer(file);
-    });
 }

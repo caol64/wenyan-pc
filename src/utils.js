@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-const { ResponseType, Body, getClient } = window.parent.__TAURI__.http;
-const { readTextFile, writeBinaryFile } = window.parent.__TAURI__.fs;
+const { fetch: tauriFetch } = window.parent.__TAURI__.http;
+const { readTextFile, writeFile } = window.parent.__TAURI__.fs;
 const { open: openShell } = window.parent.__TAURI__.shell;
+const Database = window.parent.__TAURI__.sql;
 const imgType = ['image/bmp', 'image/png', 'image/jpeg', 'image/gif', 'video/mp4'];
+let dbInstance;
 
 const highlightThemes = [
     {
@@ -86,11 +88,8 @@ async function downloadImage(src) {
         return cached;
     }
     // 获取图片二进制数据
-    const client = await getClient();
-    const response = await client.get(src, {
-        responseType: ResponseType.Binary
-    });
-    const arrayBuffer = await response.data;
+    const response = await tauriFetch(src);
+    const arrayBuffer = await response.arrayBuffer();
 
     // 将 ArrayBuffer 转换为 Base64 字符串
     const base64String = arrayBufferToBase64(arrayBuffer);
@@ -142,7 +141,7 @@ async function readAsText(resourcePath) {
 }
 
 async function writeAsBinary(filePath, arrayBuffer) {
-    await writeBinaryFile(filePath, arrayBuffer);
+    await writeFile(filePath, arrayBuffer);
 }
 
 async function setLastArticle(content) {
@@ -212,4 +211,29 @@ function getFileExtension(filename) {
         return '';
     }
     return filename.slice(lastDotIndex + 1);
+}
+
+async function getDb() {
+    if (!dbInstance) {
+        dbInstance = await Database.load('sqlite:data.db');
+    }
+    return dbInstance;
+}
+
+async function executeSql(sql, params) {
+    try {
+        const db = await getDb();
+        await db.execute(sql, params);
+    } catch (error) {
+        console.error('Error executing SQL:', error);
+    }
+}
+
+async function querySql(sql, params) {
+    try {
+        const db = await getDb();
+        return await db.select(sql, params);
+    } catch (error) {
+        console.error('Error executing SQL:', error);
+    }
 }

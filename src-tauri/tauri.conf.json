@@ -1,53 +1,12 @@
 {
+    "$schema": "https://schema.tauri.app/config/2",
+    "productName": "文颜",
+    "mainBinaryName": "文颜",
+    "identifier": "com.yztech.WenYan",
     "build": {
-        "devPath": "../src",
-        "distDir": "../src",
-        "withGlobalTauri": true
+        "frontendDist": "../src"
     },
-    "package": {
-        "productName": "文颜",
-        "version": "../package.json"
-    },
-    "tauri": {
-        "allowlist": {
-            "all": false,
-            "http": {
-                "all": true,
-                "request": true,
-                "scope": ["http://**", "https://**"]
-            },
-            "dialog": {
-                "save": true,
-                "open": true,
-                "message": true
-            },
-            "fs": {
-                "scope": [
-                    "**"
-                ],
-                "readDir": true,
-                "readFile": true,
-                "writeFile": true
-            },
-            "path": {
-                "all": true
-            },
-            "shell": {
-                "all": false,
-                "open": true
-            },
-            "window": {
-                "all": false,
-                "close": true,
-                "hide": true,
-                "show": true,
-                "maximize": true,
-                "minimize": true,
-                "unmaximize": true,
-                "unminimize": true,
-                "startDragging": true
-            }
-        },
+    "app": {
         "windows": [
             {
                 "title": "文颜",
@@ -57,40 +16,41 @@
                 "height": 800,
                 "minWidth": 840,
                 "minHeight": 580,
-                "fileDropEnabled": false
+                "dragDropEnabled": false,
+                "center": true,
+                "shadow": false
             }
         ],
         "macOSPrivateApi": true,
         "security": {
-            "csp": null
+            "csp": null,
+            "capabilities": ["migrated"]
         },
-        "bundle": {
-            "active": true,
-            "targets": "all",
-            "identifier": "com.yztech.WenYan",
-            "icon": [
-                "icons/32x32.png",
-                "icons/128x128.png",
-                "icons/128x128@2x.png",
-                "icons/icon.icns",
-                "icons/icon.ico"
-            ],
-            "resources": [
-                "resources/*"
-            ],
-            "copyright": "© 2024 Lei Cao. All rights reserved.",
-            "windows": {
-                "wix": {
-                    "language": "zh-CN"
-                },
-                "nsis": {
-                    "languages": [
-                        "SimpChinese",
-                        "English"
-                    ],
-                    "displayLanguageSelector": true
-                }
+        "withGlobalTauri": true
+    },
+    "bundle": {
+        "active": true,
+        "targets": ["dmg", "nsis", "appimage"],
+        "icon": [
+            "icons/32x32.png",
+            "icons/128x128.png",
+            "icons/128x128@2x.png",
+            "icons/icon.icns",
+            "icons/icon.ico"
+        ],
+        "resources": [
+            "resources/*"
+        ],
+        "copyright": "© 2024 Lei Cao. All rights reserved.",
+        "windows": {
+            "nsis": {
+                "languages": [
+                    "SimpChinese",
+                    "English"
+                ],
+                "displayLanguageSelector": true
             }
         }
-    }
+    },
+    "plugins": {}
 }

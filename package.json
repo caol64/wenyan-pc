@@ -8,11 +8,15 @@
     "tauri": "tauri build"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1.6.2"
+    "@tauri-apps/cli": "^2.3.1"
   },
   "dependencies": {
-    "@tauri-apps/api": "^1.6.0",
-    "@tauri-apps/plugin-store": "^2.0.0-rc.1",
-    "tauri-plugin-clipboard-api": "^1.1.4"
+    "@tauri-apps/api": "^2.3.0",
+    "@tauri-apps/plugin-clipboard-manager": "^2.2.1",
+    "@tauri-apps/plugin-dialog": "^2.2.0",
+    "@tauri-apps/plugin-fs": "^2.2.0",
+    "@tauri-apps/plugin-http": "^2.3.0",
+    "@tauri-apps/plugin-shell": "^2.2.0",
+    "@tauri-apps/plugin-sql": "^2.2.0"
   }
 }

@@ -54,7 +54,18 @@
 
 [https://yuzhi.tech/docs/wenyan/download](https://yuzhi.tech/docs/wenyan/download)
 
-## 支持
+## 如何贡献
+
+- 通过 [Issue](https://github.com/caol64/wenyan-pc/issues) 报告**bug**或进行咨询。
+- 提交 [Pull Request](https://github.com/caol64/wenyan-pc/pulls)。
+- 分享 [自定义主题](https://github.com/caol64/wenyan/discussions/13)。
+- 推荐美观的 `Typora` 主题。
+
+## 特别感谢
+
+@xsxz01 贡献的代码将`Tauri v1` 升级至 `Tauri v2`。
+
+## 赞助
 
 如果您觉得不错，可以给我家猫咪买点罐头吃。[喂猫❤️](https://yuzhi.tech/sponsor)
 

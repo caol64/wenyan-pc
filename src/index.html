@@ -217,9 +217,9 @@
 <script src="utils.js"></script>
 <script src="main.js"></script>
 <script>
-    document.getElementById('titlebar-minimize').addEventListener('click', () => appWindow.minimize());
-    document.getElementById('titlebar-maximize').addEventListener('click', () => appWindow.toggleMaximize());
-    document.getElementById('titlebar-close').addEventListener('click', () => appWindow.close());
+    document.getElementById('titlebar-minimize').addEventListener('click', () => getCurrentWindow().minimize());
+    document.getElementById('titlebar-maximize').addEventListener('click', () => getCurrentWindow().toggleMaximize());
+    document.getElementById('titlebar-close').addEventListener('click', () => getCurrentWindow().close());
     document.getElementById('gzh-button').addEventListener('click', () => changePlatform('gzh'));
     document.getElementById('toutiao-button').addEventListener('click', () => changePlatform('toutiao'));
     document.getElementById('zhihu-button').addEventListener('click', () => changePlatform('zhihu'));
