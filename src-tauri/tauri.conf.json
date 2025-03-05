@@ -16,7 +16,9 @@
                 "height": 800,
                 "minWidth": 840,
                 "minHeight": 580,
-                "dragDropEnabled": false
+                "dragDropEnabled": false,
+                "center": true,
+                "shadow": false
             }
         ],
         "macOSPrivateApi": true,
