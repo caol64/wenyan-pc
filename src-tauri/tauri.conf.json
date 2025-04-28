@@ -3,6 +3,7 @@
     "productName": "文颜",
     "mainBinaryName": "文颜",
     "identifier": "com.yztech.WenYan",
+    "version": "../package.json",
     "build": {
         "frontendDist": "../src"
     },
