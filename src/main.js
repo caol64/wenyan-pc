@@ -66,6 +66,7 @@ const builtinThemes = [
 // let greetMsgEl;
 let selectedTheme = 'gzh_default';
 let codeblockSettings = getCodeblockSettings();
+let paragraphSettings = getParagraphSettings();
 let previewMode = 'style.css';
 let content = '';
 let isFootnotes = false;
@@ -107,6 +108,9 @@ window.addEventListener('message', async (event) => {
             await message(event.data.value);
         } else if (event.data.type === 'onHighlightChange') {
             codeblockSettings = event.data.value;
+            onUpdate();
+        } else if (event.data.type === 'onParagraphSettingsChange') {
+            paragraphSettings = event.data.value;
             onUpdate();
         }
     }
@@ -163,7 +167,8 @@ async function onUpdate() {
             highlightCss: highlightCss,
             previewMode: previewMode,
             themeValue: customThemeContent,
-            codeblockSettings: codeblockSettings
+            codeblockSettings: codeblockSettings,
+            paragraphSettings: platform === 'gzh' ? paragraphSettings : null
         };
         iframe.contentWindow.postMessage(message, '*');
     }
@@ -309,7 +314,8 @@ async function changeTheme(theme) {
             type: 'onUpdate',
             highlightCss: highlightCss,
             themeValue: customThemeContent,
-            codeblockSettings: platform === 'gzh' ? codeblockSettings : defaultCodeblockSettings
+            codeblockSettings: platform === 'gzh' ? codeblockSettings : defaultCodeblockSettings,
+            paragraphSettings: platform === 'gzh' ? paragraphSettings : null
         };
         iframe.contentWindow.postMessage(message, '*');
     }

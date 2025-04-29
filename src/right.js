@@ -20,6 +20,7 @@ let isScrollingFromScript = false;
 let customCss = "";
 let highlightCss = "";
 let codeblockSettings = getCodeblockSettings();
+let paragraphSettings = getParagraphSettings();
 
 // ------- marked.js默认配置开始 -------
 // 处理frontMatter的函数
@@ -142,7 +143,52 @@ function setCustomTheme(css) {
     const style = document.createElement("style");
     style.setAttribute("id", "theme");
     customCss = replaceCSSVariables(css);
-    customCss = modifyCodeblockCss(customCss, codeblockSettings.fontSize, codeblockSettings.fontFamily);
+    customCss = modifyCss(customCss, {
+        '#wenyan pre code': [
+            {
+                property: 'font-family',
+                value: codeblockSettings.fontFamily,
+                append: true
+            }
+        ],
+        '#wenyan pre': [
+            {
+                property: 'font-size',
+                value: codeblockSettings.fontSize,
+                append: true
+            }
+        ]
+    });
+    if (paragraphSettings && paragraphSettings.isEnabled) {
+        let classes = [];
+        if (paragraphSettings.fontSize) {
+            classes.push({property: 'font-size', value: paragraphSettings.fontSize, append: true});
+        }
+        if (paragraphSettings.fontType) {
+            if (paragraphSettings.fontType === 'serif') {
+                classes.push({property: 'font-family', value: serif, append: true});
+            } else if (paragraphSettings.fontType === 'sans') {
+                classes.push({property: 'font-family', value: sansSerif, append: true});
+            } else if (paragraphSettings.fontType === 'mono') {
+                classes.push({property: 'font-family', value: monospace, append: true});
+            }
+        }
+        if (paragraphSettings.fontWeight) {
+            classes.push({property: 'font-weight', value: paragraphSettings.fontWeight, append: true});
+        }
+        if (paragraphSettings.wordSpacing) {
+            classes.push({property: 'letter-spacing', value: paragraphSettings.wordSpacing, append: true});
+        }
+        if (paragraphSettings.lineSpacing) {
+            classes.push({property: 'line-height', value: paragraphSettings.lineSpacing, append: true});
+        }
+        if (paragraphSettings.paragraphSpacing) {
+            classes.push({property: 'margin', value: `${paragraphSettings.paragraphSpacing} 0`, append: true});
+        }
+        customCss = modifyCss(customCss, {
+            '#wenyan p': classes
+        });
+    }
     style.textContent = customCss;
     document.head.appendChild(style);
 }
@@ -574,7 +620,7 @@ function removeComments(input) {
     return output;
 }
 
-function modifyCodeblockCss(customCss, newFontSize, newFontFamily) {
+function modifyCss(customCss, updates) {
     const ast = csstree.parse(customCss, {
         context: 'stylesheet',
         positions: false,
@@ -586,48 +632,28 @@ function modifyCodeblockCss(customCss, newFontSize, newFontFamily) {
     csstree.walk(ast, {
         visit: 'Rule',
         leave: (node, item, list) => {
-            if (node.prelude.type === 'SelectorList') {
-                const selectors = node.prelude.children.toArray().map(sel => csstree.generate(sel));
+            if (node.prelude.type !== 'SelectorList') return;
 
-                if (selectors && selectors[0] === '#wenyan pre code') {
-                    if (newFontFamily && newFontFamily.trim() !== "") {
-                        let fontFamilyDecl = null;
-                        csstree.walk(node.block, function(decl) {
-                            if (decl.type === 'Declaration' && decl.property === 'font-family') {
-                                fontFamilyDecl = decl;
-                            }
-                        });
-
-                        if (fontFamilyDecl) {
-                            const existingFontFamily = csstree.generate(fontFamilyDecl.value);
-                            fontFamilyDecl.value = csstree.parse(`${newFontFamily}, ${existingFontFamily}`, { context: 'value' });
-                        } else {
-                            node.block.children.prepend(
-                                list.createItem({
-                                    type: 'Declaration',
-                                    property: 'font-family',
-                                    value: { type: 'Value', children: [{ type: 'String', value: newFontFamily }] }
-                                })
-                            );
-                        }
-                    }
-                    return;
-                }
-
-                if (selectors && selectors[0] === '#wenyan pre') {
-                    let hasFontSize = false;
-                    csstree.walk(node.block, function(decl) {
-                        if (decl.type === 'Declaration' && decl.property === 'font-size') {
-                            decl.value = csstree.parse(`${newFontSize}`, { context: 'value' });
-                            hasFontSize = true;
+            const selectors = node.prelude.children.toArray().map(sel => csstree.generate(sel));
+            if (selectors) {
+                const selector = selectors[0];
+                const update = updates[selector];
+                if (!update) return;
+    
+                for (const { property, value, append } of update) {
+                    let found = false;
+                    csstree.walk(node.block, decl => {
+                        if (decl.type === 'Declaration' && decl.property === property) {
+                            decl.value = csstree.parse(value, { context: 'value' });
+                            found = true;
                         }
                     });
-                    if (!hasFontSize) {
+                    if (!found && append) {
                         node.block.children.prepend(
                             list.createItem({
                                 type: 'Declaration',
-                                property: 'font-size',
-                                value: { type: 'Value', children: [{ type: 'Dimension', value: newFontSize.replace("px", ""), unit: 'px' }] }
+                                property,
+                                value: csstree.parse(value, { context: 'value' })
                             })
                         );
                     }
@@ -661,6 +687,7 @@ window.addEventListener('message', (event) => {
                     document.getElementById("macStyle")?.remove();
                 }
             }
+            paragraphSettings = event.data.paragraphSettings;
             if (event.data.themeValue) {
                 setCustomTheme(`${event.data.themeValue}`);
             }

@@ -19,6 +19,9 @@ const { readTextFile, writeFile } = window.parent.__TAURI__.fs;
 const { open: openShell } = window.parent.__TAURI__.shell;
 const Database = window.parent.__TAURI__.sql;
 const imgType = ['image/bmp', 'image/png', 'image/jpeg', 'image/gif', 'video/mp4'];
+const serif = "ui-serif, Georgia, Cambria, 'Noto Serif', 'Microsoft YaHei', 'Times New Roman', serif";
+const sansSerif = "ui-sans-serif, system-ui, 'Apple Color Emoji', 'Segoe UI', 'Segoe UI Symbol', 'Noto Sans', 'Roboto', 'Microsoft YaHei', sans-serif";
+const monospace = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Roboto Mono', 'Courier New', 'Microsoft YaHei', monospace";
 let dbInstance = null;
 let loadingPromise = null;
 
@@ -67,6 +70,16 @@ const defaultCodeblockSettings = {
     hightlightTheme: 'github',
     fontSize: '12px',
     fontFamily: null
+};
+
+const defaultParagraphSettings = {
+    isEnabled: false,
+    fontSize: '16px',
+    fontType: 'sans', // serif, sans, mono
+    fontWeight: '400',
+    wordSpacing: '0.05em',
+    lineSpacing: '1.75',
+    paragraphSpacing: '1em'
 };
 
 const cache = {};
@@ -243,4 +256,18 @@ async function querySql(sql, params) {
     } catch (error) {
         console.error('Error executing SQL:', error);
     }
+}
+
+function getParagraphSettings() {
+    let paragraphSettings = localStorage.getItem('paragraphSettings');
+    if (paragraphSettings) {
+        paragraphSettings = JSON.parse(paragraphSettings);
+    } else {
+        paragraphSettings = defaultParagraphSettings;
+    }
+    return paragraphSettings;
+}
+
+function saveParagraphSettings(paragraphSettings) {
+    localStorage.setItem('paragraphSettings', JSON.stringify(paragraphSettings));
 }
