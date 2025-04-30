@@ -161,16 +161,20 @@ function setCustomTheme(css) {
     });
     if (paragraphSettings && paragraphSettings.isEnabled) {
         let classes = [];
+        let fontFamilyClass = {};
         if (paragraphSettings.fontSize) {
             classes.push({property: 'font-size', value: paragraphSettings.fontSize, append: true});
         }
         if (paragraphSettings.fontType) {
             if (paragraphSettings.fontType === 'serif') {
-                classes.push({property: 'font-family', value: serif, append: true});
+                fontFamilyClass = {property: 'font-family', value: serif, append: true};
+                classes.push(fontFamilyClass);
             } else if (paragraphSettings.fontType === 'sans') {
-                classes.push({property: 'font-family', value: sansSerif, append: true});
+                fontFamilyClass = {property: 'font-family', value: sansSerif, append: true};
+                classes.push(fontFamilyClass);
             } else if (paragraphSettings.fontType === 'mono') {
-                classes.push({property: 'font-family', value: monospace, append: true});
+                fontFamilyClass = {property: 'font-family', value: monospace, append: true};
+                classes.push(fontFamilyClass);
             }
         }
         if (paragraphSettings.fontWeight) {
@@ -186,7 +190,14 @@ function setCustomTheme(css) {
             classes.push({property: 'margin', value: `${paragraphSettings.paragraphSpacing} 0`, append: true});
         }
         customCss = modifyCss(customCss, {
-            '#wenyan p': classes
+            '#wenyan p': classes,
+            '#wenyan ul': classes,
+            '#wenyan h1': [fontFamilyClass],
+            '#wenyan h2': [fontFamilyClass],
+            '#wenyan h3': [fontFamilyClass],
+            '#wenyan h4': [fontFamilyClass],
+            '#wenyan h5': [fontFamilyClass],
+            '#wenyan h6': [fontFamilyClass]
         });
     }
     style.textContent = customCss;
@@ -534,6 +545,14 @@ function replaceCSSVariables(css) {
         cssVariables[variableName] = variableValue;
     }
 
+    if (!cssVariables['sans-serif-font']) {
+        cssVariables['sans-serif-font'] = sansSerif;
+    }
+
+    if (!cssVariables['monospace-font']) {
+        cssVariables['monospace-font'] = monospace;
+    }
+
     // 2. 递归解析 var() 引用为字典中对应的值
     function resolveVariable(value, variables, resolved = new Set()) {
         // 如果已经解析过这个值，则返回原始值以避免死循环
@@ -641,21 +660,23 @@ function modifyCss(customCss, updates) {
                 if (!update) return;
     
                 for (const { property, value, append } of update) {
-                    let found = false;
-                    csstree.walk(node.block, decl => {
-                        if (decl.type === 'Declaration' && decl.property === property) {
-                            decl.value = csstree.parse(value, { context: 'value' });
-                            found = true;
+                    if (value) {
+                        let found = false;
+                        csstree.walk(node.block, decl => {
+                            if (decl.type === 'Declaration' && decl.property === property) {
+                                decl.value = csstree.parse(value, { context: 'value' });
+                                found = true;
+                            }
+                        });
+                        if (!found && append) {
+                            node.block.children.prepend(
+                                list.createItem({
+                                    type: 'Declaration',
+                                    property,
+                                    value: csstree.parse(value, { context: 'value' })
+                                })
+                            );
                         }
-                    });
-                    if (!found && append) {
-                        node.block.children.prepend(
-                            list.createItem({
-                                type: 'Declaration',
-                                property,
-                                value: csstree.parse(value, { context: 'value' })
-                            })
-                        );
                     }
                 }
             }

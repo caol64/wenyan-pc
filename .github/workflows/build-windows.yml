@@ -29,7 +29,8 @@ jobs:
       with:
         path: |
           ~/.cargo
-          src-tauri/target
+          src-tauri/target/release/build
+          src-tauri/target/release/deps
         key: rust-cache-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           rust-cache-${{ runner.os }}-
