@@ -2,10 +2,11 @@
   "name": "wenyan",
   "private": true,
   "type": "module",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "scripts": {
-    "tauri-dev": "tauri dev",
-    "tauri": "tauri build"
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "info": "tauri info"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.3.1"
