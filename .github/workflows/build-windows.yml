@@ -39,7 +39,7 @@ jobs:
       run: npm install
 
     - name: Build
-      run: npm run tauri
+      run: npm run build
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
