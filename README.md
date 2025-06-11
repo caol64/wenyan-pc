@@ -6,6 +6,8 @@
 
 文颜`Windows`版，`Mac`版[请戳](https://github.com/caol64/wenyan)。
 
+**[文颜 MCP](https://github.com/caol64/wenyan-mcp) —— 可以让 AI 自动将 Markdown 文章排版后发布至微信公众号。**
+
 ## 3.0版本升级
 
 **支持图片上传功能。**
