@@ -25,36 +25,6 @@ const monospace = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liber
 let dbInstance = null;
 let loadingPromise = null;
 
-const highlightThemes = [
-    {
-        id: 'atom-one-dark'
-    },
-    {
-        id: 'atom-one-light'
-    },
-    {
-        id: 'dracula'
-    },
-    {
-        id: 'github-dark'
-    },
-    {
-        id: 'github'
-    },
-    {
-        id: 'monokai'
-    },
-    {
-        id: 'solarized-dark'
-    },
-    {
-        id: 'solarized-light'
-    },
-    {
-        id: 'xcode'
-    }
-];
-
 const gzhImageHost = {
     type: 'gzh',
     appId: '',
@@ -187,20 +157,6 @@ document.querySelectorAll('.external-link').forEach((link) => {
         await openShell(link.href);
     });
 });
-
-function stringToMap(str) {
-    const map = new Map();
-    if (str) {
-        const keyValuePairs = str.trim().split(' ');
-        for (const pair of keyValuePairs) {
-            const [key, value] = pair.split('=');
-            if (key && value) {
-                map.set(key, value);
-            }
-        }
-    }
-    return map;
-}
 
 function getCodeblockSettings() {
     let codeblockSettings = localStorage.getItem('codeblockSettings');

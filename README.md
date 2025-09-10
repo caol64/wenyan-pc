@@ -4,9 +4,13 @@
 
 # 文颜
 
-文颜`Windows`版，`Mac`版[请戳](https://github.com/caol64/wenyan)。
+本项目是文颜的跨平台版本。
 
-**[文颜 MCP](https://github.com/caol64/wenyan-mcp) —— 可以让 AI 自动将 Markdown 文章排版后发布至微信公众号。**
+## 其它版本
+
+- [文颜](https://github.com/caol64/wenyan) —— MAC App Store 版本。
+- [文颜 MCP](https://github.com/caol64/wenyan-mcp) —— 可以让 AI 自动将 Markdown 文章排版后发布至微信公众号。
+- [文颜 CLI](https://github.com/caol64/wenyan-cli) —— 文颜的 CLI 工具。
 
 ## 3.0版本升级
 
@@ -50,7 +54,7 @@
 
 ## 更多功能介绍
 
-[https://yuzhi.tech/docs/wenyan](https://yuzhi.tech/docs/wenyan)
+[https://yuzhi.tech/wenyan](https://yuzhi.tech/wenyan)
 
 ## 下载
 

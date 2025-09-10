@@ -19,51 +19,8 @@ const { getCurrentWindow } = window.__TAURI__.window;
 const { save, open, message } = window.__TAURI__.dialog;
 const { writeHtml, writeText } = window.__TAURI__.clipboardManager;
 
-const builtinThemes = [
-    {
-        id: 'gzh_default',
-        name: '默认',
-        author: ''
-    },
-    {
-        id: 'orangeheart',
-        name: 'Orange Heart',
-        author: 'evgo2017'
-    },
-    {
-        id: 'rainbow',
-        name: 'Rainbow',
-        author: 'thezbm'
-    },
-    {
-        id: 'lapis',
-        name: 'Lapis',
-        author: 'YiNN'
-    },
-    {
-        id: 'pie',
-        name: 'Pie',
-        author: 'kevinzhao2233'
-    },
-    {
-        id: 'maize',
-        name: 'Maize',
-        author: 'BEATREE'
-    },
-    {
-        id: 'purple',
-        name: 'Purple',
-        author: 'hliu202'
-    },
-    {
-        id: 'phycat',
-        name: '物理猫-薄荷',
-        author: 'sumruler'
-    }
-];
+const builtinThemes = WenyanCore.getAllThemes();
 
-// let greetInputEl;
-// let greetMsgEl;
 let selectedTheme = 'gzh_default';
 let codeblockSettings = getCodeblockSettings();
 let paragraphSettings = getParagraphSettings();
@@ -140,12 +97,12 @@ async function load() {
                     const id = gzhTheme.replace('customTheme', '');
                     customThemeContent = await getCustomThemeById(id);
                 } else {
-                    const themeResponse = await fetch(`themes/${selectedTheme}.css`);
-                    customThemeContent = await themeResponse.text();
+                    const theme = WenyanCore.themes[selectedTheme.replace('gzh_', '')];
+                    customThemeContent = await theme.getCss();
                 }
             } else {
-                const themeResponse = await fetch(`themes/${selectedTheme}.css`);
-                customThemeContent = await themeResponse.text();
+                const theme = WenyanCore.otherThemes[selectedTheme];
+                customThemeContent = await theme.getCss();
             }
             document.getElementById(selectedTheme).classList.add('selected');
             onUpdate();
@@ -159,12 +116,9 @@ async function load() {
 async function onUpdate() {
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
-        const highlightResponse = await fetch(`highlight/styles/${codeblockSettings.hightlightTheme}.min.css`);
-        const highlightCss = await highlightResponse.text();
         const message = {
             type: 'onUpdate',
-            // content: content,
-            highlightCss: highlightCss,
+            highlightCss: codeblockSettings.hightlightTheme,
             previewMode: previewMode,
             themeValue: customThemeContent,
             codeblockSettings: codeblockSettings,
@@ -183,10 +137,6 @@ async function onContentChange() {
         };
         iframe.contentWindow.postMessage(message, '*');
     }
-}
-
-async function onAppearanceChange(button) {
-    
 }
 
 async function onPeviewModeChange(button) {
@@ -302,17 +252,15 @@ async function changeTheme(theme) {
         const id = selectedTheme.replace('customTheme', '');
         customThemeContent = await getCustomThemeById(id);
     } else {
-        const themeResponse = await fetch(`themes/${selectedTheme}.css`);
-        customThemeContent = await themeResponse.text();
+        const theme = platform === 'gzh' ? WenyanCore.themes[selectedTheme.replace('gzh_', '')] : WenyanCore.otherThemes[selectedTheme];
+        customThemeContent = await theme.getCss();
     }
     const iframe = document.getElementById('rightFrame');
     if (iframe) {
-        const highlightThemePath = platform === 'gzh' ? `highlight/styles/${codeblockSettings.hightlightTheme}.min.css` : 'highlight/styles/github.min.css'
-        const highlightResponse = await fetch(highlightThemePath);
-        const highlightCss = await highlightResponse.text();
+        const highlightTheme = platform === 'gzh' ? codeblockSettings.hightlightTheme : 'github';
         const message = {
             type: 'onUpdate',
-            highlightCss: highlightCss,
+            highlightCss: highlightTheme,
             themeValue: customThemeContent,
             codeblockSettings: platform === 'gzh' ? codeblockSettings : defaultCodeblockSettings,
             paragraphSettings: platform === 'gzh' ? paragraphSettings : null
@@ -447,7 +395,7 @@ async function loadCustomThemes() {
             const li = document.createElement('li');
             li.setAttribute('id', i.id);
             const span1 = document.createElement('span');
-            span1.innerHTML = i.name;
+            span1.innerHTML = i.appName;
             const span2 = document.createElement('span');
             span2.innerHTML = i.author;
             li.appendChild(span1);
@@ -544,13 +492,12 @@ async function loadCustomTheme() {
                 const id = selectedTheme.replace('customTheme', '');
                 customThemeContent = await getCustomThemeById(id);
             } else {
-                const themeResponse = await fetch(`themes/${selectedTheme}.css`);
-                customThemeContent = await themeResponse.text();
+                const theme = WenyanCore.themes[selectedTheme.replace('gzh_', '')];
+                customThemeContent = await theme.getCss();
             }
         } else {
-            const theme = 'gzh_default';
-            const themeResponse = await fetch(`themes/${theme}.css`);
-            customThemeContent = await themeResponse.text();
+            const theme = WenyanCore.themes["default"];
+            customThemeContent = await theme.getCss();
         }
     }
 

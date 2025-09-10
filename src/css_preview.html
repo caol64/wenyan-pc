@@ -4,39 +4,17 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>WenYan</title>
-        <script src="highlight/highlight.min.js"></script>
+        <script src="wenyan-core.js"></script>
         <script>
-            function addContainer(math, doc) {
-                const tag = math.display ? 'section' : 'span';
-                const cls = math.display ? 'block-equation' : 'inline-equation';
-                math.typesetRoot.setAttribute("math", math.math);
-                math.typesetRoot = doc.adaptor.node(tag, {class: cls}, [math.typesetRoot]);
-            }
-            MathJax = {
-                options: {
-                    renderActions: {
-                        addContainer: [190, (doc) => {for (const math of doc.math) {addContainer(math, doc)}}, addContainer]
-                    }
-                },
-                svg: {
-                    fontCache: 'none'
-                },
-                tex: {
-                    inlineMath: [['$', '$'], ['\\(', '\\)']],
-                    displayMath: [['$$', '$$'], ['\\[', '\\]']]
-                }
-            };
-            function setCss(css) {
-                document.getElementById("theme").innerText = css;
+            function setCss(cssText) {
+                document.getElementById("theme").innerText = cssText;
             }
             window.addEventListener('click', function (event) {
                 // 发送点击事件的消息到父页面
                 window.parent.postMessage({ clicked: true }, '*');
             });
         </script>
-        <script src="mathjax/tex-svg-full.min.js"></script>
         <link rel="stylesheet" href="style.css">
-        <link rel="stylesheet" href="highlight/styles/github.min.css">
         <style id="theme"></style>
     </head>
     <body>
