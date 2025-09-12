@@ -19,7 +19,7 @@ const { getCurrentWindow } = window.__TAURI__.window;
 const { save, open, message } = window.__TAURI__.dialog;
 const { writeHtml, writeText } = window.__TAURI__.clipboardManager;
 
-const builtinThemes = WenyanCore.getAllThemes();
+const builtinThemes = WenyanStyles.getAllThemes();
 
 let selectedTheme = 'gzh_default';
 let codeblockSettings = getCodeblockSettings();
@@ -97,11 +97,11 @@ async function load() {
                     const id = gzhTheme.replace('customTheme', '');
                     customThemeContent = await getCustomThemeById(id);
                 } else {
-                    const theme = WenyanCore.themes[selectedTheme.replace('gzh_', '')];
+                    const theme = WenyanStyles.themes[selectedTheme.replace('gzh_', '')];
                     customThemeContent = await theme.getCss();
                 }
             } else {
-                const theme = WenyanCore.otherThemes[selectedTheme];
+                const theme = WenyanStyles.otherThemes[selectedTheme];
                 customThemeContent = await theme.getCss();
             }
             document.getElementById(selectedTheme).classList.add('selected');
@@ -252,7 +252,7 @@ async function changeTheme(theme) {
         const id = selectedTheme.replace('customTheme', '');
         customThemeContent = await getCustomThemeById(id);
     } else {
-        const theme = platform === 'gzh' ? WenyanCore.themes[selectedTheme.replace('gzh_', '')] : WenyanCore.otherThemes[selectedTheme];
+        const theme = platform === 'gzh' ? WenyanStyles.themes[selectedTheme.replace('gzh_', '')] : WenyanStyles.otherThemes[selectedTheme];
         customThemeContent = await theme.getCss();
     }
     const iframe = document.getElementById('rightFrame');
@@ -492,11 +492,11 @@ async function loadCustomTheme() {
                 const id = selectedTheme.replace('customTheme', '');
                 customThemeContent = await getCustomThemeById(id);
             } else {
-                const theme = WenyanCore.themes[selectedTheme.replace('gzh_', '')];
+                const theme = WenyanStyles.themes[selectedTheme.replace('gzh_', '')];
                 customThemeContent = await theme.getCss();
             }
         } else {
-            const theme = WenyanCore.themes["default"];
+            const theme = WenyanStyles.themes["default"];
             customThemeContent = await theme.getCss();
         }
     }

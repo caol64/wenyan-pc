@@ -1,0 +1,62 @@
+name: Build Windows Tauri Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.3.0'
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            node-modules-
+
+      - name: Cache Rust build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo
+            src-tauri/target/release/build
+            src-tauri/target/release/deps
+          key: rust-cache-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            rust-cache-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Package artifacts
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          ZIP_NAME="WenYan_${VERSION}_x64-setup.zip"
+          powershell Compress-Archive -Path src-tauri/target/release/bundle/nsis/* -DestinationPath $ZIP_NAME
+          echo "zip_name=$ZIP_NAME" >> $GITHUB_ENV
+
+      - name: Upload to Cloudflare R2
+        uses: aws-actions/s3-sync@v2
+        with:
+          bucket: ${{ secrets.R2_BUCKET }}
+          endpoint-url: ${{ secrets.R2_ENDPOINT }}
+          region: auto
+          source-dir: .
+          include: ${{ env.zip_name }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}

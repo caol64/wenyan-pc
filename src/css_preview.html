@@ -4,7 +4,20 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>WenYan</title>
-        <script src="wenyan-core.js"></script>
+        <script src="wenyan-styles.js"></script>
+        <link rel="stylesheet" href="style.css">
+        <style>
+            :root {
+                --sans-serif-font: ui-sans-serif, system-ui, 'Apple Color Emoji', 'Segoe UI', 'Segoe UI Symbol', 'Noto Sans', 'Roboto', sans-serif;
+                --monospace-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Roboto Mono', 'Courier New', 'Microsoft YaHei', monospace;
+            }
+            #wenyan pre {
+                font-size: 12px;
+            }
+        </style>
+        <style id="theme"></style>
+        <style id="highlight"></style>
+        <style id="macStyle"></style>
         <script>
             function setCss(cssText) {
                 document.getElementById("theme").innerText = cssText;
@@ -13,9 +26,11 @@
                 // 发送点击事件的消息到父页面
                 window.parent.postMessage({ clicked: true }, '*');
             });
+            (async () => {
+                document.getElementById("highlight").innerText = await WenyanStyles.hlThemes["github"].getCss();
+                document.getElementById("macStyle").innerText = WenyanStyles.macStyleCss;
+            })();
         </script>
-        <link rel="stylesheet" href="style.css">
-        <style id="theme"></style>
     </head>
     <body>
         <section id="wenyan" class="preview">
@@ -26,7 +41,7 @@
             <h5><span>五级标题</span></h5>
             <h6><span>六级标题</span></h6>
         <p>这是第一个段落。</p>
-        <p>这是第二个段落，<em>斜体</em>，<strong>加粗</strong>，行内代码：<code>monospace</code>，行内公式：$I = \int \rho R^{2} dV$。</p>
+        <p>这是第二个段落，<em>斜体</em>，<strong>加粗</strong>，行内代码：<code>monospace</code>。</p>
         <p>无序列表：</p>
         <ul>
         <li>this one</li>
@@ -47,10 +62,6 @@
         if you like.</p>
         </blockquote>
         <p>代码块：</p>
-        <pre><code>define foobar() {
-    print "Welcome to flavor country!";
-}
-        </code></pre>
         <pre><code class="hljs language-python"><span class="hljs-keyword">import</span> time
 <span class="hljs-comment"># Quick, count to ten!</span>
 <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">10</span>):
@@ -66,8 +77,6 @@
         <hr>
         <p>图片：</p>
         <p><img src="https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png" alt="example image"></p>
-        <p>行间公式：</p>
-        $$I = \int \rho R^{2} dV$$
         <p>引用链接：</p>
         <p>Here's a link to <a href="http://foo.bar">a website</a><sup class="footnote">[1]</sup>, to a <a href="local-doc.html">local
                 doc</a><sup class="footnote">[2]</sup>, and to a <a href="#an-h2-header">section heading in the current

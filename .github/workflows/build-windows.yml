@@ -41,8 +41,14 @@ jobs:
     - name: Build
       run: npm run build
 
+    - name: Fetch zip name
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        ZIP_NAME="WenYan_${VERSION}_x64-setup"
+        echo "zip_name=$ZIP_NAME" >> $GITHUB_ENV
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: tauri-build
-        path: src-tauri/target/release/bundle/
+        name: ${{ env.zip_name }}
+        path: src-tauri/target/release/bundle/nsis/

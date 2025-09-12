@@ -39,7 +39,12 @@ function setStylesheet(id, href) {
 async function setContent(content) {
     document.getElementById("wenyan")?.remove();
     const container = document.createElement("section");
-    container.innerHTML = await WenyanCore.renderMarkdown(content);
+    const preHandlerContent = WenyanCore.handleFrontMatter(content);
+    let body = preHandlerContent.body;
+    if (preHandlerContent.title) {
+        body = `# ${preHandlerContent.title}\n\n${body}`;
+    }
+    container.innerHTML = await WenyanCore.renderMarkdown(body);
     container.setAttribute("id", "wenyan");
     container.setAttribute("class", "preview");
     document.body.appendChild(container);
@@ -122,7 +127,7 @@ async function setHighlight(hlThemeId) {
     if (hlThemeId) {
         const style = document.createElement("style");
         style.setAttribute("id", "hljs");
-        const hlTheme = WenyanCore.hlThemes[hlThemeId];
+        const hlTheme = hlThemes[hlThemeId];
         highlightCss = await hlTheme.getCss();
         style.textContent = highlightCss;
         document.head.appendChild(style);
@@ -244,46 +249,6 @@ function scroll(scrollFactor) {
     requestAnimationFrame(() => isScrollingFromScript = false);
 }
 
-function addFootnotes(listStyle) {
-    let footnotes = [];
-    let footnoteIndex = 0;
-    const links = document.querySelectorAll('a[href]'); // 获取所有带有 href 的 a 元素
-    links.forEach((linkElement) => {
-        const title = linkElement.textContent || linkElement.innerText;
-        const href = linkElement.getAttribute("href");
-        
-        // 添加脚注并获取脚注编号
-        footnotes.push([++footnoteIndex, title, href]);
-        
-        // 在链接后插入脚注标记
-        const footnoteMarker = document.createElement('sup');
-        footnoteMarker.setAttribute("class", "footnote");
-        footnoteMarker.innerHTML = `[${footnoteIndex}]`;
-        linkElement.after(footnoteMarker);
-    });
-    if (footnoteIndex > 0) {
-        if (!listStyle) {
-            let footnoteArray = footnotes.map((x) => {
-                if (x[1] === x[2]) {
-                    return `<p><span class="footnote-num">[${x[0]}]</span><span class="footnote-txt"><i>${x[1]}</i></span></p>`;
-                }
-                return `<p><span class="footnote-num">[${x[0]}]</span><span class="footnote-txt">${x[1]}: <i>${x[2]}</i></span></p>`;
-            });
-            const footnotesHtml = `<h3>引用链接</h3><section id="footnotes">${footnoteArray.join("")}</section>`;
-            document.getElementById("wenyan").innerHTML += footnotesHtml;
-        } else {
-            let footnoteArray = footnotes.map((x) => {
-                if (x[1] === x[2]) {
-                    return `<li id="#footnote-${x[0]}">[${x[0]}]: <i>${x[1]}</i></li>`;
-                }
-                return `<li id="#footnote-${x[0]}">[${x[0]}] ${x[1]}: <i>${x[2]}</i></li>`;
-            });
-            const footnotesHtml = `<h3>引用链接</h3><div id="footnotes"><ul>${footnoteArray.join("")}</ul></div>`;
-            document.getElementById("wenyan").innerHTML += footnotesHtml;
-        }
-    }
-}
-
 function tableToAsciiArt(table) {
     const rows = Array.from(table.querySelectorAll('tr')).map(tr =>
         Array.from(tr.querySelectorAll('th, td')).map(td => td.innerText.trim())
@@ -348,7 +313,7 @@ window.addEventListener('message', (event) => {
                 if (macStyle) {
                     const style = document.createElement("style");
                     style.id = "macStyle";
-                    style.textContent = WenyanCore.macStyleCss;
+                    style.textContent = macStyleCss;
                     document.head.appendChild(style);
                 } else {
                     document.getElementById("macStyle")?.remove();
@@ -363,10 +328,11 @@ window.addEventListener('message', (event) => {
         } else if (event.data.type === 'onPeviewModeChange') {
             setPreviewMode(event.data.previewMode);
         } else if (event.data.type === 'onFootnoteChange') {
-            addFootnotes();
+            WenyanCore.addFootnotes(false, document.getElementById("wenyan"));
         }
     }
 });
+
 window.onscroll = function () {
     if (!isScrollingFromScript) {
         const message = {
@@ -376,10 +342,12 @@ window.onscroll = function () {
         window.parent.postMessage(message, '*');
     }
 };
+
 window.addEventListener('click', function(event) {
     // 发送点击事件的消息到父页面
     window.parent.postMessage({ clicked: true }, '*');
 });
+
 window.addEventListener("load", (event) => {
     const message = {
         type: 'onRightReady'
