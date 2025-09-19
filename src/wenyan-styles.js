@@ -5,7 +5,7 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
     background-repeat: no-repeat;
     width: 100%;
     height: 16px;
-}`,s=[{id:"default",name:"Default",description:"A clean, classic layout ideal for long-form reading.",appName:"默认",author:""},{id:"orangeheart",name:"OrangeHeart",description:"A vibrant and elegant theme in warm orange tones.",appName:"Orange Heart",author:"evgo2017"},{id:"rainbow",name:"Rainbow",description:"A colorful, lively theme with a clean layout.",appName:"Rainbow",author:"thezbm"},{id:"lapis",name:"Lapis",description:"A minimal and refreshing theme in cool blue tones.",appName:"Lapis",author:"YiNN"},{id:"pie",name:"Pie",description:"Inspired by sspai.com and Misty — modern, sharp, and stylish.",appName:"Pie",author:"kevinzhao2233"},{id:"maize",name:"Maize",description:"A crisp, light theme with a soft maize palette.",appName:"Maize",author:"BEATREE"},{id:"purple",name:"Purple",description:"Clean and minimalist, with a subtle purple accent.",appName:"Purple",author:"hliu202"},{id:"phycat",name:"Phycat",description:"物理猫-薄荷：a mint-green theme with clear structure and hierarchy.",appName:"物理猫-薄荷",author:"sumruler"}],r=Object.assign({"./themes/default.css":()=>Promise.resolve().then(()=>b).then(n=>n.default),"./themes/juejin_default.css":()=>Promise.resolve().then(()=>w).then(n=>n.default),"./themes/lapis.css":()=>Promise.resolve().then(()=>f).then(n=>n.default),"./themes/maize.css":()=>Promise.resolve().then(()=>y).then(n=>n.default),"./themes/medium_default.css":()=>Promise.resolve().then(()=>u).then(n=>n.default),"./themes/orangeheart.css":()=>Promise.resolve().then(()=>x).then(n=>n.default),"./themes/phycat.css":()=>Promise.resolve().then(()=>j).then(n=>n.default),"./themes/pie.css":()=>Promise.resolve().then(()=>k).then(n=>n.default),"./themes/purple.css":()=>Promise.resolve().then(()=>v).then(n=>n.default),"./themes/rainbow.css":()=>Promise.resolve().then(()=>z).then(n=>n.default),"./themes/toutiao_default.css":()=>Promise.resolve().then(()=>_).then(n=>n.default),"./themes/zhihu_default.css":()=>Promise.resolve().then(()=>M).then(n=>n.default)});function d(n){const l=`./themes/${n.id}.css`,o=r[l];return o?{...n,getCss:o}:(console.warn(`[Themes] CSS file not found for theme: ${n.id}`),null)}const t=Object.fromEntries(s.map(n=>d(n)).filter(n=>n!==null).map(n=>[n.id,n]));function h(){return Object.values(t)}const c=Object.fromEntries(["juejin_default","medium_default","toutiao_default","zhihu_default"].map(n=>[n,{id:n,name:"",description:"",appName:"",author:"",getCss:r[`./themes/${n}.css`]}])),p=[{id:"atom-one-dark"},{id:"atom-one-light"},{id:"dracula"},{id:"github-dark"},{id:"github"},{id:"monokai"},{id:"solarized-dark"},{id:"solarized-light"},{id:"xcode"}],m=Object.assign({"./highlight/styles/atom-one-dark.min.css":()=>Promise.resolve().then(()=>T).then(n=>n.default),"./highlight/styles/atom-one-light.min.css":()=>Promise.resolve().then(()=>I).then(n=>n.default),"./highlight/styles/dracula.min.css":()=>Promise.resolve().then(()=>N).then(n=>n.default),"./highlight/styles/github-dark.min.css":()=>Promise.resolve().then(()=>S).then(n=>n.default),"./highlight/styles/github.min.css":()=>Promise.resolve().then(()=>D).then(n=>n.default),"./highlight/styles/monokai.min.css":()=>Promise.resolve().then(()=>O).then(n=>n.default),"./highlight/styles/solarized-dark.min.css":()=>Promise.resolve().then(()=>A).then(n=>n.default),"./highlight/styles/solarized-light.min.css":()=>Promise.resolve().then(()=>L).then(n=>n.default),"./highlight/styles/xcode.min.css":()=>Promise.resolve().then(()=>C).then(n=>n.default)}),a={};for(const n of p){const l=`./highlight/styles/${n.id}.min.css`,o=m[l];o?a[n.id]={...n,getCss:o}:console.warn(`[Highlight Themes] CSS file not found for theme: ${n.id}`)}function g(){return Object.values(a)}(function(n){n.macStyleCss=i,n.themes=t,n.hlThemes=a})(typeof window<"u"?window:void 0);const b=Object.freeze(Object.defineProperty({__proto__:null,default:`/**
+}`,s=[{id:"default",name:"Default",description:"A clean, classic layout ideal for long-form reading.",appName:"默认",author:""},{id:"orangeheart",name:"OrangeHeart",description:"A vibrant and elegant theme in warm orange tones.",appName:"Orange Heart",author:"evgo2017"},{id:"rainbow",name:"Rainbow",description:"A colorful, lively theme with a clean layout.",appName:"Rainbow",author:"thezbm"},{id:"lapis",name:"Lapis",description:"A minimal and refreshing theme in cool blue tones.",appName:"Lapis",author:"YiNN"},{id:"pie",name:"Pie",description:"Inspired by sspai.com and Misty — modern, sharp, and stylish.",appName:"Pie",author:"kevinzhao2233"},{id:"maize",name:"Maize",description:"A crisp, light theme with a soft maize palette.",appName:"Maize",author:"BEATREE"},{id:"purple",name:"Purple",description:"Clean and minimalist, with a subtle purple accent.",appName:"Purple",author:"hliu202"},{id:"phycat",name:"Phycat",description:"物理猫-薄荷：a mint-green theme with clear structure and hierarchy.",appName:"物理猫-薄荷",author:"sumruler"}],r=Object.assign({"./themes/default.css":()=>Promise.resolve().then(()=>b).then(n=>n.default),"./themes/juejin_default.css":()=>Promise.resolve().then(()=>w).then(n=>n.default),"./themes/lapis.css":()=>Promise.resolve().then(()=>f).then(n=>n.default),"./themes/maize.css":()=>Promise.resolve().then(()=>y).then(n=>n.default),"./themes/medium_default.css":()=>Promise.resolve().then(()=>u).then(n=>n.default),"./themes/orangeheart.css":()=>Promise.resolve().then(()=>x).then(n=>n.default),"./themes/phycat.css":()=>Promise.resolve().then(()=>j).then(n=>n.default),"./themes/pie.css":()=>Promise.resolve().then(()=>k).then(n=>n.default),"./themes/purple.css":()=>Promise.resolve().then(()=>v).then(n=>n.default),"./themes/rainbow.css":()=>Promise.resolve().then(()=>z).then(n=>n.default),"./themes/toutiao_default.css":()=>Promise.resolve().then(()=>M).then(n=>n.default),"./themes/zhihu_default.css":()=>Promise.resolve().then(()=>_).then(n=>n.default)});function d(n){const l=`./themes/${n.id}.css`,o=r[l];return o?{...n,getCss:o}:(console.warn(`[Themes] CSS file not found for theme: ${n.id}`),null)}const t=Object.fromEntries(s.map(n=>d(n)).filter(n=>n!==null).map(n=>[n.id,n]));function h(){return Object.values(t)}const c=Object.fromEntries(["juejin_default","medium_default","toutiao_default","zhihu_default"].map(n=>[n,{id:n,name:"",description:"",appName:"",author:"",getCss:r[`./themes/${n}.css`]}])),p=[{id:"atom-one-dark"},{id:"atom-one-light"},{id:"dracula"},{id:"github-dark"},{id:"github"},{id:"monokai"},{id:"solarized-dark"},{id:"solarized-light"},{id:"xcode"}],m=Object.assign({"./highlight/styles/atom-one-dark.min.css":()=>Promise.resolve().then(()=>T).then(n=>n.default),"./highlight/styles/atom-one-light.min.css":()=>Promise.resolve().then(()=>I).then(n=>n.default),"./highlight/styles/dracula.min.css":()=>Promise.resolve().then(()=>N).then(n=>n.default),"./highlight/styles/github-dark.min.css":()=>Promise.resolve().then(()=>S).then(n=>n.default),"./highlight/styles/github.min.css":()=>Promise.resolve().then(()=>D).then(n=>n.default),"./highlight/styles/monokai.min.css":()=>Promise.resolve().then(()=>O).then(n=>n.default),"./highlight/styles/solarized-dark.min.css":()=>Promise.resolve().then(()=>A).then(n=>n.default),"./highlight/styles/solarized-light.min.css":()=>Promise.resolve().then(()=>L).then(n=>n.default),"./highlight/styles/xcode.min.css":()=>Promise.resolve().then(()=>C).then(n=>n.default)}),a={};for(const n of p){const l=`./highlight/styles/${n.id}.min.css`,o=m[l];o?a[n.id]={...n,getCss:o}:console.warn(`[Highlight Themes] CSS file not found for theme: ${n.id}`)}function g(){return Object.values(a)}(function(n){n.macStyleCss=i,n.themes=t,n.hlThemes=a})(typeof window<"u"?window:void 0);const b=Object.freeze(Object.defineProperty({__proto__:null,default:`/**
  * 欢迎使用自定义主题功能，使用教程：
  * https://babyno.top/posts/2024/11/wenyan-supports-customized-themes/
  */
@@ -1016,19 +1016,19 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
  *     https://github.com/sumruler/typora-theme-phycat
  */
 
- :root {
+:root {
     /* 标题后小图标，借鉴自思源笔记主题——Savor */
     --h1-r-graphic: url("https://cdn.phycat.cn/img/mdicon/green/h1_icon.svg")
         no-repeat center;
     --h2-r-graphic: url("https://cdn.phycat.cn/img/mdicon/green/h2_icon.svg")
         no-repeat center;
-    --h3-r-graphic: url("https://cdn.phycat.cn/img/mdicon/green/h3_icon.svg")
+    --h3-r-graphic: url("data:image/svg+xml;utf8,<svg fill='rgba(74, 200, 141, 0.5)' height='28' viewBox='0 0 32 32' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M4.571 25.143c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM4.571 18.286c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM11.429 25.143c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286z'/></svg>")
         no-repeat center;
-    --h4-r-graphic: url("https://cdn.phycat.cn/img/mdicon/green/h4_icon.svg")
+    --h4-r-graphic: url("data:image/svg+xml;utf8,<svg fill='rgba(74, 200, 141, 0.5)' height='24' viewBox='0 0 32 32' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M4.571 25.143c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM4.571 18.286c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM11.429 25.143c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM11.429 22.857c1.257 0 2.286-1.029 2.286-2.286s-1.029-2.286-2.286-2.286-2.286 1.029-2.286 2.286 1.029 2.286 2.286 2.286z'/></svg>")
         no-repeat center;
-    --h5-r-graphic: url("https://cdn.phycat.cn/img/mdicon/green/h5_icon.svg")
+    --h5-r-graphic: url("data:image/svg+xml;utf8,<svg fill='rgba(74, 200, 141, 0.5)' height='24' viewBox='0 0 32 32' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M4.571 18.286c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM11.429 22.857c1.257 0 2.286-1.029 2.286-2.286s-1.029-2.286-2.286-2.286-2.286 1.029-2.286 2.286 1.029 2.286 2.286 2.286zM4.571 25.143c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM11.429 25.143c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM4.571 11.429c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286z'/></svg>")
         no-repeat center;
-    --h6-r-graphic: url("https://cdn.phycat.cn/img/mdicon/green/h6_icon.svg")
+    --h6-r-graphic: url("data:image/svg+xml;utf8,<svg fill='rgba(74, 200, 141, 0.5)' height='24' viewBox='0 0 32 32' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M4.571 25.143c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM4.571 18.286c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM4.571 11.429c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM11.429 18.286c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM11.429 25.143c-1.257 0-2.286 1.029-2.286 2.286s1.029 2.286 2.286 2.286 2.286-1.029 2.286-2.286-1.029-2.286-2.286-2.286zM11.429 16c1.257 0 2.286-1.029 2.286-2.286s-1.029-2.286-2.286-2.286-2.286 1.029-2.286 2.286 1.029 2.286 2.286 2.286z'/></svg>")
         no-repeat center;
 
     /* 是否开启网格背景？1 是；0 否 */
@@ -1060,7 +1060,7 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
 }
 #wenyan {
     font-size: 14px;
-    font-family:var(--sans-serif-font);
+    font-family: var(--sans-serif-font);
     margin: 0 auto;
     padding: 15px;
     line-height: 1.75;
@@ -1069,17 +1069,21 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
     word-break: break-word;
     word-wrap: break-word;
     text-align: left;
-    background-image: linear-gradient(90deg,
-    rgba(50, 0, 0, 0.05) calc(3% * var(--bg-grid)),
-    rgba(0, 0, 0, 0) calc(3% * var(--bg-grid))),
-    linear-gradient(360deg,
-    rgba(50, 0, 0, 0.05) calc(3% * var(--bg-grid)),
-    rgba(0, 0, 0, 0) calc(3% * var(--bg-grid)));
-  background-size: 20px 20px;
-  background-position: center center;
+    background-image: linear-gradient(
+            90deg,
+            rgba(50, 0, 0, 0.05) calc(3% * var(--bg-grid)),
+            rgba(0, 0, 0, 0) calc(3% * var(--bg-grid))
+        ),
+        linear-gradient(
+            360deg,
+            rgba(50, 0, 0, 0.05) calc(3% * var(--bg-grid)),
+            rgba(0, 0, 0, 0) calc(3% * var(--bg-grid))
+        );
+    background-size: 20px 20px;
+    background-position: center center;
 }
 #wenyan p {
-    text-align:justify;
+    text-align: justify;
     color: #333;
     margin: 10px 10px;
     word-spacing: 2px;
@@ -1088,7 +1092,7 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
 #wenyan h4::after,
 #wenyan h5::after,
 #wenyan h6::after {
-    content: '';
+    content: "";
     margin-left: 0.2em;
     height: 2em;
     width: 1.2em;
@@ -1126,9 +1130,12 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
     background: var(--head-title-h2-background);
     background-size: 200% 100%;
     background-position: 0% 0%;
-    transition: all ease-in-out 0.1s;
+    display: inline-block;
 }
-#wenyan h3,h4,h5,h6{
+#wenyan h3,
+h4,
+h5,
+h6 {
     font-weight: bold;
     display: flex;
     align-items: top;
@@ -1148,7 +1155,7 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
     font-size: 1.15em;
 }
 #wenyan h4::before {
-    content: '';
+    content: "";
     margin-right: 7px;
     margin-top: 8px;
     background-color: var(--head-title-color);
@@ -1162,7 +1169,7 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
     font-size: 1.1em;
 }
 #wenyan h5::before {
-    content: '';
+    content: "";
     margin-right: 7px;
     margin-top: 8px;
     display: inline-block;
@@ -1177,60 +1184,60 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
     font-size: 1.1em;
 }
 #wenyan h6::before {
-    content: '⁘';
+    content: "⁘";
     color: var(--head-title-color);
     margin-right: 7px;
 }
 
 #wenyan ol {
-  margin-left: 2px;
-  padding-left: 12px;
-  margin-bottom: 0px;
-  margin-top: 0px;
+    margin-left: 2px;
+    padding-left: 12px;
+    margin-bottom: 0px;
+    margin-top: 0px;
 }
 
 #wenyan ul {
-  list-style-type: disc;
-  margin-bottom: 0px;
-  margin-top: 0px;
+    list-style-type: disc;
+    margin-bottom: 0px;
+    margin-top: 0px;
 }
 
 #wenyan ul ul {
-  list-style-type: circle;
+    list-style-type: circle;
 }
 
 #wenyan ul ul ul {
-  list-style-type: square;
+    list-style-type: square;
 }
 
 #wenyan ol {
-  padding-left: 27px;
-  list-style-type: decimal;
+    padding-left: 27px;
+    list-style-type: decimal;
 }
 #wenyan ol ol {
-  list-style-type: lower-alpha;
+    list-style-type: lower-alpha;
 }
 #wenyan ol ol ol {
-  list-style-type: lower-roman;
+    list-style-type: lower-roman;
 }
 
 #wenyan li {
-  color: #333;
-  margin: 0px 6px;
-  word-spacing: 2px;
-  line-height: 2.5;
+    color: #333;
+    margin: 0px 6px;
+    word-spacing: 2px;
+    line-height: 2.5;
 }
 
 #wenyan li {
-  position: relative;
+    position: relative;
 }
-#wenyan li > p{
-  margin:0;
+#wenyan li > p {
+    margin: 0;
 }
 #wenyan blockquote {
-    font-size:12px;
+    font-size: 12px;
     margin-left: 12px;
-    text-align:justify;
+    text-align: justify;
     padding: 12px;
     background: var(--element-color-soo-shallow);
     border: 0px solid var(--element-color);
@@ -1268,7 +1275,7 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
 }
 #wenyan img {
     max-width: 90%;
-    display:block;
+    display: block;
     border-radius: 6px;
     margin: 10px auto;
     object-fit: contain;
@@ -1288,14 +1295,14 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
     border-radius: 5px;
     line-height: 2;
     margin: 1em 0.5em;
-    padding: .5em;
+    padding: 0.5em;
     box-shadow: rgba(0, 0, 0, 0.55) 0px 1px 5px;
 }
 #wenyan pre code {
     font-family: var(--monospace-font);
     display: block;
     overflow-x: auto;
-    margin: .5em;
+    margin: 0.5em;
     padding: 0;
 }
 #wenyan table {
@@ -1920,7 +1927,7 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
     word-wrap: break-word;
     word-break: break-all;
 }
-`},Symbol.toStringTag,{value:"Module"})),_=Object.freeze(Object.defineProperty({__proto__:null,default:`:root {
+`},Symbol.toStringTag,{value:"Module"})),M=Object.freeze(Object.defineProperty({__proto__:null,default:`:root {
     --sans-serif-font: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji";
     --monospace-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "liberation mono", "courier new", monospace;
@@ -2067,7 +2074,7 @@ var WenyanStyles=(function(e){"use strict";const i=`#wenyan pre::before {
 #wenyan .footnote {
     color: #0069c2;
 }
-`},Symbol.toStringTag,{value:"Module"})),M=Object.freeze(Object.defineProperty({__proto__:null,default:`:root {
+`},Symbol.toStringTag,{value:"Module"})),_=Object.freeze(Object.defineProperty({__proto__:null,default:`:root {
     --sans-serif-font: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji";
     --monospace-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "liberation mono", "courier new", monospace;
