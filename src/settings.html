@@ -199,8 +199,16 @@
             color: #666;
         }
 
+        #content-itemParagraphSettings .form-wrapper {
+            max-height: 1000px;
+            overflow: hidden;
+            opacity: 1;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+        }
+
         #content-itemParagraphSettings .form-wrapper.hidden {
-            display: none;
+            max-height: 0;
+            opacity: 0;
         }
     </style>
 </head>
