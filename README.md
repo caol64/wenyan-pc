@@ -4,13 +4,20 @@
 
 # 文颜
 
+[![Download](https://img.shields.io/badge/Download-latest-brightgreen)](https://yuzhi.tech/docs/wenyan/download)
+[![Guides](https://img.shields.io/badge/Getting_Started-fe7d37?logo=gitbook&logoColor=fff)](https://yuzhi.tech/docs/wenyan)
+[![License](https://img.shields.io/github/license/caol64/wenyan-pc)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/caol64/wenyan-pc?style=social)](https://github.com/caol64/wenyan-pc)
+
 本项目是文颜的跨平台版本。
 
 ## 其它版本
 
-- [文颜](https://github.com/caol64/wenyan) —— MAC App Store 版本。
-- [文颜 MCP](https://github.com/caol64/wenyan-mcp) —— 可以让 AI 自动将 Markdown 文章排版后发布至微信公众号。
-- [文颜 CLI](https://github.com/caol64/wenyan-cli) —— 文颜的 CLI 工具。
+* [macOS App Store 版](https://github.com/caol64/wenyan) - MAC 桌面应用
+* [跨平台版本](https://github.com/caol64/wenyan-pc) - Windows/Linux 跨平台桌面应用
+* [CLI 版本](https://github.com/caol64/wenyan-cli) - CI/CD 或脚本自动化发布公众号文章
+* [MCP 版本](https://github.com/caol64/wenyan-mcp) - 让 AI 自动发布公众号文章
+* [嵌入版本](https://github.com/caol64/wenyan-core) - 将文颜的核心功能嵌入 Node 或者 Web 项目
 
 ## 3.0版本升级
 

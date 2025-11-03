@@ -16,8 +16,6 @@
 
 let postprocessMarkdown = "";
 let isScrollingFromScript = false;
-let customCss = "";
-let highlightCss = "";
 let codeblockSettings = getCodeblockSettings();
 let paragraphSettings = getParagraphSettings();
 
@@ -39,11 +37,12 @@ function setStylesheet(id, href) {
 async function setContent(content) {
     document.getElementById("wenyan")?.remove();
     const container = document.createElement("section");
-    const preHandlerContent = WenyanCore.handleFrontMatter(content);
+    const preHandlerContent = await WenyanCore.handleFrontMatter(content);
     let body = preHandlerContent.body;
     if (preHandlerContent.title) {
         body = `# ${preHandlerContent.title}\n\n${body}`;
     }
+    postprocessMarkdown = body;
     container.innerHTML = await WenyanCore.renderMarkdown(body);
     container.setAttribute("id", "wenyan");
     container.setAttribute("class", "preview");
@@ -60,7 +59,7 @@ function setCustomTheme(css) {
     document.getElementById("theme")?.remove();
     const style = document.createElement("style");
     style.setAttribute("id", "theme");
-    customCss = WenyanCore.replaceCSSVariables(css);
+    let customCss = WenyanCore.replaceCSSVariables(css);
     customCss = WenyanCore.modifyCss(customCss, {
         '#wenyan pre code': [
             {
@@ -127,12 +126,9 @@ async function setHighlight(hlThemeId) {
     if (hlThemeId) {
         const style = document.createElement("style");
         style.setAttribute("id", "hljs");
-        const hlTheme = hlThemes[hlThemeId];
-        highlightCss = await hlTheme.getCss();
-        style.textContent = highlightCss;
+        const hlTheme = WenyanStyles.hlThemes[hlThemeId];
+        style.textContent = await hlTheme.getCss();
         document.head.appendChild(style);
-    } else {
-        highlightCss = "";
     }
 }
 
@@ -176,7 +172,10 @@ async function getContentForGzh() {
     const wenyan = document.getElementById("wenyan");
     const clonedWenyan = wenyan.cloneNode(true);
     revertImages(clonedWenyan);
-    return WenyanCore.getContentForGzhCustomCss(clonedWenyan, customCss, highlightCss, macStyle);
+    const customCss = document.getElementById("theme")?.textContent || "";
+    const highlightCss = document.getElementById("hljs")?.textContent || "";
+    const isMacStyle = document.getElementById("macStyle") ? true : false;
+    return WenyanCore.getContentForGzhCustomCss(clonedWenyan, customCss, highlightCss, isMacStyle, false);
 }
 
 function getContentForMedium() {
@@ -197,9 +196,17 @@ function getContentForMedium() {
             const classAttribute = code.getAttribute('class');
             // 提取语言
             if (classAttribute) {
-                const language = classAttribute.split(' ').find(cls => cls.startsWith('language-')).replace('language-', '');
-                if (language) {
-                    p.setAttribute("data-code-block-lang", language);
+                // 1. 分割类名并使用 find() 查找以 'language-' 开头的类
+                const languageClass = classAttribute.split(' ').find(cls => cls.startsWith('language-'));
+                
+                // 2. 关键：检查 find() 的返回值是否有效（即不是 undefined）
+                if (languageClass) {
+                    // 3. 只有在找到匹配项时，才执行 replace() 来提取语言名
+                    const language = languageClass.replace('language-', '');
+                    
+                    if (language) {
+                        p.setAttribute("data-code-block-lang", language);
+                    }
                 }
             }
             // 获取所有子 span 元素

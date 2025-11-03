@@ -12,7 +12,9 @@
         <script src="utils.js"></script>
         <script src="right.js"></script>
         <script>
-            WenyanCore.configureMarked();
+            (async () => {
+                await WenyanCore.configureMarked();
+            })();
         </script>
     </head>
     <body>
