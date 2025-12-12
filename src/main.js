@@ -14,590 +14,350 @@
  * limitations under the License.
  */
 
-const { resolveResource } = window.__TAURI__.path;
-const { getCurrentWindow } = window.__TAURI__.window;
-const { save, open, message } = window.__TAURI__.dialog;
-const { writeHtml, writeText } = window.__TAURI__.clipboardManager;
-
-const builtinThemes = WenyanStyles.getAllThemes();
-
-let selectedTheme = 'gzh_default';
+let postprocessMarkdown = "";
+let isScrollingFromScript = false;
 let codeblockSettings = getCodeblockSettings();
 let paragraphSettings = getParagraphSettings();
-let previewMode = 'style.css';
-let content = '';
-let isFootnotes = false;
-let platform = 'gzh';
-let leftReady = false;
-let rightReady = false;
-let customThemeContent = '';
-let selectedCustomTheme = '';
 
-window.addEventListener('message', async (event) => {
-    if (event.data) {
-        if (event.data.type === 'onReady') {
-            leftReady = true;
-            load();
-        } else if (event.data.type === 'onRightReady') {
-            rightReady = true;
-            load();
-        } else if (event.data.type === 'onChange') {
-            content = event.data.value;
-            setLastArticle(content);
-            onContentChange();
-        } else if (event.data.type === 'leftScroll') {
-            const iframe = document.getElementById('rightFrame');
-            const iframeWindow = iframe.contentWindow;
-            iframeWindow.scroll(event.data.value.y0);
-        } else if (event.data.type === 'rightScroll') {
-            const iframe = document.getElementById('leftFrame');
-            const iframeWindow = iframe.contentWindow;
-            iframeWindow.scroll(event.data.value.y0);
-        } else if (event.data.clicked) {
-            hideThemeOverlay();
-            hideMenu();
-        } else if (event.data.type === 'onReadyCss') {
-            loadCustomTheme();
-        } else if (event.data.type === 'onChangeCss') {
-            customThemeContent = event.data.value;
-            updateThemePreview();
-        } else if (event.data.type === 'onError') {
-            await message(event.data.value);
-        } else if (event.data.type === 'onHighlightChange') {
-            codeblockSettings = event.data.value;
-            onUpdate();
-        } else if (event.data.type === 'onParagraphSettingsChange') {
-            paragraphSettings = event.data.value;
-            onUpdate();
-        }
+function getScrollFrame() {
+    const height = document.body.scrollHeight;
+    const width = document.getElementById("wenyan").offsetWidth;
+    const fullWidth = document.body.scrollWidth;
+    return { width, height, fullWidth }
+}
+
+function setStylesheet(id, href) {
+    const style = document.createElement("link");
+    style.setAttribute("id", id);
+    style.setAttribute("rel", "stylesheet");
+    style.setAttribute("href", href);
+    document.head.appendChild(style);
+}
+
+async function setContent(content) {
+    document.getElementById("wenyan")?.remove();
+    const container = document.createElement("section");
+    const preHandlerContent = await WenyanCore.handleFrontMatter(content);
+    let body = preHandlerContent.body;
+    if (preHandlerContent.title) {
+        body = `# ${preHandlerContent.title}\n\n${body}`;
     }
-});
+    postprocessMarkdown = body;
+    container.innerHTML = await WenyanCore.renderMarkdown(body);
+    container.setAttribute("id", "wenyan");
+    container.setAttribute("class", "preview");
+    document.body.appendChild(container);
+    handleImages(container);
+}
 
-async function load() {
-    if (leftReady && rightReady) {
-        try {
-            let lastArticle = localStorage.getItem('lastArticle');
-            if (!lastArticle) {
-                const resourcePath = await resolveResource('resources/example.md');
-                lastArticle = await readAsText(resourcePath);
+function setPreviewMode(mode) {
+    document.getElementById("style")?.remove();
+    setStylesheet("style", mode);
+}
+
+function setCustomTheme(css) {
+    document.getElementById("theme")?.remove();
+    const style = document.createElement("style");
+    style.setAttribute("id", "theme");
+    let customCss = WenyanCore.replaceCSSVariables(css);
+    customCss = WenyanCore.modifyCss(customCss, {
+        '#wenyan pre code': [
+            {
+                property: 'font-family',
+                value: codeblockSettings.fontFamily,
+                append: true
             }
-            content = lastArticle;
-            const iframe = document.getElementById('leftFrame');
-            if (iframe) {
-                const message = {
-                    type: 'onUpdate',
-                    value: content
-                };
-                iframe.contentWindow.postMessage(message, '*');
+        ],
+        '#wenyan pre': [
+            {
+                property: 'font-size',
+                value: codeblockSettings.fontSize,
+                append: true
             }
-            let gzhTheme = localStorage.getItem('gzhTheme');
-            if (gzhTheme) {
-                selectedTheme = gzhTheme;
-                if (gzhTheme.startsWith('customTheme')) {
-                    const id = gzhTheme.replace('customTheme', '');
-                    customThemeContent = await getCustomThemeById(id);
-                } else {
-                    const theme = WenyanStyles.themes[selectedTheme.replace('gzh_', '')];
-                    customThemeContent = await theme.getCss();
-                }
-            } else {
-                const theme = WenyanStyles.otherThemes[selectedTheme];
-                customThemeContent = await theme.getCss();
-            }
-            document.getElementById(selectedTheme).classList.add('selected');
-            onUpdate();
-        } catch (error) {
-            console.error('Error reading file:', error);
-            await message(`${error}`, 'Error reading file');
-        }
-    }
-}
-
-async function onUpdate() {
-    const iframe = document.getElementById('rightFrame');
-    if (iframe) {
-        const message = {
-            type: 'onUpdate',
-            highlightCss: codeblockSettings.hightlightTheme,
-            previewMode: previewMode,
-            themeValue: customThemeContent,
-            codeblockSettings: codeblockSettings,
-            paragraphSettings: platform === 'gzh' ? paragraphSettings : null
-        };
-        iframe.contentWindow.postMessage(message, '*');
-    }
-}
-
-async function onContentChange() {
-    const iframe = document.getElementById('rightFrame');
-    if (iframe) {
-        const message = {
-            type: 'onContentChange',
-            content: content
-        };
-        iframe.contentWindow.postMessage(message, '*');
-    }
-}
-
-async function onPeviewModeChange(button) {
-    const useElement = button.querySelector('use');
-    if (previewMode === 'style.css') {
-        previewMode = 'desktop_style.css';
-        useElement.setAttribute('href', '#mobileIcon');
-    } else {
-        previewMode = 'style.css';
-        useElement.setAttribute('href', '#desktopIcon');
-    }
-    const iframe = document.getElementById('rightFrame');
-    if (iframe) {
-        const message = {
-            type: 'onPeviewModeChange',
-            previewMode: previewMode
-        };
-        iframe.contentWindow.postMessage(message, '*');
-    }
-}
-
-async function onFootnoteChange(button) {
-    isFootnotes = !isFootnotes;
-    const useElement = button.querySelector('use');
-    if (isFootnotes) {
-        useElement.setAttribute('href', '#footnoteIcon');
-        const iframe = document.getElementById('rightFrame');
-        if (iframe) {
-            const message = {
-                type: 'onFootnoteChange'
-            };
-            iframe.contentWindow.postMessage(message, '*');
-        }
-    } else {
-        useElement.setAttribute('href', '#footnoteIcon');
-        onContentChange();
-    }
-}
-
-async function changePlatform(selectedPlatform) {
-    hideMenu();
-    hideThemeOverlay();
-    if (selectedPlatform !== 'gzh') {
-        document.getElementById('gzhThemeButton').style.display = 'none';
-        document.getElementById('exportImageButton').style.display = 'none';
-    } else {
-        if (document.getElementById('gzhThemeButton').style.display === 'none') {
-            document.getElementById('gzhThemeButton').style.display = '';
-        }
-        if (document.getElementById('exportImageButton').style.display === 'none') {
-            document.getElementById('exportImageButton').style.display = '';
-        }
-    }
-    platform = selectedPlatform;
-    let selectedTheme = platform + '_default';
-    if (platform === 'gzh') {
-        let gzhTheme = localStorage.getItem('gzhTheme');
-        if (gzhTheme) {
-            selectedTheme = gzhTheme;
-        }
-    }
-    changeTheme(selectedTheme);
-}
-
-async function onCopy(button) {
-    const iframe = document.getElementById('rightFrame');
-    const iframeWindow = iframe.contentWindow;
-    let htmlValue = '';
-    if (platform === 'gzh') {
-        htmlValue = await iframeWindow.getContentForGzh();
-    } else if (platform === 'zhihu') {
-        htmlValue = iframeWindow.getContentWithMathImg();
-    } else if (platform === 'juejin') {
-        htmlValue = iframeWindow.getPostprocessMarkdown();
-    } else if (platform === 'medium') {
-        htmlValue = iframeWindow.getContentForMedium();
-    } else {
-        htmlValue = iframeWindow.getContent();
-    }
-    // console.log(htmlValue);
-    if (platform === 'juejin') {
-        await writeText(htmlValue);
-    } else {
-        await writeHtml(htmlValue);
-    }
-    const useElement = button.querySelector('use');
-    useElement.setAttribute('href', '#checkIcon');
-    setTimeout(() => {
-        useElement.setAttribute('href', '#clipboardIcon');
-    }, 1000);
-}
-
-function displayThemeOverlay() {
-    const themeOverlay = document.getElementById('themeOverlay');
-    themeOverlay.style.display = 'block';
-}
-
-function hideThemeOverlay() {
-    const themeOverlay = document.getElementById('themeOverlay');
-    themeOverlay.style.display = 'none';
-}
-
-function hideMenu() {
-    const themeOverlay = document.getElementById('dropdown');
-    themeOverlay.style.display = 'none';
-    const mainMenu = document.getElementById('mainMenu');
-    mainMenu.style.display = 'none';
-}
-
-async function changeTheme(theme) {
-    selectedTheme = theme;
-    if (selectedTheme.startsWith('customTheme')) {
-        const id = selectedTheme.replace('customTheme', '');
-        customThemeContent = await getCustomThemeById(id);
-    } else {
-        const theme = platform === 'gzh' ? WenyanStyles.themes[selectedTheme.replace('gzh_', '')] : WenyanStyles.otherThemes[selectedTheme];
-        customThemeContent = await theme.getCss();
-    }
-    const iframe = document.getElementById('rightFrame');
-    if (iframe) {
-        const highlightTheme = platform === 'gzh' ? codeblockSettings.hightlightTheme : 'github';
-        const message = {
-            type: 'onUpdate',
-            highlightCss: highlightTheme,
-            themeValue: customThemeContent,
-            codeblockSettings: platform === 'gzh' ? codeblockSettings : defaultCodeblockSettings,
-            paragraphSettings: platform === 'gzh' ? paragraphSettings : null
-        };
-        iframe.contentWindow.postMessage(message, '*');
-    }
-    if (platform === 'gzh') {
-        localStorage.setItem('gzhTheme', selectedTheme);
-    }
-}
-
-function showMoreMenu() {
-    const dropdown = document.getElementById('dropdown');
-    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-    hideThemeOverlay()
-}
-
-function showMainMenu() {
-    const dropdown = document.getElementById('mainMenu');
-    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-}
-
-async function openAbout() {
-    getCurrentWindow().emit('open-about');
-}
-
-async function openSettings() {
-    MicroModal.show('modal-settings');
-    hideMenu()
-}
-
-async function exportLongImage() {
-    const iframe = document.getElementById('rightFrame');
-    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    const clonedWenyan = iframeDocument.getElementById('wenyan').cloneNode(true);
-    const images = clonedWenyan.querySelectorAll('img');
-    const promises = Array.from(images).map(async (img, index) => {
-        try {
-            if (!img.src.startsWith('data:')) {
-                // 替换 img.src
-                img.src = await downloadImage(img.src);
-            }
-        } catch (error) {
-            console.error(`Failed to process image ${index}:`, error);
-            await message(`${error}`, 'Error exporting image.');
-        }
+        ]
     });
-    let elements = clonedWenyan.querySelectorAll('mjx-container');
-    elements.forEach((element) => {
-        const svg = element.querySelector('svg');
-        svg.style.width = svg.getAttribute('width');
-        svg.style.height = svg.getAttribute('height');
-        svg.removeAttribute('width');
-        svg.removeAttribute('height');
+    if (paragraphSettings && paragraphSettings.isEnabled) {
+        let classes = [];
+        let fontFamilyClass = {};
+        if (paragraphSettings.fontSize) {
+            classes.push({property: 'font-size', value: paragraphSettings.fontSize, append: true});
+        }
+        if (paragraphSettings.fontType) {
+            if (paragraphSettings.fontType === 'serif') {
+                fontFamilyClass = {property: 'font-family', value: serif, append: true};
+                classes.push(fontFamilyClass);
+            } else if (paragraphSettings.fontType === 'sans') {
+                fontFamilyClass = {property: 'font-family', value: sansSerif, append: true};
+                classes.push(fontFamilyClass);
+            } else if (paragraphSettings.fontType === 'mono') {
+                fontFamilyClass = {property: 'font-family', value: monospace, append: true};
+                classes.push(fontFamilyClass);
+            }
+        }
+        if (paragraphSettings.fontWeight) {
+            classes.push({property: 'font-weight', value: paragraphSettings.fontWeight, append: true});
+        }
+        if (paragraphSettings.wordSpacing) {
+            classes.push({property: 'letter-spacing', value: paragraphSettings.wordSpacing, append: true});
+        }
+        if (paragraphSettings.lineSpacing) {
+            classes.push({property: 'line-height', value: paragraphSettings.lineSpacing, append: true});
+        }
+        if (paragraphSettings.paragraphSpacing) {
+            classes.push({property: 'margin', value: `${paragraphSettings.paragraphSpacing} 0`, append: true});
+        }
+        customCss = WenyanCore.modifyCss(customCss, {
+            '#wenyan p': classes,
+            '#wenyan ul': classes,
+            '#wenyan h1': [fontFamilyClass],
+            '#wenyan h2': [fontFamilyClass],
+            '#wenyan h3': [fontFamilyClass],
+            '#wenyan h4': [fontFamilyClass],
+            '#wenyan h5': [fontFamilyClass],
+            '#wenyan h6': [fontFamilyClass]
+        });
+    }
+    style.textContent = customCss;
+    document.head.appendChild(style);
+}
+
+async function setHighlight(hlThemeId) {
+    document.getElementById("hljs")?.remove();
+    if (hlThemeId) {
+        const style = document.createElement("style");
+        style.setAttribute("id", "hljs");
+        const hlTheme = WenyanStyles.hlThemes[hlThemeId];
+        style.textContent = await hlTheme.getCss();
+        document.head.appendChild(style);
+    }
+}
+
+function getContent() {
+    const wenyan = document.getElementById("wenyan");
+    const clonedWenyan = wenyan.cloneNode(true);
+    const elements = clonedWenyan.querySelectorAll("mjx-container");
+    elements.forEach(element => {
+        const svg = element.firstChild;
         const parent = element.parentElement;
         element.remove();
-        parent.appendChild(svg);
-        if (parent.classList.contains('block-equation')) {
-            parent.setAttribute('style', 'text-align: center; margin-bottom: 1rem;');
-        }
+        let img = document.createElement("img");
+        const encodedSVG = encodeURIComponent(svg.outerHTML);
+        const dataURL = `data:image/svg+xml,${encodedSVG}`;
+        img.setAttribute("src", dataURL);
+        parent.appendChild(img);
     });
-    Promise.all(promises)
-        .then(() => {
-            clonedWenyan.classList.add('invisible');
-            // console.log(clonedWenyan.outerHTML);
-            iframeDocument.body.appendChild(clonedWenyan);
-            html2canvas(clonedWenyan, {
-                logging: false
-            })
-            .then((canvas) => {
-                // 将 Canvas 转换为 JPEG 图像数据
-                canvas.toBlob(
-                    async (blob) => {
-                        const filePath = await save({
-                            filters: [
-                                {
-                                    name: 'Image',
-                                    extensions: ['jpeg']
-                                }
-                            ]
-                        });
-                        if (filePath) {
-                            blob.arrayBuffer().then(async (arrayBuffer) => {
-                                // console.log(arrayBuffer); // ArrayBuffer 内容
-                                await writeAsBinary(filePath, arrayBuffer);
-                            });
-                        }
-                    },
-                    'image/jpeg',
-                    0.9
-                ); // 0.9 表示 JPEG 压缩系数
-                iframeDocument.body.removeChild(clonedWenyan);
-            })
-            .catch((error) => {
-                console.error('Error capturing with html2canvas:', error);
-                iframeDocument.body.removeChild(clonedWenyan);
-                message(`${error}`, 'Error capturing with image');
-            });
-        })
-        .catch((error) => {
-            console.error('An error occurred during the image processing:', error);
-            message(`${error}`, 'Error during the image processing');
-        });
+    revertImages(clonedWenyan);
+    return clonedWenyan.outerHTML;
 }
 
-async function showCssEditor(customTheme) {
-    const element = document.getElementById('btnDeleteTheme');
-    if (element) {
+function getContentWithMathImg() {
+    const wenyan = document.getElementById("wenyan");
+    const clonedWenyan = wenyan.cloneNode(true);
+    const elements = clonedWenyan.querySelectorAll("mjx-container");
+    elements.forEach(element => {
+        const math = element.getAttribute("math");
+        const parent = element.parentElement;
         element.remove();
-    }
-    selectedCustomTheme = customTheme ? customTheme : '';
-    const iframe = document.getElementById('cssLeftFrame');
-    iframe.src = '/css_editor.html';
-    if (selectedCustomTheme) {
-        const footer = document.getElementById('footerButtonContainer');
-        const btn = document.createElement('button');
-        btn.setAttribute('id', 'btnDeleteTheme');
-        btn.classList.add('modal__btn', 'modal__btn-delete');
-        btn.addEventListener('click', () => deleteCustomTheme());
-        btn.innerHTML = '删除';
-        footer.insertBefore(btn, footer.firstChild);
-    }
-    MicroModal.show('modal-css-editor');
-    hideThemeOverlay();
+        let img = document.createElement("img");
+        img.setAttribute("alt", math);
+        img.setAttribute("data-eeimg", "true");
+        img.setAttribute("style", "margin: 0 auto; width: auto; max-width: 100%;");
+        parent.appendChild(img);
+    });
+    revertImages(clonedWenyan);
+    return clonedWenyan.outerHTML;
 }
 
-async function loadCustomThemes() {
-    const ul = document.getElementById('gzhThemeSelector');
-    if (ul) {
-        ul.innerHTML = '';
-        builtinThemes.forEach((i) => {
-            const li = document.createElement('li');
-            li.setAttribute('id', i.id);
-            const span1 = document.createElement('span');
-            span1.innerHTML = i.appName;
-            const span2 = document.createElement('span');
-            span2.innerHTML = i.author;
-            li.appendChild(span1);
-            li.appendChild(span2);
-            ul.appendChild(li);
-        });
-        await executeSql(`CREATE TABLE IF NOT EXISTS CustomTheme (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                content TEXT NOT NULL,
-                createdAt TEXT NOT NULL
-            );
-        `);
-        const customThemes = await querySql('SELECT * FROM CustomTheme');
-        // console.log(customThemes);
-        if (customThemes && customThemes.length > 0) {
-            customThemes.forEach((i, index) => {
-                const li = document.createElement('li');
-                li.setAttribute('id', `customTheme${i.id}`);
-                const span1 = document.createElement('span');
-                span1.innerHTML = `${i.name}`;
-                const span2 = document.createElement('span');
-                span2.innerHTML = `<svg width="12" height="16" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#editIcon"></use></svg>`;
-                span2.addEventListener('click', () => showCssEditor(`${i.id}`));
-                li.appendChild(span1);
-                li.appendChild(span2);
-                if (index === 0) {
-                    li.classList.add('border-li');
+async function getContentForGzh() {
+    const wenyan = document.getElementById("wenyan");
+    const clonedWenyan = wenyan.cloneNode(true);
+    revertImages(clonedWenyan);
+    const customCss = document.getElementById("theme")?.textContent || "";
+    const highlightCss = document.getElementById("hljs")?.textContent || "";
+    const isMacStyle = document.getElementById("macStyle") ? true : false;
+    return WenyanCore.getContentForGzhCustomCss(clonedWenyan, customCss, highlightCss, isMacStyle, false);
+}
+
+function getContentForMedium() {
+    const wenyan = document.getElementById("wenyan");
+    const clonedWenyan = wenyan.cloneNode(true);
+    // 处理blockquote，移除<p>标签
+    clonedWenyan.querySelectorAll('blockquote p').forEach(p => {
+        const span = document.createElement('span');
+        span.innerText = p.innerText + "\n\n";
+        p.replaceWith(span);
+    });
+    // 处理代码块
+    clonedWenyan.querySelectorAll('pre').forEach(p => {
+        const code = p.querySelector('code');
+        p.setAttribute("data-code-block-lang", "none");
+        if (code) {
+            // 获取 class 属性
+            const classAttribute = code.getAttribute('class');
+            // 提取语言
+            if (classAttribute) {
+                // 1. 分割类名并使用 find() 查找以 'language-' 开头的类
+                const languageClass = classAttribute.split(' ').find(cls => cls.startsWith('language-'));
+                
+                // 2. 关键：检查 find() 的返回值是否有效（即不是 undefined）
+                if (languageClass) {
+                    // 3. 只有在找到匹配项时，才执行 replace() 来提取语言名
+                    const language = languageClass.replace('language-', '');
+                    
+                    if (language) {
+                        p.setAttribute("data-code-block-lang", language);
+                    }
                 }
-                ul.appendChild(li);
-            });
-            const height = calcHeight(customThemes.length);
-            document.getElementById('themeOverlay').setAttribute("style", `height: ${height}px;`);
-        } else {
-            document.getElementById('themeOverlay').removeAttribute("style");
-        }
-        const listItems = ul.querySelectorAll('li');
-        listItems.forEach((item) => {
-            item.addEventListener('click', function () {
-                listItems.forEach((li) => li.classList.remove('selected'));
-                this.classList.add('selected');
-                changeTheme(item.id);
-            });
-        });
-        if (customThemes && customThemes.length < 3) {
-            const li = document.createElement('li');
-            li.setAttribute('id', 'create-theme');
-            li.classList.add('border-li');
-            const span1 = document.createElement('span');
-            span1.innerHTML = '创建新主题';
-            const span2 = document.createElement('span');
-            span2.innerHTML = `<svg width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#plusIcon"></use></svg>`;
-            span2.addEventListener('click', () => showCssEditor());
-            li.appendChild(span1);
-            li.appendChild(span2);
-            ul.appendChild(li);
-        }
-    }
-}
-
-async function saveCustomTheme() {
-    if (selectedCustomTheme) {
-        await executeSql('UPDATE CustomTheme SET content = $1, createdAt = $2 WHERE id = $3;',
-            [customThemeContent, new Date().toISOString(), selectedCustomTheme]
-        );
-    } else {
-        await executeSql('INSERT INTO CustomTheme (name, content, createdAt) VALUES ($1, $2, $3);',
-            ['自定义主题', customThemeContent, new Date().toISOString()]
-        );
-    }
-    MicroModal.close('modal-css-editor');
-    await loadCustomThemes();
-    document.getElementById(selectedTheme).classList.add('selected');
-    changeTheme(selectedTheme);
-}
-
-async function deleteCustomTheme() {
-    if (selectedCustomTheme) {
-        await executeSql('DELETE FROM CustomTheme WHERE id = $1;',
-            [selectedCustomTheme]
-        );
-    }
-    MicroModal.close('modal-css-editor');
-    await loadCustomThemes();
-    selectedTheme = 'gzh_default';
-    document.getElementById(selectedTheme).classList.add('selected');
-    changeTheme(selectedTheme);
-}
-
-async function loadCustomTheme() {
-    if (!selectedCustomTheme) {
-        if (selectedTheme) {
-            if (selectedTheme.startsWith('customTheme')) {
-                const id = selectedTheme.replace('customTheme', '');
-                customThemeContent = await getCustomThemeById(id);
-            } else {
-                const theme = WenyanStyles.themes[selectedTheme.replace('gzh_', '')];
-                customThemeContent = await theme.getCss();
             }
-        } else {
-            const theme = WenyanStyles.themes["default"];
-            customThemeContent = await theme.getCss();
-        }
-    }
+            // 获取所有子 span 元素
+            const spans = code.querySelectorAll('span');
 
-    const iframe = document.getElementById('cssLeftFrame');
-    const iframeWindow = iframe.contentWindow;
-    iframeWindow.setContent(customThemeContent);
+            // 遍历每个 span 元素，将它们替换为它们的文本内容
+            spans.forEach(span => {
+                span.replaceWith(...span.childNodes); // 只替换标签，保留内容
+            });
+            // 如果不删除多余的换行符，编辑器会把代码块分割，暂时未找到好的解决方法
+            code.innerHTML = code.innerHTML.replace(/\n+/g, '\n');
+        }
+        p.setAttribute("data-code-block-mode", "2");
+    });
+    // 处理table，转成ascii格式
+    clonedWenyan.querySelectorAll('table').forEach(t => {
+        const pre = document.createElement('pre');
+        const code = document.createElement('code');
+        code.innerText = tableToAsciiArt(t);
+        pre.appendChild(code);
+        pre.setAttribute("data-code-block-lang", "none");
+        pre.setAttribute("data-code-block-mode", "2");
+        t.replaceWith(pre);
+    });
+    // 处理嵌套ul li
+    clonedWenyan.querySelectorAll('ul ul').forEach(ul => {
+        transformUl(ul);  // 处理每个 <ul>
+    });
+    // 原样输出公式
+    clonedWenyan.querySelectorAll("mjx-container").forEach(element => {
+        const math = element.getAttribute("math");
+        const parent = element.parentElement;
+        element.remove();
+        parent.innerHTML = math;
+    });
+    revertImages(clonedWenyan);
+    return clonedWenyan.outerHTML;
 }
 
-async function getCustomThemeById(id) {
-    const customTheme = await querySql('SELECT * FROM CustomTheme WHERE id = $1;',
-        [id]
+function getPostprocessMarkdown() {
+    return postprocessMarkdown;
+}
+
+function scroll(scrollFactor) {
+    isScrollingFromScript = true;
+    window.scrollTo(0, document.body.scrollHeight * scrollFactor);
+    requestAnimationFrame(() => isScrollingFromScript = false);
+}
+
+function tableToAsciiArt(table) {
+    const rows = Array.from(table.querySelectorAll('tr')).map(tr =>
+        Array.from(tr.querySelectorAll('th, td')).map(td => td.innerText.trim())
     );
-    if (customTheme && customTheme.length > 0) {
-        return customTheme[0].content;
-    }
-    return null;
-}
 
-async function updateThemePreview() {
-    const iframe = document.getElementById('cssRightFrame');
-    const iframeWindow = iframe.contentWindow;
-    iframeWindow.setCss(customThemeContent);
-}
+    if (rows.length === 0) return '';
 
-async function openMarkdownFile() {
-    const selected = await open({
-        multiple: false,
-        filters: [
-            {
-                name: 'Markdown',
-                extensions: ['md', 'markdown']
-            }
-        ]
+    // 获取每列的最大宽度
+    const columnWidths = rows[0].map((_, i) =>
+        Math.max(...rows.map(row => row[i].length))
+    );
+
+    const horizontalLine = '+' + columnWidths.map(width => '-'.repeat(width + 2)).join('+') + '+\n';
+
+    // 格式化行数据
+    const formattedRows = rows.map(row =>
+        '| ' + row.map((cell, i) => cell.padEnd(columnWidths[i])).join(' | ') + ' |\n'
+    );
+
+    // 构建最终的表格
+    let asciiTable = horizontalLine;
+    asciiTable += formattedRows[0];  // 表头
+    asciiTable += horizontalLine;
+    asciiTable += formattedRows.slice(1).join('');  // 表内容
+    asciiTable += horizontalLine;
+
+    return asciiTable;
+}
+// 递归处理所有嵌套的 <ul>，将其转换为 Medium 风格
+function transformUl(ulElement) {
+    // 先递归处理子 <ul>
+    ulElement.querySelectorAll('ul').forEach(nestedUl => {
+        transformUl(nestedUl);  // 递归调用处理嵌套 <ul>
     });
+
+    // 把 <li> 转换成 Medium-friendly 格式
+    let replaceString = Array.from(ulElement.children).map(item => item.outerHTML).join(' ');
     
-    if (selected) {
-        try {
-            const fileContent = await readAsText(selected);
-            const iframe = document.getElementById('leftFrame');
-            const iframeWindow = iframe.contentWindow;
-            iframeWindow.setContent(fileContent);
-        } catch (error) {
-            console.error("Error reading file:", error);
-            await message(`${error}`, '文件读取失败');
+    // 将 <li> 标签替换为 Medium 风格列表
+    replaceString = replaceString.replace(/<li>/g, '<br>\n- ').replace(/<\/li>/g, '');
+
+    // 将原来的 <ul> 替换为转换后的字符串
+    ulElement.outerHTML = replaceString;
+}
+
+//// 非通用方法
+window.addEventListener('message', (event) => {
+    if (event.data) {
+        if (event.data.type === 'onUpdate') {
+            if (event.data.content) {
+                setContent(event.data.content);
+            }
+            if (event.data.highlightCss) {
+                setHighlight(event.data.highlightCss);
+            }
+            if (event.data.previewMode) {
+                setPreviewMode(event.data.previewMode);
+            }
+            codeblockSettings = event.data.codeblockSettings;
+            if (codeblockSettings) {
+                macStyle = codeblockSettings.isMacStyle;
+                if (macStyle) {
+                    const style = document.createElement("style");
+                    style.id = "macStyle";
+                    style.textContent = macStyleCss;
+                    document.head.appendChild(style);
+                } else {
+                    document.getElementById("macStyle")?.remove();
+                }
+            }
+            paragraphSettings = event.data.paragraphSettings;
+            if (event.data.themeValue) {
+                setCustomTheme(`${event.data.themeValue}`);
+            }
+        } else if (event.data.type === 'onContentChange') {
+            setContent(event.data.content);
+        } else if (event.data.type === 'onPeviewModeChange') {
+            setPreviewMode(event.data.previewMode);
+        } else if (event.data.type === 'onFootnoteChange') {
+            WenyanCore.addFootnotes(false, document.getElementById("wenyan"));
         }
     }
-}
+});
 
-async function openCssFile() {
-    const selected = await open({
-        multiple: false,
-        filters: [
-            {
-                name: 'Stylesheet',
-                extensions: ['css']
-            }
-        ]
-    });
-    
-    if (selected) {
-        try {
-            const fileContent = await readAsText(selected);
-            const iframe = document.getElementById('cssLeftFrame');
-            const iframeWindow = iframe.contentWindow;
-            iframeWindow.loadCss(fileContent);
-        } catch (error) {
-            console.error("Error reading file:", error);
-            await message(`${error}`, '文件读取失败');
-        }
+window.onscroll = function () {
+    if (!isScrollingFromScript) {
+        const message = {
+            type: 'rightScroll',
+            value: { y0: window.scrollY / document.body.scrollHeight }
+        };
+        window.parent.postMessage(message, '*');
     }
-}
+};
 
-const helpButton = document.getElementById('helpButton');
-const bubbleBox = document.getElementById('bubbleBox');
-let hideTimeout;
-helpButton.addEventListener('mouseenter', () => {
-    clearTimeout(hideTimeout);
-    bubbleBox.style.display = 'block';
+window.addEventListener('click', function(event) {
+    // 发送点击事件的消息到父页面
+    window.parent.postMessage({ clicked: true }, '*');
 });
 
-helpButton.addEventListener('mouseleave', () => {
-    hideTimeout = setTimeout(() => {
-        bubbleBox.style.display = 'none';
-    }, 200);
+window.addEventListener("load", (event) => {
+    const message = {
+        type: 'onRightReady'
+    };
+    window.parent.postMessage(message, '*');
 });
-
-bubbleBox.addEventListener('mouseenter', () => {
-    clearTimeout(hideTimeout);
-});
-
-bubbleBox.addEventListener('mouseleave', () => {
-    bubbleBox.style.display = 'none';
-});
-
-function calcHeight(customThemeCount) {
-    return 240 + (Math.min(customThemeCount, 2) * 25);
-}
-
-async function saveSettings() {
-    const iframe = document.getElementById("settingsFrame");
-    await iframe.contentWindow.saveSettings();
-    await message("保存成功");
-}

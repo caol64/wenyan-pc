@@ -128,10 +128,6 @@ async function writeAsBinary(filePath, arrayBuffer) {
     await writeFile(filePath, arrayBuffer);
 }
 
-async function setLastArticle(content) {
-    localStorage.setItem('lastArticle', content);
-}
-
 async function handleImages(container) {
     container.querySelectorAll('img').forEach(async (element) => {
         const dataSrc = element.getAttribute('src');
