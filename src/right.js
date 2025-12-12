@@ -362,6 +362,16 @@ async function getContentForGzh() {
             element.insertBefore(buildPseudoSpan(beforeResults), element.firstChild);
         }
     });
+    // 列表
+    elements = clonedWenyan.querySelectorAll("li");
+    elements.forEach(li => {
+        const section = document.createElement("section");
+        // 将 li 的所有子节点移动进 section
+        while (li.firstChild) {
+            section.appendChild(li.firstChild);
+        }
+        li.appendChild(section);
+    });
     revertImages(clonedWenyan);
     clonedWenyan.setAttribute("data-provider", "WenYan");
     return `${clonedWenyan.outerHTML.replace(/class="mjx-solid"/g, 'fill="none" stroke-width="70"')}`;

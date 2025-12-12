@@ -2,7 +2,7 @@
   "name": "wenyan",
   "private": true,
   "type": "module",
-  "version": "3.2.2",
+  "version": "3.2.3",
   "scripts": {
     "dev": "tauri dev",
     "build": "tauri build",
