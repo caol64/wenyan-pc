@@ -28,7 +28,7 @@
 * 👉 [跨平台版本](https://github.com/caol64/wenyan-pc) - 本项目
 * [CLI 版本](https://github.com/caol64/wenyan-cli) - 命令行 / CI 自动化发布
 * [MCP 版本](https://github.com/caol64/wenyan-mcp) - AI 自动发文
-* [UI 库]() - 桌面应用和 Web App 共用的 UI 层封装
+* [UI 库](https://github.com/caol64/wenyan-ui) - 桌面应用和 Web App 共用的 UI 层封装
 * [核心库](https://github.com/caol64/wenyan-core) - 渲染、排版等核心能力
 
 ## 功能特性
