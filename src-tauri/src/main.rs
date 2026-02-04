@@ -46,7 +46,7 @@ fn create_about_window(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn std:
     tauri::WebviewWindowBuilder::new(
         app_handle,
         "about",
-        WebviewUrl::App("about.html".into()),
+        WebviewUrl::App("/about".into()),
     )
     .title("关于")
     .inner_size(350.0, 200.0)

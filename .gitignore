@@ -13,8 +13,6 @@ dist-ssr
 *.local
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
 .idea
 .DS_Store
 *.suo
@@ -23,4 +21,16 @@ dist-ssr
 *.sln
 *.sw?
 migrate.md
-pnpm-lock.yaml
+
+/.svelte-kit
+/build
+Thumbs.db
+
+.env
+.env.*
+!.env.example
+!.env.test
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+src-bak/
