@@ -87,10 +87,10 @@ git clone --recursive https://github.com/caol64/wenyan-pc
 pnpm install
 ```
 
-**编译ui组件**
+**同步ui组件**
 
 ```sh
-pnpm ui:build
+pnpm ui:sync
 ```
 
 **运行**
