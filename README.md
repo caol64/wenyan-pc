@@ -71,7 +71,7 @@
 
 [https://yuzhi.tech/docs/wenyan/download](https://yuzhi.tech/docs/wenyan/download)
 
-## 从源码编译
+## 从源码运行
 
 本项目使用`tauri`进行开发，需要事先已经安装`rust`和`node`环境。
 
