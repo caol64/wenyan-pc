@@ -8,19 +8,19 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build = { version = "=2.5.5", features = [] }
 
 [dependencies]
-tauri = { version = "=2.9.1", features = ["macos-private-api"] }
+tauri = { version = "=2.10.1", features = ["macos-private-api"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tauri-plugin-clipboard-manager = "2"
-tauri-plugin-http = "2"
-tauri-plugin-dialog = "2"
-tauri-plugin-fs = "2"
-tauri-plugin-shell = "2"
-tauri-plugin-sql = { version = "2", features = ["sqlite"] }
-tauri-plugin-os = "2"
+tauri-plugin-clipboard-manager = "=2.3.2"
+tauri-plugin-http = "=2.5.7"
+tauri-plugin-dialog = "=2.6.0"
+tauri-plugin-fs = "=2.4.5"
+tauri-plugin-shell = "=2.3.4"
+tauri-plugin-sql = { version = "=2.3.2", features = ["sqlite"] }
+tauri-plugin-os = "=2.3.2"
 log = "0.4"
 tauri-utils = "2"
 tauri-runtime = "2"

@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { onMount, setContext } from "svelte";
+    import { open } from "@tauri-apps/plugin-shell";
+    import { onMount } from "svelte";
     import TitleBar from "$lib/components/TitleBar.svelte";
     import { readExampleArticle, writeHtmlToClipboard, writeTextToClipboard } from "$lib/utils";
     import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -10,15 +11,25 @@
         themeStore,
         settingsStore,
         localStorageSettingsAdapter,
-        COPY_CONTEXT_KEY,
-        GET_WENYAN_ELEMENT_CONTEXT_KEY,
         type CopyContentType,
         articleStore,
+        AlertModal,
+        defaultEditorPasteHandler,
+        defaultEditorDropHandler,
+        SettingsModal,
+        setPreviewClick,
+        setCopyClick,
+        setEditorClick,
+        setEditorDrop,
+        setEditorPaste,
+        setGetWenyanElement,
+        setUploadHelpClick,
     } from "@wenyan-md/ui";
     import { sqliteThemeStorageAdapter } from "$lib/themeStore";
     import { sqliteArticleStorageAdapter } from "$lib/articleStore";
 
     let isShowMoreMenu = $state(false);
+    let isShowSettingsPage = $state(false);
 
     function getWenyanElement(): HTMLElement {
         const wenyanElement = document.getElementById("wenyan");
@@ -26,11 +37,6 @@
             throw new Error("Wenyan element not found");
         }
         const clonedWenyan = wenyanElement.cloneNode(true) as HTMLElement;
-        // 清理样式以确保复制的内容干净
-        // [clonedWenyan, ...clonedWenyan.querySelectorAll("*")].forEach((el) => {
-        //     el.removeAttribute("class");
-        //     el.removeAttribute("style");
-        // });
         return clonedWenyan;
     }
 
@@ -42,8 +48,13 @@
         }
     }
 
-    setContext(COPY_CONTEXT_KEY, handleCopy);
-    setContext(GET_WENYAN_ELEMENT_CONTEXT_KEY, getWenyanElement);
+    setCopyClick(handleCopy);
+    setGetWenyanElement(getWenyanElement);
+    setEditorPaste(defaultEditorPasteHandler);
+    setEditorDrop(defaultEditorDropHandler);
+    setPreviewClick(closeMoreMenu);
+    setEditorClick(closeMoreMenu);
+    setUploadHelpClick(uploadHelpClick);
 
     onMount(async () => {
         await themeStore.register(sqliteThemeStorageAdapter);
@@ -58,12 +69,26 @@
     }
 
     function onAboutClick() {
+        closeMoreMenu();
         getCurrentWindow().emit("open-about");
     }
 
     async function getArticle(): Promise<string> {
         const article = articleStore.getLastArticle();
         return article ? article : await readExampleArticle();
+    }
+
+    function closeMoreMenu() {
+        isShowMoreMenu = false;
+    }
+
+    function showSettingsPage() {
+        closeMoreMenu();
+        isShowSettingsPage = true;
+    }
+
+    async function uploadHelpClick() {
+        await open("https://yuzhi.tech/docs/wenyan/upload");
     }
 </script>
 
@@ -81,9 +106,13 @@
 
     {#if isShowMoreMenu}
         <div
-            class="absolute w-40 top-8 right-5 justify-start flex flex-col gap-2.5 items-start transition-opacity duration-300 rounded-md outline-none shadow-md p-2 bg-[#f9f9f9] dark:bg-gray-700 z-50"
+            class="absolute w-40 top-8 right-5 justify-start flex flex-col items-start transition-opacity duration-300 rounded-md outline-none shadow-md p-2 bg-[#f9f9f9] dark:bg-gray-700 z-50"
         >
+            <button onclick={showSettingsPage} class="p-2 cursor-pointer">设置</button>
             <button onclick={onAboutClick} class="p-2 cursor-pointer">关于</button>
         </div>
     {/if}
 </div>
+
+<AlertModal />
+<SettingsModal isOpen={isShowSettingsPage} onClose={() => (isShowSettingsPage = false)} />
