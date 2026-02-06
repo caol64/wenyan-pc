@@ -37,6 +37,8 @@
     "@tauri-apps/plugin-shell": "2.3.4",
     "@tauri-apps/plugin-sql": "2.3.2",
     "@tauri-apps/plugin-os": "2.3.2",
+    "codemirror": "^6.0.2",
+    "@wenyan-md/core": "^2.0.3",
     "@wenyan-md/ui": "file:./wenyan-ui"
   }
 }

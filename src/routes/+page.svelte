@@ -14,8 +14,6 @@
         type CopyContentType,
         articleStore,
         AlertModal,
-        defaultEditorPasteHandler,
-        defaultEditorDropHandler,
         SettingsModal,
         setPreviewClick,
         setCopyClick,
@@ -24,9 +22,15 @@
         setEditorPaste,
         setGetWenyanElement,
         setUploadHelpClick,
+        credentialStore,
+        setDownloadImageToBase64,
     } from "@wenyan-md/ui";
-    import { sqliteThemeStorageAdapter } from "$lib/themeStore";
-    import { sqliteArticleStorageAdapter } from "$lib/articleStore";
+    import { sqliteThemeStorageAdapter } from "$lib/stores/themeStore";
+    import { sqliteArticleStorageAdapter } from "$lib/stores/articleStore";
+    import { sqliteCredentialStoreAdapter } from "$lib/stores/credentialStore";
+    import { defaultEditorDropHandler, defaultEditorPasteHandler } from "$lib/editorHandler";
+    import SimpleLoader from "$lib/components/SimpleLoader.svelte";
+    import { downloadImage } from "$lib/imageProxy";
 
     let isShowMoreMenu = $state(false);
     let isShowSettingsPage = $state(false);
@@ -55,11 +59,13 @@
     setPreviewClick(closeMoreMenu);
     setEditorClick(closeMoreMenu);
     setUploadHelpClick(uploadHelpClick);
+    setDownloadImageToBase64(downloadImage);
 
     onMount(async () => {
         await themeStore.register(sqliteThemeStorageAdapter);
         await settingsStore.register(localStorageSettingsAdapter);
         await articleStore.register(sqliteArticleStorageAdapter);
+        await credentialStore.register(sqliteCredentialStoreAdapter);
         globalState.setMarkdownText(await getArticle());
         globalState.setPlatform("wechat");
     });
@@ -94,13 +100,17 @@
 
 <div class="flex h-screen w-full flex-col overflow-hidden relative">
     <TitleBar showMoreMenu={toggleMoreMenu} />
-    <div class="flex h-full w-full flex-col overflow-hidden md:flex-row">
+    <div class="flex h-full w-full flex-col overflow-hidden md:flex-row relative">
         <MainPage />
 
         {#if globalState.judgeSidebarOpen()}
             <div class="h-full w-80">
                 <Sidebar />
             </div>
+        {/if}
+
+        {#if globalState.isLoading}
+            <SimpleLoader />
         {/if}
     </div>
 
