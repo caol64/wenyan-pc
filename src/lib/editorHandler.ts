@@ -1,7 +1,9 @@
-import type { EditorView } from "codemirror";
+import type { EditorView } from "@codemirror/view";
 import { credentialStore, globalState, settingsStore } from "@wenyan-md/ui";
-import { createWechatClient, type HttpAdapter, type MultipartBody } from "@wenyan-md/core/wechat";
+import { createWechatClient } from "@wenyan-md/core/wechat";
+import type { HttpAdapter, MultipartBody } from "@wenyan-md/core/http";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import { getWechatToken, updateWechatAccessToken } from "./stores/sqliteCredentialStore";
 
 export const tauriHttpAdapter: HttpAdapter = {
     // 1. 直接代理给 Tauri 的 fetch
@@ -62,8 +64,9 @@ function checkCredential(): boolean {
 
 async function auth(): Promise<string> {
     const credential = credentialStore.getCredential("wechat");
-    const storedAccessToken = credential.accessToken;
-    const expireTime = credential.expireTime;
+    const credentialDO = await getWechatToken();
+    const storedAccessToken = credentialDO!.accessToken;
+    const expireTime = credentialDO!.expireTime;
     if (!storedAccessToken || (expireTime && Date.now() > expireTime)) {
         const data = await fetchAccessToken(credential.appId!, credential.appSecret!);
         if ((data as any).errcode) {
@@ -75,7 +78,7 @@ async function auth(): Promise<string> {
         if (data.access_token && data.expires_in) {
             data.expires_in = Date.now() + data.expires_in * 1000;
         }
-        credentialStore.saveCredentialDirect("wechat", { accessToken: data.access_token, expireTime: data.expires_in });
+        await updateWechatAccessToken(data.access_token, data.expires_in);
         return data.access_token;
     }
     return storedAccessToken;

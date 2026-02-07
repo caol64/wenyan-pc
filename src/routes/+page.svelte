@@ -24,10 +24,12 @@
         setUploadHelpClick,
         credentialStore,
         setDownloadImageToBase64,
+        setResetTokenClick,
+        ConfirmModal,
     } from "@wenyan-md/ui";
-    import { sqliteThemeStorageAdapter } from "$lib/stores/themeStore";
-    import { sqliteArticleStorageAdapter } from "$lib/stores/articleStore";
-    import { sqliteCredentialStoreAdapter } from "$lib/stores/credentialStore";
+    import { sqliteThemeStorageAdapter } from "$lib/stores/sqliteThemeStore";
+    import { sqliteArticleStorageAdapter } from "$lib/stores/sqliteArticleStore";
+    import { resetWechatAccessToken, sqliteCredentialStoreAdapter } from "$lib/stores/sqliteCredentialStore";
     import { defaultEditorDropHandler, defaultEditorPasteHandler } from "$lib/editorHandler";
     import SimpleLoader from "$lib/components/SimpleLoader.svelte";
     import { downloadImage } from "$lib/imageProxy";
@@ -60,6 +62,7 @@
     setEditorClick(closeMoreMenu);
     setUploadHelpClick(uploadHelpClick);
     setDownloadImageToBase64(downloadImage);
+    setResetTokenClick(resetWechatAccessToken);
 
     onMount(async () => {
         await themeStore.register(sqliteThemeStorageAdapter);
@@ -125,4 +128,5 @@
 </div>
 
 <AlertModal />
+<ConfirmModal />
 <SettingsModal isOpen={isShowSettingsPage} onClose={() => (isShowSettingsPage = false)} />
