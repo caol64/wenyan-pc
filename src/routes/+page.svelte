@@ -2,7 +2,7 @@
     import { open } from "@tauri-apps/plugin-shell";
     import { onMount } from "svelte";
     import TitleBar from "$lib/components/TitleBar.svelte";
-    import { readExampleArticle, writeHtmlToClipboard, writeTextToClipboard } from "$lib/utils";
+    import { loadMarkdownFromPath, readExampleArticle, writeHtmlToClipboard, writeTextToClipboard } from "$lib/utils";
     import { getCurrentWindow } from "@tauri-apps/api/window";
     import {
         globalState,
@@ -34,6 +34,7 @@
     import SimpleLoader from "$lib/components/SimpleLoader.svelte";
     import { downloadImage } from "$lib/imageProxy";
     import { exportImage } from "$lib/services/exportHandler";
+    import { initFileOpenListener } from "$lib/fileOpenListener";
 
     let isShowMoreMenu = $state(false);
     let isShowSettingsPage = $state(false);
@@ -63,6 +64,12 @@
         await credentialStore.register(sqliteCredentialStoreAdapter);
         globalState.setMarkdownText(await getArticle());
         globalState.setPlatform("wechat");
+
+        initFileOpenListener(async (filePath) => {
+            // console.log("Loading new markdown:", filePath);
+            const content = await loadMarkdownFromPath(filePath);
+            globalState.setMarkdownText(content);
+        });
     });
 
     function toggleMoreMenu() {

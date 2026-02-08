@@ -1,11 +1,19 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{Listener, Manager, WebviewUrl};
-use log::{info, error};
+use log::{error, info};
+use tauri::{Listener, Manager, WebviewUrl, Emitter};
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            info!("second instance args: {:?}", argv);
+
+            if argv.len() > 1 {
+                let file = argv[1].clone();
+                let _ = app.emit("open-file", file);
+            }
+        }))
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
@@ -14,6 +22,12 @@ fn main() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_os::init())
         .setup(|app| {
+            let args: Vec<String> = std::env::args().collect();
+            if args.len() > 1 {
+                let file = args[1].clone();
+                let handle = app.handle();
+                let _ = handle.emit("open-file", file);
+            }
             if let Some(main_window) = app.get_webview_window("main") {
                 // 获取线程安全的 AppHandle
                 let app_handle = app.handle().clone();
@@ -43,17 +57,13 @@ fn handle_open_about(app_handle: &tauri::AppHandle) {
 }
 
 fn create_about_window(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-    tauri::WebviewWindowBuilder::new(
-        app_handle,
-        "about",
-        WebviewUrl::App("/about".into()),
-    )
-    .title("关于")
-    .inner_size(350.0, 200.0)
-    .resizable(false) // 禁用窗口大小调整
-    .minimizable(false) // 禁用最小化按钮
-    .maximizable(false) // 禁用最大化按钮
-    .center() // 将窗口居中显示
-    .build()?;
+    tauri::WebviewWindowBuilder::new(app_handle, "about", WebviewUrl::App("/about".into()))
+        .title("关于")
+        .inner_size(350.0, 200.0)
+        .resizable(false) // 禁用窗口大小调整
+        .minimizable(false) // 禁用最小化按钮
+        .maximizable(false) // 禁用最大化按钮
+        .center() // 将窗口居中显示
+        .build()?;
     Ok(())
 }

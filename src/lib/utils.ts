@@ -11,6 +11,10 @@ export async function writeTextToClipboard(text: string): Promise<void> {
 }
 
 export async function readExampleArticle(): Promise<string> {
-    const resourcePath = await resolveResource('resources/example.md');
+    const resourcePath = await resolveResource("resources/example.md");
     return await readTextFile(resourcePath);
+}
+
+export async function loadMarkdownFromPath(path: string): Promise<string> {
+    return await readTextFile(path);
 }

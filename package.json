@@ -37,6 +37,7 @@
     "@tauri-apps/plugin-http": "2.5.7",
     "@tauri-apps/plugin-os": "2.3.2",
     "@tauri-apps/plugin-shell": "2.3.4",
+    "@tauri-apps/plugin-single-instance": "2.4.0",
     "@tauri-apps/plugin-sql": "2.3.2",
     "@wenyan-md/core": "^2.0.4",
     "@wenyan-md/ui": "file:./wenyan-ui",
