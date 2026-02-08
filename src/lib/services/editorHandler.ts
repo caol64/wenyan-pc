@@ -3,7 +3,7 @@ import { credentialStore, globalState, settingsStore } from "@wenyan-md/ui";
 import { createWechatClient } from "@wenyan-md/core/wechat";
 import type { HttpAdapter, MultipartBody } from "@wenyan-md/core/http";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
-import { getWechatToken, updateWechatAccessToken } from "./stores/sqliteCredentialStore";
+import { getWechatToken, updateWechatAccessToken } from "../stores/sqliteCredentialStore";
 
 export const tauriHttpAdapter: HttpAdapter = {
     // 1. 直接代理给 Tauri 的 fetch
@@ -35,14 +35,31 @@ export async function defaultEditorPasteHandler(event: ClipboardEvent, view: Edi
 }
 
 export async function defaultEditorDropHandler(event: DragEvent, view: EditorView) {
-    const files = event.dataTransfer?.files;
-    if (files && files.length > 0 && canHandleFile(files[0])) {
+    const file = event.dataTransfer?.files?.[0];
+    if (!file) return;
+
+    const extension = getFileExtension(file.name).toLowerCase();
+    const isMarkdown = extension === "md" || file.type === "text/markdown";
+
+    if (canHandleFile(file)) {
         event.preventDefault();
-        await handleImageUpload(files[0], view);
+        await handleImageUpload(file, view);
+    } else if (isMarkdown) {
+        event.preventDefault();
+        try {
+            const content = await readFileAsText(file);
+            globalState.setMarkdownText(content);
+        } catch (error) {
+            console.error("File drop error:", error);
+            globalState.setAlertMessage({
+                type: "error",
+                message: `处理文件出错: ${error instanceof Error ? error.message : "未知错误"}`,
+            });
+        }
     }
 }
 
-function canHandleFile(file: File) {
+function canHandleFile(file: File): boolean {
     return file && imgType.includes(file.type);
 }
 
@@ -85,6 +102,9 @@ async function auth(): Promise<string> {
 }
 
 async function handleImageUpload(file: File, view: EditorView) {
+    const selectionSnapshot = view.state.selection.main;
+    const insertFrom = selectionSnapshot.from;
+    const insertTo = selectionSnapshot.to;
     try {
         if (checkUploadEnabed() && checkCredential()) {
             globalState.isLoading = true;
@@ -96,11 +116,15 @@ async function handleImageUpload(file: File, view: EditorView) {
             const url = data.url;
             const mediaId = data.media_id;
             // 在光标位置插入图片链接
-            const markdownImage = `![${file.name}](${url})`;
-            const { from, to } = view.state.selection.main;
+            const markdownImage = `\n![${file.name}](${url})\n`;
             view.dispatch({
-                changes: { from, to, insert: markdownImage },
-                selection: { anchor: from + markdownImage.length },
+                changes: {
+                    from: insertFrom,
+                    to: insertTo,
+                    insert: markdownImage,
+                },
+                // 插入后，将新的光标位置定位到图片后面
+                selection: { anchor: insertFrom + markdownImage.length },
             });
             view.focus();
         }
@@ -113,4 +137,24 @@ async function handleImageUpload(file: File, view: EditorView) {
     } finally {
         globalState.isLoading = false;
     }
+}
+
+function getFileExtension(filename: string): string {
+    if (!filename || typeof filename !== "string") {
+        return "";
+    }
+    const lastDotIndex = filename.lastIndexOf(".");
+    if (lastDotIndex === -1 || lastDotIndex === 0) {
+        return "";
+    }
+    return filename.slice(lastDotIndex + 1);
+}
+
+function readFileAsText(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(file);
+    });
 }

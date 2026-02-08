@@ -5,7 +5,7 @@
   "version": "4.0.0",
   "scripts": {
     "ui:sync": "git submodule update --remote --merge && pnpm ui:init",
-    "ui:init": "cd wenyan-ui && pnpm svelte-kit sync",
+    "ui:init": "cd wenyan-ui && pnpm install && pnpm svelte-kit sync",
     "web:install": "pnpm install",
     "web:dev": "vite dev",
     "web:build": "vite build",
@@ -21,24 +21,25 @@
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "@tailwindcss/vite": "^4.1.17",
     "@tauri-apps/cli": "2.10.0",
+    "@types/node": "^24.3.0",
     "svelte": "^5.45.6",
     "svelte-check": "^4.3.4",
     "tailwindcss": "^4.1.17",
-    "vite": "^7.2.6",
     "typescript": "^5.9.3",
-    "@types/node": "^24.3.0"
+    "vite": "^7.2.6"
   },
   "dependencies": {
+    "@codemirror/view": "^6.39.12",
     "@tauri-apps/api": "2.10.1",
     "@tauri-apps/plugin-clipboard-manager": "2.3.2",
-    "@tauri-apps/plugin-http": "2.5.7",
     "@tauri-apps/plugin-dialog": "2.6.0",
     "@tauri-apps/plugin-fs": "2.4.5",
+    "@tauri-apps/plugin-http": "2.5.7",
+    "@tauri-apps/plugin-os": "2.3.2",
     "@tauri-apps/plugin-shell": "2.3.4",
     "@tauri-apps/plugin-sql": "2.3.2",
-    "@tauri-apps/plugin-os": "2.3.2",
-    "@codemirror/view": "^6.39.11",
     "@wenyan-md/core": "^2.0.4",
-    "@wenyan-md/ui": "file:./wenyan-ui"
+    "@wenyan-md/ui": "file:./wenyan-ui",
+    "modern-screenshot": "^4.6.8"
   }
 }

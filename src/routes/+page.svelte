@@ -20,31 +20,23 @@
         setEditorClick,
         setEditorDrop,
         setEditorPaste,
-        setGetWenyanElement,
         setUploadHelpClick,
         credentialStore,
         setDownloadImageToBase64,
         setResetTokenClick,
         ConfirmModal,
+        setExportImageClick,
     } from "@wenyan-md/ui";
     import { sqliteThemeStorageAdapter } from "$lib/stores/sqliteThemeStore";
     import { sqliteArticleStorageAdapter } from "$lib/stores/sqliteArticleStore";
     import { resetWechatAccessToken, sqliteCredentialStoreAdapter } from "$lib/stores/sqliteCredentialStore";
-    import { defaultEditorDropHandler, defaultEditorPasteHandler } from "$lib/editorHandler";
+    import { defaultEditorDropHandler, defaultEditorPasteHandler } from "$lib/services/editorHandler";
     import SimpleLoader from "$lib/components/SimpleLoader.svelte";
     import { downloadImage } from "$lib/imageProxy";
+    import { exportImage } from "$lib/services/exportHandler";
 
     let isShowMoreMenu = $state(false);
     let isShowSettingsPage = $state(false);
-
-    function getWenyanElement(): HTMLElement {
-        const wenyanElement = document.getElementById("wenyan");
-        if (!wenyanElement) {
-            throw new Error("Wenyan element not found");
-        }
-        const clonedWenyan = wenyanElement.cloneNode(true) as HTMLElement;
-        return clonedWenyan;
-    }
 
     function handleCopy(result: string, contentType: CopyContentType) {
         if (contentType === "html") {
@@ -55,7 +47,6 @@
     }
 
     setCopyClick(handleCopy);
-    setGetWenyanElement(getWenyanElement);
     setEditorPaste(defaultEditorPasteHandler);
     setEditorDrop(defaultEditorDropHandler);
     setPreviewClick(closeMoreMenu);
@@ -63,6 +54,7 @@
     setUploadHelpClick(uploadHelpClick);
     setDownloadImageToBase64(downloadImage);
     setResetTokenClick(resetWechatAccessToken);
+    setExportImageClick(exportImage);
 
     onMount(async () => {
         await themeStore.register(sqliteThemeStorageAdapter);
