@@ -2357,6 +2357,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "md5"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae960838283323069879657ca3de837e9f7bbb4c7bf6ea7f1b290d5e9476d2e0"
+
+[[package]]
 name = "memchr"
 version = "2.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5948,6 +5954,7 @@ name = "wenyan"
 version = "0.1.0"
 dependencies = [
  "log",
+ "md5",
  "serde",
  "serde_json",
  "tauri",

@@ -1,4 +1,4 @@
-import { DBInstance } from "$lib/db";
+import { DBInstance } from "$lib/stores/db";
 import type { CredentialStoreAdapter, CredentialType, GenericCredential } from "@wenyan-md/ui";
 
 interface CredentialDO {

@@ -22,19 +22,20 @@
         setEditorPaste,
         setUploadHelpClick,
         credentialStore,
-        setDownloadImageToBase64,
         setResetTokenClick,
         ConfirmModal,
         setExportImageClick,
+        setGetWenyanElement,
+        setImageProcessorAction,
     } from "@wenyan-md/ui";
     import { sqliteThemeStorageAdapter } from "$lib/stores/sqliteThemeStore";
     import { sqliteArticleStorageAdapter } from "$lib/stores/sqliteArticleStore";
     import { resetWechatAccessToken, sqliteCredentialStoreAdapter } from "$lib/stores/sqliteCredentialStore";
     import { defaultEditorDropHandler, defaultEditorPasteHandler } from "$lib/services/editorHandler";
     import SimpleLoader from "$lib/components/SimpleLoader.svelte";
-    import { downloadImage } from "$lib/imageProxy";
     import { exportImage } from "$lib/services/exportHandler";
-    import { initFileOpenListener } from "$lib/fileOpenListener";
+    import { initFileOpenListener } from "$lib/services/fileOpenListener";
+    import { imageProcessorAction } from "$lib/services/processImages.svelte";
 
     let isShowMoreMenu = $state(false);
     let isShowSettingsPage = $state(false);
@@ -53,9 +54,10 @@
     setPreviewClick(closeMoreMenu);
     setEditorClick(closeMoreMenu);
     setUploadHelpClick(uploadHelpClick);
-    setDownloadImageToBase64(downloadImage);
     setResetTokenClick(resetWechatAccessToken);
     setExportImageClick(exportImage);
+    setGetWenyanElement(getWenyanElement);
+    setImageProcessorAction(imageProcessorAction);
 
     onMount(async () => {
         await themeStore.register(sqliteThemeStorageAdapter);
@@ -97,6 +99,21 @@
 
     async function uploadHelpClick() {
         await open("https://yuzhi.tech/docs/wenyan/upload");
+    }
+
+    function getWenyanElement(): HTMLElement {
+        const wenyanElement = document.getElementById("wenyan");
+        if (!wenyanElement) {
+            throw new Error("Wenyan element not found");
+        }
+        const clonedWenyan = wenyanElement.cloneNode(true) as HTMLElement;
+        clonedWenyan.querySelectorAll("img").forEach(async (element) => {
+            const dataSrc = element.getAttribute("data-src");
+            if (dataSrc) {
+                element.src = dataSrc;
+            }
+        });
+        return clonedWenyan;
     }
 </script>
 

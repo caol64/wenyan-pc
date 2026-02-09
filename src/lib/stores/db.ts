@@ -35,6 +35,13 @@ export class DBInstance {
                 updatedAt INTEGER,
                 createdAt TEXT NOT NULL
             );`);
+            await db.execute(`CREATE TABLE IF NOT EXISTS UploadCache (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                md5 TEXT NOT NULL,
+                mediaId TEXT NOT NULL,
+                lastUsed TEXT NOT NULL,
+                createdAt TEXT NOT NULL
+            );`);
             DBInstance.instance = db;
             return db;
         })();

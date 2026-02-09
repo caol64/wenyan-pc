@@ -1,36 +1,50 @@
 import type { EditorView } from "@codemirror/view";
-import { credentialStore, globalState, settingsStore } from "@wenyan-md/ui";
-import { createWechatClient } from "@wenyan-md/core/wechat";
-import type { HttpAdapter, MultipartBody } from "@wenyan-md/core/http";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
-import { getWechatToken, updateWechatAccessToken } from "../stores/sqliteCredentialStore";
-
-export const tauriHttpAdapter: HttpAdapter = {
-    // 1. 直接代理给 Tauri 的 fetch
-    fetch: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-        return tauriFetch(input as any, init as any);
-    },
-
-    // 2. 使用原生 FormData 构建 Multipart
-    createMultipart(field: string, file: Blob, filename: string): MultipartBody {
-        const form = new FormData();
-        form.append(field, file, filename);
-
-        return {
-            body: form,
-            headers: undefined,
-        };
-    },
-};
+import { globalState, settingsStore } from "@wenyan-md/ui";
+import { getFileExtension, readFileAsText } from "$lib/utils";
+import { uploadImageWithCache } from "./imageUploadService";
 
 const imgType = ["image/bmp", "image/png", "image/jpeg", "image/gif", "video/mp4"];
-const { uploadMaterial, fetchAccessToken } = createWechatClient(tauriHttpAdapter);
+// 匹配 Markdown 图片语法的正则: ![alt](url)
+const IMAGE_REGEX = /!\[([^\]]*)\]\(([^)]+)\)/g;
 
 export async function defaultEditorPasteHandler(event: ClipboardEvent, view: EditorView) {
-    const files = event.clipboardData?.files;
+    const clipboardData = event.clipboardData;
+    const files = clipboardData?.files;
     if (files && files.length > 0 && canHandleFile(files[0])) {
+        // 粘贴图片
         event.preventDefault();
         await handleImageUpload(files[0], view);
+        return;
+    }
+    const original = clipboardData?.getData("text/plain");
+    if (!original) {
+        return;
+    }
+    try {
+        event.preventDefault();
+        globalState.isLoading = true;
+        const selectionSnapshot = view.state.selection.main;
+        const insertFrom = selectionSnapshot.from;
+        const insertTo = selectionSnapshot.to;
+        const { text } = await replaceLocalImagesInMarkdown(original);
+
+        view.dispatch({
+            changes: {
+                from: insertFrom,
+                to: insertTo,
+                insert: text,
+            },
+            selection: { anchor: insertFrom + text.length },
+        });
+        view.focus();
+    } catch (error) {
+        console.error("File paste error:", error);
+        globalState.setAlertMessage({
+            type: "error",
+            message: `处理文件出错: ${error instanceof Error ? error.message : "未知错误"}`,
+        });
+    } finally {
+        globalState.isLoading = false;
     }
 }
 
@@ -42,19 +56,27 @@ export async function defaultEditorDropHandler(event: DragEvent, view: EditorVie
     const isMarkdown = extension === "md" || file.type === "text/markdown";
 
     if (canHandleFile(file)) {
+        // 拖拽图片
         event.preventDefault();
         await handleImageUpload(file, view);
-    } else if (isMarkdown) {
+        return;
+    }
+    if (isMarkdown) {
+        // 拖拽文档
         event.preventDefault();
         try {
             const content = await readFileAsText(file);
             globalState.setMarkdownText(content);
+            globalState.isLoading = true;
+            await uploadAllLocalImages(view);
         } catch (error) {
             console.error("File drop error:", error);
             globalState.setAlertMessage({
                 type: "error",
                 message: `处理文件出错: ${error instanceof Error ? error.message : "未知错误"}`,
             });
+        } finally {
+            globalState.isLoading = false;
         }
     }
 }
@@ -63,98 +85,89 @@ function canHandleFile(file: File): boolean {
     return file && imgType.includes(file.type);
 }
 
-function checkUploadEnabed(): boolean {
-    const imageHostEnabled = settingsStore.enabledImageHost === "wechat";
-    if (!imageHostEnabled) {
-        throw new Error("请先在设置中启用微信图床");
-    }
-    return true;
-}
-
-function checkCredential(): boolean {
-    const credential = credentialStore.getCredential("wechat");
-    if (!credential || !credential.appId || !credential.appSecret) {
-        throw new Error("请先在设置中配置微信的凭据");
-    }
-    return true;
-}
-
-async function auth(): Promise<string> {
-    const credential = credentialStore.getCredential("wechat");
-    const credentialDO = await getWechatToken();
-    const storedAccessToken = credentialDO!.accessToken;
-    const expireTime = credentialDO!.expireTime;
-    if (!storedAccessToken || (expireTime && Date.now() > expireTime)) {
-        const data = await fetchAccessToken(credential.appId!, credential.appSecret!);
-        if ((data as any).errcode) {
-            throw new Error(`获取 Access Token 失败，错误码：${data.errcode}，${data.errmsg}`);
-        }
-        if (!data.access_token) {
-            throw new Error(`获取 Access Token 失败: ${data}`);
-        }
-        if (data.access_token && data.expires_in) {
-            data.expires_in = Date.now() + data.expires_in * 1000;
-        }
-        await updateWechatAccessToken(data.access_token, data.expires_in);
-        return data.access_token;
-    }
-    return storedAccessToken;
-}
-
 async function handleImageUpload(file: File, view: EditorView) {
-    const selectionSnapshot = view.state.selection.main;
-    const insertFrom = selectionSnapshot.from;
-    const insertTo = selectionSnapshot.to;
+    globalState.isLoading = true;
+
     try {
-        if (checkUploadEnabed() && checkCredential()) {
-            globalState.isLoading = true;
-            const accessToken = await auth();
-            const data = await uploadMaterial("image", file, file.name, accessToken);
-            if ((data as any).errcode) {
-                throw new Error(`上传失败，错误码：${(data as any).errcode}，错误信息：${(data as any).errmsg}`);
-            }
-            const url = data.url;
-            const mediaId = data.media_id;
-            // 在光标位置插入图片链接
-            const markdownImage = `\n![${file.name}](${url})\n`;
-            view.dispatch({
-                changes: {
-                    from: insertFrom,
-                    to: insertTo,
-                    insert: markdownImage,
-                },
-                // 插入后，将新的光标位置定位到图片后面
-                selection: { anchor: insertFrom + markdownImage.length },
-            });
-            view.focus();
-        }
-    } catch (error) {
-        console.error("图片上传失败:", error);
+        const url = await uploadImageWithCache(file);
+        const markdown = `\n![${file.name}](${url})\n`;
+
+        const { from, to } = view.state.selection.main;
+
+        view.dispatch({
+            changes: { from, to, insert: markdown },
+            selection: { anchor: from + markdown.length },
+        });
+
+        view.focus();
+    } catch (e) {
         globalState.setAlertMessage({
             type: "error",
-            message: `${error instanceof Error ? error.message : error}`,
+            message: String(e),
         });
     } finally {
         globalState.isLoading = false;
     }
 }
 
-function getFileExtension(filename: string): string {
-    if (!filename || typeof filename !== "string") {
-        return "";
+async function uploadAllLocalImages(view: EditorView) {
+    if (!settingsStore.uploadSettings.autoUploadLocal) return;
+
+    globalState.isLoading = true;
+
+    try {
+        const original = globalState.getMarkdownText();
+        const { text, replaced } = await replaceLocalImagesInMarkdown(original);
+
+        if (!replaced) return;
+
+        globalState.setMarkdownText(text);
+
+        view.dispatch({
+            changes: {
+                from: 0,
+                to: view.state.doc.length,
+                insert: text,
+            },
+        });
+    } finally {
+        globalState.isLoading = false;
     }
-    const lastDotIndex = filename.lastIndexOf(".");
-    if (lastDotIndex === -1 || lastDotIndex === 0) {
-        return "";
-    }
-    return filename.slice(lastDotIndex + 1);
 }
 
-function readFileAsText(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsText(file);
+async function replaceLocalImagesInMarkdown(markdown: string): Promise<{ text: string; replaced: boolean }> {
+    const matches = Array.from(markdown.matchAll(IMAGE_REGEX));
+    const localImages = matches.filter((m) => {
+        const src = m[2];
+        return src && !src.startsWith("http");
     });
+
+    if (localImages.length === 0) {
+        return { text: markdown, replaced: false };
+    }
+
+    const replaceMap = new Map<string, string>();
+
+    for (const match of localImages) {
+        const oldPath = match[2];
+        if (replaceMap.has(oldPath)) continue;
+
+        try {
+            const url = await uploadImageWithCache(oldPath);
+            replaceMap.set(oldPath, url);
+        } catch (e) {
+            console.error("Image upload failed:", oldPath, e);
+            // ⚠️ 不 throw，允许部分成功
+        }
+    }
+
+    let newText = markdown;
+    replaceMap.forEach((url, oldPath) => {
+        newText = newText.replaceAll(`](${oldPath})`, `](${url})`);
+    });
+
+    return {
+        text: newText,
+        replaced: replaceMap.size > 0,
+    };
 }

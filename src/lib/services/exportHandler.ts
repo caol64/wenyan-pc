@@ -2,7 +2,7 @@ import { domToPng } from "modern-screenshot";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { save } from "@tauri-apps/plugin-dialog";
 import { globalState } from "@wenyan-md/ui";
-import { downloadImage } from "$lib/imageProxy";
+import { downloadImageToBase64 } from "$lib/services/imageProxy";
 
 export async function exportImage() {
     const element = document.getElementById("wenyan");
@@ -25,7 +25,7 @@ export async function exportImage() {
         const images = clonedWenyan.querySelectorAll("img");
         const promises = Array.from(images).map(async (img) => {
             if (!img.src.startsWith("data:")) {
-                img.src = await downloadImage(img.src);
+                img.src = await downloadImageToBase64(img.src);
             }
         });
         await Promise.all(promises); // 等待所有图片下载完再往下走
@@ -56,7 +56,6 @@ export async function exportImage() {
             }
             await writeFile(filePath, bytes);
         }
-
     } catch (error) {
         console.error("保存失败:", error);
         globalState.setAlertMessage({

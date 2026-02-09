@@ -1,5 +1,5 @@
 import type { ThemeStorageAdapter, CustomTheme } from "@wenyan-md/ui";
-import { DBInstance } from "../db";
+import { DBInstance } from "./db";
 
 interface ThemeDO {
     id: number;

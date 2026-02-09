@@ -3,6 +3,8 @@
 
 use log::{error, info};
 use tauri::{Listener, Manager, WebviewUrl, Emitter};
+use std::fs::File;
+use std::io::Read;
 
 fn main() {
     tauri::Builder::default()
@@ -39,6 +41,10 @@ fn main() {
             }
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![
+            get_data_md5,
+            get_file_md5,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -66,4 +72,38 @@ fn create_about_window(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn std:
         .center() // 将窗口居中显示
         .build()?;
     Ok(())
+}
+
+#[tauri::command]
+fn get_file_md5(path: String) -> Result<String, String> {
+    // 1. 打开文件
+    let mut file = File::open(&path).map_err(|e| format!("无法打开文件: {}", e))?;
+
+    // 2. 初始化 MD5 上下文
+    let mut context = md5::Context::new();
+
+    // 3. 增大缓冲区到 8KB 或更大 (通常 8*1024 或 64*1024 都不错)
+    let mut buffer = [0; 8 * 1024];
+
+    loop {
+        // 阻塞读取是安全的，因为我们在普通 fn 中 (Tauri 会在独立线程运行它)
+        let count = file.read(&mut buffer).map_err(|e| format!("读取文件失败: {}", e))?;
+
+        if count == 0 {
+            break;
+        }
+
+        context.consume(&buffer[..count]);
+    }
+
+    let digest = context.finalize();
+    Ok(format!("{:x}", digest))
+}
+
+#[tauri::command]
+fn get_data_md5(data: Vec<u8>) -> String {
+    // 对于已经在内存中的数据，直接使用 compute 即可
+    // md5::compute 接收 &[u8]
+    let digest = md5::compute(&data);
+    format!("{:x}", digest)
 }

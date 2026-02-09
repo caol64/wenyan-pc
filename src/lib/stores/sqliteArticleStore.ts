@@ -1,5 +1,5 @@
 import type { ArticleStorageAdapter, Article } from "@wenyan-md/ui";
-import { DBInstance } from "../db";
+import { DBInstance } from "./db";
 
 interface ArticleDO {
     id: number;
