@@ -1,62 +1,68 @@
-name: Build Windows Tauri Release
+name: Build Windows Release
 
 on:
   release:
     types: [created]
+  workflow_dispatch:
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
 
     steps:
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '22.3.0'
+          node-version: "24"
 
       - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
+        uses: actions/checkout@v6
         with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            node-modules-
+          submodules: "recursive"
 
-      - name: Cache Rust build artifacts
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo
-            src-tauri/target/release/build
-            src-tauri/target/release/deps
-          key: rust-cache-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            rust-cache-${{ runner.os }}-
+      - name: Sync UI
+        run: pnpm ui:sync
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Build
-        run: npm run build
+        run: pnpm tauri:build
 
-      - name: Package artifacts
+      - name: Fetch zip name
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          ZIP_NAME="WenYan_${VERSION}_x64-setup.zip"
-          powershell Compress-Archive -Path src-tauri/target/release/bundle/nsis/* -DestinationPath $ZIP_NAME
+          ZIP_NAME="WenYan_${VERSION}_x64-setup"
           echo "zip_name=$ZIP_NAME" >> $GITHUB_ENV
 
-      - name: Upload to Cloudflare R2
-        uses: aws-actions/s3-sync@v2
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
-          bucket: ${{ secrets.R2_BUCKET }}
-          endpoint-url: ${{ secrets.R2_ENDPOINT }}
-          region: auto
-          source-dir: .
-          include: ${{ env.zip_name }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          name: ${{ env.zip_name }}
+          path: src-tauri/target/release/bundle/nsis/*.exe
+
+  # 发布任务
+  release:
+    name: Upload to Release and R2
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Upload to Cloudflare R2
+        uses: ryand56/r2-upload-action@latest
+        with:
+          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          r2-bucket: ${{ secrets.R2_BUCKET }}
+          source-dir: ./artifacts
+          destination-dir: ./
