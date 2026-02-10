@@ -70,13 +70,25 @@ export async function calculateHash(blobOrFile: Blob): Promise<string> {
     const md5 = await invoke<string>("get_data_md5", {
         data: uint8Array,
     });
-
-    // console.log('MD5:', md5);
     return md5;
 }
 
 export async function calculateHashFromPath(path: string): Promise<string> {
     const md5 = await invoke<string>("get_file_md5", { path });
-    // console.log('MD5:', md5);
     return md5;
+}
+
+export function getWenyanElement(): HTMLElement {
+    const wenyanElement = document.getElementById("wenyan");
+    if (!wenyanElement) {
+        throw new Error("Wenyan element not found");
+    }
+    const clonedWenyan = wenyanElement.cloneNode(true) as HTMLElement;
+    clonedWenyan.querySelectorAll("img").forEach(async (element) => {
+        const dataSrc = element.getAttribute("data-src");
+        if (dataSrc) {
+            element.src = dataSrc;
+        }
+    });
+    return clonedWenyan;
 }

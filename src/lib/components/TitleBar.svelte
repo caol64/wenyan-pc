@@ -1,8 +1,16 @@
 <script lang="ts">
-    import { PlatformButtons, Win32WindowButtons, WenYanButton } from "@wenyan-md/ui";
+    import { PlatformButtons, Win32WindowButtons, WenYanButton, MacWindowButtons } from "@wenyan-md/ui";
     import { getCurrentWindow } from "@tauri-apps/api/window";
+    import { type } from "@tauri-apps/plugin-os";
+    import { onMount } from "svelte";
 
     let { showMoreMenu }: { showMoreMenu: () => void } = $props();
+    // 可能的值: 'windows', 'macos', 'linux', 'android', 'ios'
+    let currentOs = $state<string | null>(null);
+
+    onMount(async () => {
+        currentOs = type();
+    });
 
     function minimizeWindow() {
         const window = getCurrentWindow();
@@ -22,8 +30,12 @@
 
 <div data-tauri-drag-region class="h-7.5 flex justify-between items-center bg-gray-200 dark:bg-gray-700">
     <div class="flex flex-row gap-2 justify-center items-center px-4">
-        <WenYanButton w="20px" />
-        <span class="text-xs font-bold select-none">文颜</span>
+        {#if currentOs === "macos"}
+            <MacWindowButtons {minimizeWindow} {maximizeWindow} {closeWindow} class="mr-2" />
+        {:else}
+            <WenYanButton w="20px" />
+            <span class="text-xs font-bold select-none">文颜</span>
+        {/if}
     </div>
     <div class="flex gap-4">
         <PlatformButtons />
@@ -38,6 +50,8 @@
                 <circle cx="24" cy="35" r="3" fill="#currentColor" />
             </svg>
         </button>
-        <Win32WindowButtons {minimizeWindow} {maximizeWindow} {closeWindow} />
+        {#if currentOs !== "macos"}
+            <Win32WindowButtons {minimizeWindow} {maximizeWindow} {closeWindow} />
+        {/if}
     </div>
 </div>

@@ -2,7 +2,7 @@
     import { open } from "@tauri-apps/plugin-shell";
     import { onMount } from "svelte";
     import TitleBar from "$lib/components/TitleBar.svelte";
-    import { loadMarkdownFromPath, readExampleArticle, writeHtmlToClipboard, writeTextToClipboard } from "$lib/utils";
+    import { loadMarkdownFromPath, readExampleArticle } from "$lib/utils";
     import { getCurrentWindow } from "@tauri-apps/api/window";
     import {
         globalState,
@@ -11,7 +11,6 @@
         themeStore,
         settingsStore,
         localStorageSettingsAdapter,
-        type CopyContentType,
         articleStore,
         AlertModal,
         SettingsModal,
@@ -25,8 +24,8 @@
         setResetTokenClick,
         ConfirmModal,
         setExportImageClick,
-        setGetWenyanElement,
         setImageProcessorAction,
+        setPublishArticleClick,
     } from "@wenyan-md/ui";
     import { sqliteThemeStorageAdapter } from "$lib/stores/sqliteThemeStore";
     import { sqliteArticleStorageAdapter } from "$lib/stores/sqliteArticleStore";
@@ -36,19 +35,13 @@
     import { exportImage } from "$lib/services/exportHandler";
     import { initFileOpenListener } from "$lib/services/fileOpenListener";
     import { imageProcessorAction } from "$lib/services/processImages.svelte";
+    import { publishHandler } from "$lib/services/publishHandler";
+    import { copyHandler } from "$lib/services/copyHandler";
 
     let isShowMoreMenu = $state(false);
     let isShowSettingsPage = $state(false);
 
-    function handleCopy(result: string, contentType: CopyContentType) {
-        if (contentType === "html") {
-            writeHtmlToClipboard(result);
-        } else {
-            writeTextToClipboard(result);
-        }
-    }
-
-    setCopyClick(handleCopy);
+    setCopyClick(copyHandler);
     setEditorPaste(defaultEditorPasteHandler);
     setEditorDrop(defaultEditorDropHandler);
     setPreviewClick(closeMoreMenu);
@@ -56,8 +49,8 @@
     setUploadHelpClick(uploadHelpClick);
     setResetTokenClick(resetWechatAccessToken);
     setExportImageClick(exportImage);
-    setGetWenyanElement(getWenyanElement);
     setImageProcessorAction(imageProcessorAction);
+    setPublishArticleClick(publishHandler);
 
     onMount(async () => {
         await themeStore.register(sqliteThemeStorageAdapter);
@@ -101,20 +94,7 @@
         await open("https://yuzhi.tech/docs/wenyan/upload");
     }
 
-    function getWenyanElement(): HTMLElement {
-        const wenyanElement = document.getElementById("wenyan");
-        if (!wenyanElement) {
-            throw new Error("Wenyan element not found");
-        }
-        const clonedWenyan = wenyanElement.cloneNode(true) as HTMLElement;
-        clonedWenyan.querySelectorAll("img").forEach(async (element) => {
-            const dataSrc = element.getAttribute("data-src");
-            if (dataSrc) {
-                element.src = dataSrc;
-            }
-        });
-        return clonedWenyan;
-    }
+
 </script>
 
 <div class="flex h-screen w-full flex-col overflow-hidden relative">

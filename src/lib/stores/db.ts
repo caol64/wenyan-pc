@@ -39,6 +39,7 @@ export class DBInstance {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 md5 TEXT NOT NULL,
                 mediaId TEXT NOT NULL,
+                url TEXT NOT NULL,
                 lastUsed TEXT NOT NULL,
                 createdAt TEXT NOT NULL
             );`);

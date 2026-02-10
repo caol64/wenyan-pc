@@ -1,6 +1,6 @@
 import { credentialStore, settingsStore } from "@wenyan-md/ui";
 import { getWechatToken, updateWechatAccessToken } from "../stores/sqliteCredentialStore";
-import { createWechatClient } from "@wenyan-md/core/wechat";
+import { createWechatClient, type WechatPublishOptions, type WechatUploadResponse } from "@wenyan-md/core/wechat";
 import type { HttpAdapter, MultipartBody } from "@wenyan-md/core/http";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 
@@ -21,7 +21,7 @@ const tauriHttpAdapter: HttpAdapter = {
         };
     },
 };
-const { uploadMaterial, fetchAccessToken } = createWechatClient(tauriHttpAdapter);
+const { uploadMaterial, fetchAccessToken, publishArticle } = createWechatClient(tauriHttpAdapter);
 
 function checkUploadEnabed(): boolean {
     const imageHostEnabled = settingsStore.enabledImageHost === "wechat";
@@ -41,36 +41,37 @@ function checkCredential(): boolean {
 
 async function auth(): Promise<string> {
     const credential = credentialStore.getCredential("wechat");
+    const appid = credential.appId!;
+    const secret = credential.appSecret!;
     const credentialDO = await getWechatToken();
-    const storedAccessToken = credentialDO!.accessToken;
-    const expireTime = credentialDO!.expireTime;
-    if (!storedAccessToken || (expireTime && Date.now() > expireTime)) {
-        const data = await fetchAccessToken(credential.appId!, credential.appSecret!);
-        if ((data as any).errcode) {
-            throw new Error(`获取 Access Token 失败，错误码：${data.errcode}，${data.errmsg}`);
+    if (credentialDO && credentialDO.accessToken && credentialDO.expireTime) {
+        const storedAccessToken = credentialDO.accessToken;
+        const expireTime = credentialDO.expireTime;
+        if (Date.now() < expireTime) {
+            return storedAccessToken;
         }
-        if (!data.access_token) {
-            throw new Error(`获取 Access Token 失败: ${data}`);
-        }
-        if (data.access_token && data.expires_in) {
-            data.expires_in = Date.now() + data.expires_in * 1000;
-        }
-        await updateWechatAccessToken(data.access_token, data.expires_in);
-        return data.access_token;
     }
-    return storedAccessToken;
+    const data = await fetchAccessToken(appid, secret);
+    if (data.access_token && data.expires_in) {
+        data.expires_in = Date.now() + data.expires_in * 1000;
+    }
+    await updateWechatAccessToken(data.access_token, data.expires_in);
+    return data.access_token;
 }
 
-export async function uploadFileCore(file: Blob | File, fileName: string): Promise<string> {
+export async function uploadFileCore(file: Blob | File, fileName: string): Promise<WechatUploadResponse> {
     if (checkUploadEnabed() && checkCredential()) {
         const accessToken = await auth();
-        const data = await uploadMaterial("image", file, fileName, accessToken);
-
-        if ((data as any).errcode) {
-            throw new Error(`上传失败 [${(data as any).errcode}]: ${(data as any).errmsg}`);
-        }
-
-        return data.url;
+        return await uploadMaterial("image", file, fileName, accessToken);
     }
     throw new Error("上传条件未满足");
+}
+
+export async function publishArticleToDraft(publishOption: WechatPublishOptions): Promise<string> {
+    if (checkUploadEnabed() && checkCredential()) {
+        const accessToken = await auth();
+        const data = await publishArticle(accessToken, publishOption);
+        return data.media_id;
+    }
+    throw new Error("发布条件未满足");
 }
