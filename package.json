@@ -6,7 +6,7 @@
   "scripts": {
     "ui:sync": "git submodule update --remote --merge && pnpm ui:init",
     "ui:init": "cd wenyan-ui && pnpm install && pnpm svelte-kit sync",
-    "web:install": "pnpm install",
+    "web:install": "pnpm install && pnpm svelte-kit sync",
     "web:dev": "vite dev",
     "web:build": "vite build",
     "tauri:dev": "tauri dev",
@@ -38,7 +38,7 @@
     "@tauri-apps/plugin-os": "2.3.2",
     "@tauri-apps/plugin-shell": "2.3.4",
     "@tauri-apps/plugin-sql": "2.3.2",
-    "@wenyan-md/core": "^2.0.5",
+    "@wenyan-md/core": "^2.0.6",
     "@wenyan-md/ui": "file:./wenyan-ui",
     "modern-screenshot": "^4.6.8"
   },

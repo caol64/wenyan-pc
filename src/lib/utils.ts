@@ -2,6 +2,7 @@ import { writeHtml, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { resolveResource, isAbsolute } from "@tauri-apps/api/path";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { invoke } from "@tauri-apps/api/core";
+import { articleStore } from "@wenyan-md/ui";
 
 export async function writeHtmlToClipboard(html: string): Promise<void> {
     await writeHtml(html);
@@ -18,6 +19,11 @@ export async function readExampleArticle(): Promise<string> {
 
 export async function loadMarkdownFromPath(path: string): Promise<string> {
     return await readTextFile(path);
+}
+
+export async function getArticle(): Promise<string> {
+    const article = articleStore.getLastArticle();
+    return article ? article : await readExampleArticle();
 }
 
 export function getFileExtension(filename: string): string {

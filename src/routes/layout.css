@@ -3,16 +3,15 @@
 
 :root {
     color-scheme: light dark;
-    scroll-behavior: smooth;
     @apply font-sans;
 }
 
 body {
-    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden text-sm;
+    @apply bg-white dark:bg-[#1e1e1e] text-gray-900 dark:text-gray-100 overflow-hidden text-sm;
 }
 
 .dark-container {
-    @apply bg-white dark:bg-gray-900;
+    @apply bg-white dark:bg-[#1e1e1e];
 }
 
 .smooth-border {
@@ -20,5 +19,5 @@ body {
 }
 
 .overlay-button {
-    @apply bg-white dark:bg-gray-900 inline-flex flex-row items-center gap-2 text-center cursor-pointer text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-sm z-10;
+    @apply bg-white dark:bg-[#1e1e1e] inline-flex flex-row items-center gap-2 text-center cursor-pointer text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-sm;
 }

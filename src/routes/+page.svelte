@@ -1,100 +1,38 @@
 <script lang="ts">
-    import { open } from "@tauri-apps/plugin-shell";
     import { onMount } from "svelte";
     import TitleBar from "$lib/components/TitleBar.svelte";
-    import { loadMarkdownFromPath, readExampleArticle } from "$lib/utils";
-    import { getCurrentWindow } from "@tauri-apps/api/window";
-    import {
-        globalState,
-        MainPage,
-        Sidebar,
-        themeStore,
-        settingsStore,
-        localStorageSettingsAdapter,
-        articleStore,
-        AlertModal,
-        SettingsModal,
-        setPreviewClick,
-        setCopyClick,
-        setEditorClick,
-        setEditorDrop,
-        setEditorPaste,
-        setUploadHelpClick,
-        credentialStore,
-        setResetTokenClick,
-        ConfirmModal,
-        setExportImageClick,
-        setImageProcessorAction,
-        setPublishArticleClick,
-    } from "@wenyan-md/ui";
-    import { sqliteThemeStorageAdapter } from "$lib/stores/sqliteThemeStore";
-    import { sqliteArticleStorageAdapter } from "$lib/stores/sqliteArticleStore";
-    import { resetWechatAccessToken, sqliteCredentialStoreAdapter } from "$lib/stores/sqliteCredentialStore";
-    import { defaultEditorDropHandler, defaultEditorPasteHandler } from "$lib/services/editorHandler";
+    import { getArticle, loadMarkdownFromPath } from "$lib/utils";
+    import { appState } from "$lib/appState.svelte";
+    import { globalState, MainPage, Sidebar, AlertModal, SettingsModal, ConfirmModal } from "@wenyan-md/ui";
     import SimpleLoader from "$lib/components/SimpleLoader.svelte";
-    import { exportImage } from "$lib/services/exportHandler";
     import { initFileOpenListener } from "$lib/services/fileOpenListener";
-    import { imageProcessorAction } from "$lib/services/processImages.svelte";
-    import { publishHandler } from "$lib/services/publishHandler";
-    import { copyHandler } from "$lib/services/copyHandler";
+    import { setHooks } from "$lib/setHooks";
+    import { registerStore } from "$lib/storeRegister";
+    import AboutPage from "$lib/components/AboutPage.svelte";
 
-    let isShowMoreMenu = $state(false);
-    let isShowSettingsPage = $state(false);
-
-    setCopyClick(copyHandler);
-    setEditorPaste(defaultEditorPasteHandler);
-    setEditorDrop(defaultEditorDropHandler);
-    setPreviewClick(closeMoreMenu);
-    setEditorClick(closeMoreMenu);
-    setUploadHelpClick(uploadHelpClick);
-    setResetTokenClick(resetWechatAccessToken);
-    setExportImageClick(exportImage);
-    setImageProcessorAction(imageProcessorAction);
-    setPublishArticleClick(publishHandler);
-
+    setHooks();
     onMount(async () => {
-        await themeStore.register(sqliteThemeStorageAdapter);
-        await settingsStore.register(localStorageSettingsAdapter);
-        await articleStore.register(sqliteArticleStorageAdapter);
-        await credentialStore.register(sqliteCredentialStoreAdapter);
+        await registerStore();
         globalState.setMarkdownText(await getArticle());
         globalState.setPlatform("wechat");
 
         initFileOpenListener(async (filePath) => {
-            // console.log("Loading new markdown:", filePath);
             const content = await loadMarkdownFromPath(filePath);
             globalState.setMarkdownText(content);
         });
     });
 
     function toggleMoreMenu() {
-        isShowMoreMenu = !isShowMoreMenu;
+        appState.isShowMoreMenu = !appState.isShowMoreMenu;
     }
 
     function onAboutClick() {
-        closeMoreMenu();
-        getCurrentWindow().emit("open-about");
-    }
-
-    async function getArticle(): Promise<string> {
-        const article = articleStore.getLastArticle();
-        return article ? article : await readExampleArticle();
-    }
-
-    function closeMoreMenu() {
-        isShowMoreMenu = false;
+        appState.isShowAboutPage = true;
     }
 
     function showSettingsPage() {
-        closeMoreMenu();
-        isShowSettingsPage = true;
+        appState.isShowSettingsPage = true;
     }
-
-    async function uploadHelpClick() {
-        await open("https://yuzhi.tech/docs/wenyan/upload");
-    }
-
-
 </script>
 
 <div class="flex h-screen w-full flex-col overflow-hidden relative">
@@ -113,7 +51,7 @@
         {/if}
     </div>
 
-    {#if isShowMoreMenu}
+    {#if appState.isShowMoreMenu}
         <div
             class="absolute w-40 top-8 right-5 justify-start flex flex-col items-start transition-opacity duration-300 rounded-md outline-none shadow-md p-2 bg-[#f9f9f9] dark:bg-gray-700 z-50"
         >
@@ -125,4 +63,5 @@
 
 <AlertModal />
 <ConfirmModal />
-<SettingsModal isOpen={isShowSettingsPage} onClose={() => (isShowSettingsPage = false)} />
+<SettingsModal isOpen={appState.isShowSettingsPage} onClose={() => (appState.isShowSettingsPage = false)} />
+<AboutPage />

@@ -27,12 +27,13 @@ jobs:
         run: pnpm ui:sync
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm web:install
 
       - name: Build
         run: pnpm tauri:build
 
       - name: Fetch zip name
+        shell: bash
         run: |
           VERSION=$(node -p "require('./package.json').version")
           ZIP_NAME="WenYan_${VERSION}_x64-setup"
