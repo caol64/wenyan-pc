@@ -41,5 +41,6 @@
     "@wenyan-md/core": "^2.0.5",
     "@wenyan-md/ui": "file:./wenyan-ui",
     "modern-screenshot": "^4.6.8"
-  }
+  },
+  "packageManager": "pnpm@10.7.1"
 }
