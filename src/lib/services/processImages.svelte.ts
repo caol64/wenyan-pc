@@ -15,32 +15,34 @@ export const imageProcessorAction: ImageProcessorAction = (node) => {
         for (const img of images) {
             const dataSrc = img.getAttribute("src");
 
-            if (dataSrc) {
-                const resolvedSrc = await resolveArticleRelativePath(dataSrc, lastArticle);
-                const cached = cache.get(resolvedSrc);
-                if (cached) {
-                    img.src = cached;
-                    continue;
-                }
-                try {
-                    if (dataSrc.startsWith("https://mmbiz.qpic.cn")) {
-                        img.setAttribute("data-src", dataSrc);
-                        const base64 = await downloadImageToBase64(dataSrc);
-                        if (base64) {
-                            cache.set(dataSrc, base64);
-                            img.src = base64;
-                        }
-                    } else if ((await getPathType(dataSrc)) !== "network") {
-                        img.setAttribute("data-src", dataSrc);
-                        const base64 = await localPathToBase64(resolvedSrc);
-                        if (base64) {
-                            cache.set(resolvedSrc, base64);
-                            img.src = base64;
-                        }
+            if (!dataSrc || dataSrc.startsWith("data:")) {
+                continue;
+            }
+
+            const resolvedSrc = await resolveArticleRelativePath(dataSrc, lastArticle);
+            const cached = cache.get(resolvedSrc);
+            if (cached) {
+                img.src = cached;
+                continue;
+            }
+            try {
+                if (dataSrc.startsWith("https://mmbiz.qpic.cn")) {
+                    img.setAttribute("data-src", dataSrc);
+                    const base64 = await downloadImageToBase64(dataSrc);
+                    if (base64) {
+                        cache.set(dataSrc, base64);
+                        img.src = base64;
                     }
-                } catch (err) {
-                    console.error("Image process failed:", dataSrc, err);
+                } else if ((await getPathType(dataSrc)) !== "network") {
+                    img.setAttribute("data-src", dataSrc);
+                    const base64 = await localPathToBase64(resolvedSrc);
+                    if (base64) {
+                        cache.set(resolvedSrc, base64);
+                        img.src = base64;
+                    }
                 }
+            } catch (err) {
+                console.error("Image process failed:", dataSrc, err);
             }
         }
     };

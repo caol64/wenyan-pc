@@ -4,7 +4,7 @@ import { settingsStore } from "@wenyan-md/ui";
 import { base64ToFile, pathToFile, urlToFile } from "./imageProxy";
 import { uploadFileCore } from "./wechatHandler";
 import type { WechatUploadResponse } from "@wenyan-md/core/wechat";
-import { isAbsolute } from "@tauri-apps/api/path";
+import { isAbsolute, resolve } from "@tauri-apps/api/path";
 import { getLastArticle, type ArticleDO } from "$lib/stores/sqliteArticleStore";
 
 // 匹配 Markdown 图片语法的正则: ![alt](url)
@@ -110,7 +110,7 @@ async function resolveRelativePath(path: string, relative?: string): Promise<str
     }
     const isAbsolutePath = await isAbsolute(path);
     if (isAbsolutePath) {
-        return path;
+        return await resolve(path);
     }
     if (relative) {
         return getAbsoluteImagePath(relative, path);

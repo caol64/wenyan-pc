@@ -41,7 +41,7 @@ export async function defaultEditorPasteHandler(event: ClipboardEvent, view: Edi
         console.error("File paste error:", error);
         globalState.setAlertMessage({
             type: "error",
-            message: `处理文件出错: ${error instanceof Error ? error.message : "未知错误"}`,
+            message: `处理文件出错: ${error instanceof Error ? error.message : error}`,
         });
     } finally {
         globalState.isLoading = false;
@@ -74,7 +74,7 @@ export async function defaultEditorDropHandler(event: DragEvent, view: EditorVie
         } catch (error) {
             globalState.setAlertMessage({
                 type: "error",
-                message: `处理文件出错: ${error instanceof Error ? error.message : "未知错误"}`,
+                message: `处理文件出错: ${error instanceof Error ? error.message : error}`,
             });
         } finally {
             globalState.isLoading = false;
