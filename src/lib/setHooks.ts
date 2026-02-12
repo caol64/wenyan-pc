@@ -1,4 +1,5 @@
 import { open } from "@tauri-apps/plugin-shell";
+import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { appState } from "./appState.svelte";
 import {
     setPreviewClick,
@@ -12,6 +13,9 @@ import {
     setImageProcessorAction,
     setPublishArticleClick,
     setAutoCacheChangeClick,
+    setImportCssClick,
+    globalState,
+    themeStore,
 } from "@wenyan-md/ui";
 import { resetWechatAccessToken } from "$lib/stores/sqliteCredentialStore";
 import { defaultEditorDropHandler, defaultEditorPasteHandler } from "$lib/services/editorHandler";
@@ -33,6 +37,7 @@ export function setHooks() {
     setImageProcessorAction(imageProcessorAction);
     setPublishArticleClick(publishHandler);
     setAutoCacheChangeClick(autoCacheChangeHandler);
+    setImportCssClick(importCssHandler);
 }
 
 async function uploadHelpClick() {
@@ -45,4 +50,24 @@ function closeMoreMenu() {
 
 function autoCacheChangeHandler() {
     sqliteUploadCacheStore.clear();
+}
+
+async function importCssHandler(url: string, name: string) {
+    const resp = await tauriFetch(url);
+    if (!resp.ok) {
+        globalState.setAlertMessage({
+            type: "error",
+            title: "导入 CSS 失败",
+            message: `无法从 ${url} 获取 CSS 文件。`,
+        });
+        return;
+    }
+    const cssText = await resp.text();
+    const themeId = globalState.getCurrentThemeId();
+    themeStore.addCustomTheme(`0:${themeId}`, name);
+    const currentTheme = globalState.getCurrentTheme();
+    currentTheme.name = name;
+    currentTheme.css = cssText;
+    currentTheme.id = `0:${themeId}`;
+    globalState.customThemeName = name;
 }

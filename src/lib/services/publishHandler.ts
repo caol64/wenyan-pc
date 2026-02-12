@@ -2,6 +2,7 @@ import { getWenyanElement } from "$lib/utils";
 import type { WechatUploadResponse } from "@wenyan-md/core/wechat";
 import { publishArticleToDraft } from "./wechatHandler";
 import { globalState, wenyanRenderer, wenyanCopier } from "@wenyan-md/ui";
+import { open } from "@tauri-apps/plugin-shell";
 import {
     uploadBase64ImageWithCache,
     uploadLocalImageWithCache,
@@ -58,9 +59,10 @@ export async function publishHandler() {
             message: "文章已成功发布到微信草稿箱，请前往微信公众平台查看并发布。",
         });
     } catch (error) {
-        globalState.setAlertMessage({
-            type: "error",
+        globalState.setConfirmMessage({
             message: error instanceof Error ? error.message : String(error),
+            action: async () => {await open("https://yuzhi.tech/docs/wenyan/publish")},
+            actionLabel: "查看教程",
         });
     } finally {
         globalState.isLoading = false;

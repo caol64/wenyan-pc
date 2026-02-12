@@ -1,18 +1,23 @@
 import type { ImageProcessorAction } from "@wenyan-md/ui";
 import { downloadImageToBase64, localPathToBase64 } from "./imageProxy";
-import { getPathType } from "$lib/utils";
+import { FIFOCache, getPathType } from "$lib/utils";
+import { getLastArticle } from "$lib/stores/sqliteArticleStore";
+import { resolveArticleRelativePath } from "./imageUploadService";
 
-const cache = new Map<string, string>();
+const cache = new FIFOCache<string, string>();
 
 export const imageProcessorAction: ImageProcessorAction = (node) => {
     const run = async () => {
         const images = node.querySelectorAll<HTMLImageElement>("img");
+        if (images.length === 0) return;
+        const lastArticle = await getLastArticle();
 
         for (const img of images) {
             const dataSrc = img.getAttribute("src");
 
             if (dataSrc) {
-                const cached = cache.get(dataSrc);
+                const resolvedSrc = await resolveArticleRelativePath(dataSrc, lastArticle);
+                const cached = cache.get(resolvedSrc);
                 if (cached) {
                     img.src = cached;
                     continue;
@@ -27,9 +32,9 @@ export const imageProcessorAction: ImageProcessorAction = (node) => {
                         }
                     } else if ((await getPathType(dataSrc)) !== "network") {
                         img.setAttribute("data-src", dataSrc);
-                        const base64 = await localPathToBase64(dataSrc);
+                        const base64 = await localPathToBase64(resolvedSrc);
                         if (base64) {
-                            cache.set(dataSrc, base64);
+                            cache.set(resolvedSrc, base64);
                             img.src = base64;
                         }
                     }

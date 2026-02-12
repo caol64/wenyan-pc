@@ -1,11 +1,10 @@
 import type { EditorView } from "@codemirror/view";
-import { globalState, settingsStore } from "@wenyan-md/ui";
+import { globalState } from "@wenyan-md/ui";
 import { getFileExtension, readFileAsText } from "$lib/utils";
-import { uploadLocalImageWithCache, uploadMemImageWithCache, uploadNetworkImageWithCache } from "./imageUploadService";
+import { replaceLocalImagesInMarkdown, replaceNetworkImagesInMarkdown, uploadMemImageWithCache } from "./imageUploadService";
 
 const imgType = ["image/bmp", "image/png", "image/jpeg", "image/gif", "video/mp4"];
-// 匹配 Markdown 图片语法的正则: ![alt](url)
-const IMAGE_REGEX = /!\[([^\]]*)\]\(([^)]+)\)/g;
+
 
 export async function defaultEditorPasteHandler(event: ClipboardEvent, view: EditorView) {
     const clipboardData = event.clipboardData;
@@ -71,16 +70,8 @@ export async function defaultEditorDropHandler(event: DragEvent, view: EditorVie
             globalState.isLoading = true;
             const { text } = await replaceLocalImagesInMarkdown(content);
             const { text: finalText } = await replaceNetworkImagesInMarkdown(text);
-
-            view.dispatch({
-                changes: {
-                    from: 0,
-                    to: view.state.doc.length,
-                    insert: finalText,
-                },
-            });
+            globalState.setMarkdownText(finalText);
         } catch (error) {
-            console.error("File drop error:", error);
             globalState.setAlertMessage({
                 type: "error",
                 message: `处理文件出错: ${error instanceof Error ? error.message : "未知错误"}`,
@@ -120,60 +111,4 @@ async function handleImageUpload(file: File, view: EditorView) {
     }
 }
 
-async function replaceImagesInMarkdown(
-    markdown: string,
-    predicate: (src: string) => boolean,
-    uploader: (src: string) => Promise<{ url: string }>,
-): Promise<{ text: string; replaced: boolean }> {
-    const matches = Array.from(markdown.matchAll(IMAGE_REGEX));
 
-    const targetImages = matches.filter((m) => {
-        const src = m[2];
-        return src && predicate(src);
-    });
-
-    if (targetImages.length === 0) {
-        return { text: markdown, replaced: false };
-    }
-
-    const replaceMap = new Map<string, string>();
-
-    for (const match of targetImages) {
-        const oldSrc = match[2];
-
-        if (replaceMap.has(oldSrc)) continue;
-
-        try {
-            const resp = await uploader(oldSrc);
-            replaceMap.set(oldSrc, resp.url);
-        } catch (e) {
-            console.error("Image upload failed:", oldSrc, e);
-            // 允许部分成功
-        }
-    }
-
-    let newText = markdown;
-
-    replaceMap.forEach((newUrl, oldSrc) => {
-        newText = newText.replaceAll(`](${oldSrc})`, `](${newUrl})`);
-    });
-
-    return {
-        text: newText,
-        replaced: replaceMap.size > 0,
-    };
-}
-
-function replaceLocalImagesInMarkdown(markdown: string) {
-    if (!settingsStore.uploadSettings.autoUploadLocal) {
-        return { text: markdown, replaced: false };
-    }
-    return replaceImagesInMarkdown(markdown, (src) => !src.startsWith("http"), uploadLocalImageWithCache);
-}
-
-function replaceNetworkImagesInMarkdown(markdown: string) {
-    if (!settingsStore.uploadSettings.autoUploadNetwork) {
-        return { text: markdown, replaced: false };
-    }
-    return replaceImagesInMarkdown(markdown, (src) => src.startsWith("http"), uploadNetworkImageWithCache);
-}

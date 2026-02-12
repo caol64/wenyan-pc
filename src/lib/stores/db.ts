@@ -21,6 +21,9 @@ export class DBInstance {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
                 content TEXT NOT NULL,
+                fileName TEXT,
+                filePath TEXT,
+                relativePath TEXT,
                 createdAt TEXT NOT NULL
             );`);
             await db.execute(`CREATE TABLE IF NOT EXISTS Credential (

@@ -3,6 +3,7 @@
     import { getCurrentWindow } from "@tauri-apps/api/window";
     import { type } from "@tauri-apps/plugin-os";
     import { onMount } from "svelte";
+    import FileSidebarButton from "./FileSidebarButton.svelte";
 
     let { showMoreMenu }: { showMoreMenu: () => void } = $props();
     // 可能的值: 'windows', 'macos', 'linux', 'android', 'ios'
@@ -29,12 +30,15 @@
 </script>
 
 <div data-tauri-drag-region class="h-7.5 flex justify-between items-center bg-gray-200 dark:bg-gray-700">
-    <div class="flex flex-row gap-2 justify-center items-center px-4">
+    <div class="flex flex-row gap-4 justify-center items-center px-4">
         {#if currentOs === "macos"}
             <MacWindowButtons {minimizeWindow} {maximizeWindow} {closeWindow} class="mr-2" />
+            <FileSidebarButton />
+            <span class="text-xs font-bold select-none">文颜</span>
         {:else}
             <WenYanButton w="20px" />
             <span class="text-xs font-bold select-none">文颜</span>
+            <FileSidebarButton />
         {/if}
     </div>
     <div class="flex gap-4">

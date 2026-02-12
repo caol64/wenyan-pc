@@ -25,21 +25,23 @@ export const sqliteThemeStorageAdapter: ThemeStorageAdapter = {
         return customThemes;
     },
 
-    async save(id: string, name: string, css: string) {
+    async save(id: string, name: string, css: string): Promise<string> {
         const db = await DBInstance.getInstance();
         const row = await db.select<ThemeDO[]>("SELECT * FROM CustomTheme WHERE id = $1;", [id]);
         if (row.length === 0) {
-            await db.execute("INSERT INTO CustomTheme (name, content, createdAt) VALUES ($1, $2, $3);", [
+            const result = await db.execute("INSERT INTO CustomTheme (name, content, createdAt) VALUES ($1, $2, $3);", [
                 name,
                 css,
                 new Date().toISOString(),
             ]);
+            return String(result.lastInsertId);
         } else {
             await db.execute("UPDATE CustomTheme SET content = $1, createdAt = $2 WHERE id = $3;", [
                 css,
                 new Date().toISOString(),
                 id,
             ]);
+            return id;
         }
     },
 

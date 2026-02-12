@@ -39,11 +39,16 @@ jobs:
           ZIP_NAME="WenYan_${VERSION}_x64-setup"
           echo "zip_name=$ZIP_NAME" >> $GITHUB_ENV
 
+      - name: Create Zip Archive
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "src-tauri/target/release/bundle/nsis/*.exe" -DestinationPath "./${{ env.zip_name }}.zip"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.zip_name }}
-          path: src-tauri/target/release/bundle/nsis/*.exe
+          path: ./${{ env.zip_name }}.zip
 
   # 发布任务
   release:

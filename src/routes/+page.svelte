@@ -1,14 +1,15 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import TitleBar from "$lib/components/TitleBar.svelte";
-    import { getArticle, loadMarkdownFromPath } from "$lib/utils";
+    import { getArticle } from "$lib/utils";
     import { appState } from "$lib/appState.svelte";
-    import { globalState, MainPage, Sidebar, AlertModal, SettingsModal, ConfirmModal } from "@wenyan-md/ui";
+    import { globalState, MainPage, Sidebar, AlertModal, SettingsModal, ConfirmModal, CreateThemeModal } from "@wenyan-md/ui";
     import SimpleLoader from "$lib/components/SimpleLoader.svelte";
-    import { initFileOpenListener } from "$lib/services/fileOpenListener";
+    import { handleFileOpen, initFileOpenListener } from "$lib/services/fileOpenHandler";
     import { setHooks } from "$lib/setHooks";
     import { registerStore } from "$lib/storeRegister";
     import AboutPage from "$lib/components/AboutPage.svelte";
+    import FileSidebar from "$lib/components/FileSidebar.svelte";
 
     setHooks();
     onMount(async () => {
@@ -17,8 +18,7 @@
         globalState.setPlatform("wechat");
 
         initFileOpenListener(async (filePath) => {
-            const content = await loadMarkdownFromPath(filePath);
-            globalState.setMarkdownText(content);
+            await handleFileOpen(filePath);
         });
     });
 
@@ -38,6 +38,9 @@
 <div class="flex h-screen w-full flex-col overflow-hidden relative">
     <TitleBar showMoreMenu={toggleMoreMenu} />
     <div class="flex h-full w-full flex-col overflow-hidden md:flex-row relative">
+        {#if appState.isShowFileSidebar}
+            <FileSidebar />
+        {/if}
         <MainPage />
 
         {#if globalState.judgeSidebarOpen()}
@@ -65,3 +68,4 @@
 <ConfirmModal />
 <SettingsModal isOpen={appState.isShowSettingsPage} onClose={() => (appState.isShowSettingsPage = false)} />
 <AboutPage />
+<CreateThemeModal isOpen={globalState.isShowCreateThemeModal} onClose={() => (globalState.isShowCreateThemeModal = false)} />

@@ -1,5 +1,5 @@
 import { writeHtml, writeText } from "@tauri-apps/plugin-clipboard-manager";
-import { resolveResource, isAbsolute } from "@tauri-apps/api/path";
+import { resolveResource, isAbsolute, resolve, dirname, basename } from "@tauri-apps/api/path";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { invoke } from "@tauri-apps/api/core";
 import { articleStore } from "@wenyan-md/ui";
@@ -15,10 +15,6 @@ export async function writeTextToClipboard(text: string): Promise<void> {
 export async function readExampleArticle(): Promise<string> {
     const resourcePath = await resolveResource("resources/example.md");
     return await readTextFile(resourcePath);
-}
-
-export async function loadMarkdownFromPath(path: string): Promise<string> {
-    return await readTextFile(path);
 }
 
 export async function getArticle(): Promise<string> {
@@ -97,4 +93,49 @@ export function getWenyanElement(): HTMLElement {
         }
     });
     return clonedWenyan;
+}
+
+export async function getAbsoluteImagePath(basePath: string, relativePath: string) {
+    const absolutePath = await resolve(basePath, relativePath);
+    return absolutePath;
+}
+
+export async function unpackFilePath(path: string): Promise<{ fileName: string; dir: string }> {
+    const fileName = await basename(path);
+    const dir = await dirname(path);
+    return { fileName, dir };
+}
+
+export class FIFOCache<K, V> {
+    private cache: Map<K, V>;
+    private readonly max: number;
+
+    constructor(max: number = 50) {
+        this.cache = new Map<K, V>();
+        this.max = max;
+    }
+
+    get(key: K): V | undefined {
+        return this.cache.get(key);
+    }
+
+    set(key: K, value: V): void {
+        if (this.cache.has(key)) {
+            this.cache.set(key, value);
+            return;
+        }
+
+        if (this.cache.size >= this.max) {
+            const firstKey = this.cache.keys().next().value;
+            if (firstKey !== undefined) {
+                this.cache.delete(firstKey);
+            }
+        }
+
+        this.cache.set(key, value);
+    }
+
+    clear(): void {
+        this.cache.clear();
+    }
 }
