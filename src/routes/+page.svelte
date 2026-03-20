@@ -3,13 +3,22 @@
     import TitleBar from "$lib/components/TitleBar.svelte";
     import { getArticle } from "$lib/utils";
     import { appState } from "$lib/appState.svelte";
-    import { globalState, MainPage, Sidebar, AlertModal, SettingsModal, ConfirmModal, CreateThemeModal } from "@wenyan-md/ui";
-    import SimpleLoader from "$lib/components/SimpleLoader.svelte";
+    import {
+        globalState,
+        MainPage,
+        Sidebar,
+        AlertModal,
+        SettingsModal,
+        ConfirmModal,
+        CreateThemeModal,
+        SimpleLoader,
+        FileSidebar,
+    } from "@wenyan-md/ui";
     import { handleFileOpen, initFileOpenListener } from "$lib/services/fileOpenHandler";
     import { setHooks } from "$lib/setHooks";
     import { registerStore } from "$lib/storeRegister";
     import AboutPage from "$lib/components/AboutPage.svelte";
-    import FileSidebar from "$lib/components/FileSidebar.svelte";
+    import { tauriFsAdapter } from "$lib/tauriFsAdapter";
 
     setHooks();
     onMount(async () => {
@@ -38,8 +47,8 @@
 <div class="flex h-screen w-full flex-col overflow-hidden relative">
     <TitleBar showMoreMenu={toggleMoreMenu} />
     <div class="flex h-full w-full flex-col overflow-hidden md:flex-row relative">
-        {#if appState.isShowFileSidebar}
-            <FileSidebar />
+        {#if globalState.isShowFileSidebar}
+            <FileSidebar fsAdapter={tauriFsAdapter} />
         {/if}
         <MainPage />
 
@@ -68,4 +77,7 @@
 <ConfirmModal />
 <SettingsModal isOpen={appState.isShowSettingsPage} onClose={() => (appState.isShowSettingsPage = false)} />
 <AboutPage />
-<CreateThemeModal isOpen={globalState.isShowCreateThemeModal} onClose={() => (globalState.isShowCreateThemeModal = false)} />
+<CreateThemeModal
+    isOpen={globalState.isShowCreateThemeModal}
+    onClose={() => (globalState.isShowCreateThemeModal = false)}
+/>

@@ -2,7 +2,6 @@ class AppState {
     private _isShowMoreMenu = $state(false);
     private _isShowSettingsPage = $state(false);
     private _isShowAboutPage = $state(false);
-    private _isShowFileSidebar = $state(false);
 
     get isShowMoreMenu() {
         return this._isShowMoreMenu;
@@ -28,14 +27,6 @@ class AppState {
     set isShowAboutPage(value: boolean) {
         this._isShowAboutPage = value;
         this._isShowMoreMenu = false;
-    }
-
-    get isShowFileSidebar() {
-        return this._isShowFileSidebar;
-    }
-
-    set isShowFileSidebar(value: boolean) {
-        this._isShowFileSidebar = value;
     }
 }
 

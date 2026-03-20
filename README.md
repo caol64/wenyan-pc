@@ -1,5 +1,5 @@
 <div align="center">
-    <img alt = "logo" src="data/256-mac.png" />
+    <img alt = "logo" src="data/256-mac.png" width="128" />
 </div>
 
 # 文颜

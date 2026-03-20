@@ -1,9 +1,8 @@
 <script lang="ts">
-    import { PlatformButtons, Win32WindowButtons, WenYanButton, MacWindowButtons } from "@wenyan-md/ui";
+    import { PlatformButtons, Win32WindowButtons, WenYanButton, MacWindowButtons, FileSidebarButton } from "@wenyan-md/ui";
     import { getCurrentWindow } from "@tauri-apps/api/window";
     import { type } from "@tauri-apps/plugin-os";
     import { onMount } from "svelte";
-    import FileSidebarButton from "./FileSidebarButton.svelte";
 
     let { showMoreMenu }: { showMoreMenu: () => void } = $props();
     // 可能的值: 'windows', 'macos', 'linux', 'android', 'ios'
