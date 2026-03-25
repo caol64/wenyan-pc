@@ -66,7 +66,7 @@ export const sqliteArticleStorageAdapter: ArticleStorageAdapter = {
     },
 };
 
-export async function getLastArticle(): Promise<ArticleDO | null> {
+async function getLastArticle(): Promise<ArticleDO | null> {
     const db = await DBInstance.getInstance();
     const rows = await db.select<ArticleDO[]>("SELECT * FROM Article ORDER BY id DESC LIMIT 1;");
     if (rows.length === 0) {
@@ -92,3 +92,12 @@ export async function updateLastArticlePath(
         lastArticle.id,
     ]);
 }
+
+export async function getLastArticleRelativePath(): Promise<string | null> {
+    const lastArticle = await getLastArticle();
+    if (!lastArticle) {
+        return null;
+    }
+    return lastArticle.relativePath;
+}
+

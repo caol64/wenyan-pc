@@ -1,8 +1,9 @@
 import { writeHtml, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { resolveResource, isAbsolute, resolve, dirname, basename } from "@tauri-apps/api/path";
-import { readTextFile } from "@tauri-apps/plugin-fs";
+import { readFile, readTextFile } from "@tauri-apps/plugin-fs";
 import { invoke } from "@tauri-apps/api/core";
-import { articleStore } from "@wenyan-md/ui";
+import { articleStore, bufferToBase64 } from "@wenyan-md/ui";
+import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 
 export async function writeHtmlToClipboard(html: string): Promise<void> {
     await writeHtml(html);
@@ -17,29 +18,9 @@ export async function readExampleArticle(): Promise<string> {
     return await readTextFile(resourcePath);
 }
 
-export async function getArticle(): Promise<string> {
+export async function getDefaultArticle(): Promise<string> {
     const article = articleStore.getLastArticle();
     return article ? article : await readExampleArticle();
-}
-
-export function getFileExtension(filename: string): string {
-    if (!filename || typeof filename !== "string") {
-        return "";
-    }
-    const lastDotIndex = filename.lastIndexOf(".");
-    if (lastDotIndex === -1 || lastDotIndex === 0) {
-        return "";
-    }
-    return filename.slice(lastDotIndex + 1).toLowerCase();
-}
-
-export function readFileAsText(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsText(file);
-    });
 }
 
 export async function getPathType(src: string) {
@@ -95,6 +76,20 @@ export function getWenyanElement(): HTMLElement {
     return clonedWenyan;
 }
 
+export async function resolveRelativePath(path: string, relative?: string): Promise<string> {
+    if (path.startsWith("http")) {
+        return path;
+    }
+    const isAbsolutePath = await isAbsolute(path);
+    if (isAbsolutePath) {
+        return await resolve(path);
+    }
+    if (relative) {
+        return getAbsoluteImagePath(relative, path);
+    }
+    return path;
+}
+
 export async function getAbsoluteImagePath(basePath: string, relativePath: string) {
     const absolutePath = await resolve(basePath, relativePath);
     return absolutePath;
@@ -138,4 +133,18 @@ export class FIFOCache<K, V> {
     clear(): void {
         this.cache.clear();
     }
+}
+
+export async function downloadImageToBase64(src: string): Promise<string> {
+    // 获取图片二进制数据
+    const response = await tauriFetch(src);
+    const arrayBuffer = await response.arrayBuffer();
+
+    // 将 ArrayBuffer 转换为 Base64 字符串
+    return await bufferToBase64(arrayBuffer);
+}
+
+export async function localPathToBase64(path: string): Promise<string> {
+    const uint8Array = await readFile(path);
+    return await bufferToBase64(uint8Array.buffer);
 }

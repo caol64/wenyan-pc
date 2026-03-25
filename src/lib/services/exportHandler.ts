@@ -2,11 +2,17 @@ import { domToPng } from "modern-screenshot";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { save } from "@tauri-apps/plugin-dialog";
 import { globalState } from "@wenyan-md/ui";
-import { downloadImageToBase64 } from "$lib/services/imageProxy";
+import { downloadImageToBase64 } from "$lib/utils";
 
 export async function exportImage() {
     const element = document.getElementById("wenyan");
     if (!element) return;
+
+    let bgColor = window.getComputedStyle(document.body).backgroundColor;
+    // 如果获取到的是透明色 (rgba(0, 0, 0, 0)) 或者 transparent，设置为白色
+    if (bgColor === "rgba(0, 0, 0, 0)" || bgColor === "transparent") {
+        bgColor = "#ffffff";
+    }
 
     // 1. 克隆并配置
     const clonedWenyan = element.cloneNode(true) as HTMLElement;
@@ -16,7 +22,7 @@ export async function exportImage() {
         left: "0",
         zIndex: "-9999",
         width: "420px",
-        backgroundColor: "#ffffff",
+        backgroundColor: bgColor,
         pointerEvents: "none",
     });
 
@@ -36,7 +42,7 @@ export async function exportImage() {
         // 4. 生成图片 (此时 clonedWenyan 确定在 DOM 中)
         const dataUrl = await domToPng(clonedWenyan, {
             scale: 2,
-            backgroundColor: "#ffffff",
+            backgroundColor: bgColor,
             fetch: { requestInit: { mode: "cors" } },
         });
 

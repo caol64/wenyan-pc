@@ -1,8 +1,6 @@
 import type { ImageProcessorAction } from "@wenyan-md/ui";
-import { downloadImageToBase64, localPathToBase64 } from "./imageProxy";
-import { FIFOCache, getPathType } from "$lib/utils";
-import { getLastArticle } from "$lib/stores/sqliteArticleStore";
-import { resolveArticleRelativePath } from "./imageUploadService";
+import { downloadImageToBase64, FIFOCache, getPathType, localPathToBase64, resolveRelativePath } from "$lib/utils";
+import { getLastArticleRelativePath } from "./stores/sqliteArticleStore";
 
 const cache = new FIFOCache<string, string>();
 
@@ -10,7 +8,7 @@ export const imageProcessorAction: ImageProcessorAction = (node) => {
     const run = async () => {
         const images = node.querySelectorAll<HTMLImageElement>("img");
         if (images.length === 0) return;
-        const lastArticle = await getLastArticle();
+        const relativePath = await getLastArticleRelativePath();
 
         for (const img of images) {
             const dataSrc = img.getAttribute("src");
@@ -19,7 +17,7 @@ export const imageProcessorAction: ImageProcessorAction = (node) => {
                 continue;
             }
 
-            const resolvedSrc = await resolveArticleRelativePath(dataSrc, lastArticle);
+            const resolvedSrc = await resolveRelativePath(dataSrc, relativePath || undefined);
             const cached = cache.get(resolvedSrc);
             if (cached) {
                 img.src = cached;

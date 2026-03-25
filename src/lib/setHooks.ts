@@ -17,15 +17,28 @@ import {
     globalState,
     themeStore,
     setHandleFileOpen,
+    defaultPublishHandler,
+    setGetWenyanElement,
+    setPublishArticleToDraft,
+    setUploadImage,
+    setPublishHelpClick,
+    defaultEditorPasteHandler,
+    defaultEditorDropHandler,
+    setHandleMarkdownContent,
+    setMarkdownFileDrop,
+    setUploadBlobImage,
 } from "@wenyan-md/ui";
 import { resetWechatAccessToken } from "$lib/stores/sqliteCredentialStore";
-import { defaultEditorDropHandler, defaultEditorPasteHandler } from "$lib/services/editorHandler";
 import { exportImage } from "$lib/services/exportHandler";
-import { imageProcessorAction } from "$lib/services/processImages.svelte";
-import { publishHandler } from "$lib/services/publishHandler";
+import { imageProcessorAction } from "./imageProcessor.svelte";
 import { copyHandler } from "$lib/services/copyHandler";
 import { sqliteUploadCacheStore } from "./stores/sqliteUploadCacheStore";
 import { handleFileOpen } from "./services/fileOpenHandler";
+import { getWenyanElement } from "./utils";
+import { publishArticleToDraft } from "./services/wechatHandler";
+import { uploadImage, uploadBlobImageWithCache } from "./services/imageUploadService";
+import { handleMarkdownContent } from "./services/markdownContentHandler";
+import { updateLastArticlePath } from "./stores/sqliteArticleStore";
 
 export function setHooks() {
     setCopyClick(copyHandler);
@@ -37,14 +50,25 @@ export function setHooks() {
     setResetTokenClick(resetWechatAccessToken);
     setExportImageClick(exportImage);
     setImageProcessorAction(imageProcessorAction);
-    setPublishArticleClick(publishHandler);
+    setPublishArticleClick(defaultPublishHandler);
     setAutoCacheChangeClick(autoCacheChangeHandler);
     setImportCssClick(importCssHandler);
-    setHandleFileOpen(handleFileOpen);
+    setHandleFileOpen(handleFileOpen); // 处理从目录树中打开文件的逻辑
+    setGetWenyanElement(getWenyanElement);
+    setPublishArticleToDraft(publishArticleToDraft);
+    setUploadImage(uploadImage); // 点击发布按钮后，处理文章内容中的单个图片上传
+    setPublishHelpClick(publishHelpClick);
+    setHandleMarkdownContent(handleMarkdownContent); // 编辑器内粘贴文本或拖拽 Markdown 文件时，处理其中的图片
+    setMarkdownFileDrop(onMarkdownFileDrop);
+    setUploadBlobImage(uploadBlobImageWithCache); // 处理编辑器内粘贴或拖拽的图片（Blob 对象）
 }
 
 async function uploadHelpClick() {
     await open("https://yuzhi.tech/docs/wenyan/upload");
+}
+
+async function publishHelpClick() {
+    await open("https://yuzhi.tech/docs/wenyan/publish");
 }
 
 function closeMoreMenu() {
@@ -73,4 +97,8 @@ async function importCssHandler(url: string, name: string) {
     currentTheme.css = cssText;
     currentTheme.id = `0:${themeId}`;
     globalState.customThemeName = name;
+}
+
+async function onMarkdownFileDrop() {
+    await updateLastArticlePath(null, null, null);
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import TitleBar from "$lib/components/TitleBar.svelte";
-    import { getArticle } from "$lib/utils";
+    import { getDefaultArticle } from "$lib/utils";
     import { appState } from "$lib/appState.svelte";
     import {
         globalState,
@@ -23,7 +23,7 @@
     setHooks();
     onMount(async () => {
         await registerStore();
-        globalState.setMarkdownText(await getArticle());
+        globalState.setMarkdownText(await getDefaultArticle());
         globalState.setPlatform("wechat");
 
         initFileOpenListener(async (filePath) => {
