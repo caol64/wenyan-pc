@@ -27,14 +27,16 @@ export async function defaultEditorPasteHandler(event: ClipboardEvent, view: Edi
         const insertTo = selectionSnapshot.to;
         const { text } = await replaceLocalImagesInMarkdown(original);
         const { text: finalText } = await replaceNetworkImagesInMarkdown(text);
+        // windows 换行符为 \r\n，统一替换成 \n，避免出现"Selection points outside of document"
+        const normalizedText = finalText.replace(/\r\n/g, "\n");
 
         view.dispatch({
             changes: {
                 from: insertFrom,
                 to: insertTo,
-                insert: finalText,
+                insert: normalizedText,
             },
-            selection: { anchor: insertFrom + finalText.length },
+            selection: { anchor: insertFrom + normalizedText.length },
         });
         view.focus();
     } catch (error) {
