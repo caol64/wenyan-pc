@@ -16,6 +16,7 @@ import {
     setImportCssClick,
     globalState,
     themeStore,
+    setHandleFileOpen,
 } from "@wenyan-md/ui";
 import { resetWechatAccessToken } from "$lib/stores/sqliteCredentialStore";
 import { defaultEditorDropHandler, defaultEditorPasteHandler } from "$lib/services/editorHandler";
@@ -24,6 +25,7 @@ import { imageProcessorAction } from "$lib/services/processImages.svelte";
 import { publishHandler } from "$lib/services/publishHandler";
 import { copyHandler } from "$lib/services/copyHandler";
 import { sqliteUploadCacheStore } from "./stores/sqliteUploadCacheStore";
+import { handleFileOpen } from "./services/fileOpenHandler";
 
 export function setHooks() {
     setCopyClick(copyHandler);
@@ -38,6 +40,7 @@ export function setHooks() {
     setPublishArticleClick(publishHandler);
     setAutoCacheChangeClick(autoCacheChangeHandler);
     setImportCssClick(importCssHandler);
+    setHandleFileOpen(handleFileOpen);
 }
 
 async function uploadHelpClick() {
