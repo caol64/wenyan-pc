@@ -39,6 +39,7 @@ import { publishArticleToDraft } from "./services/wechatHandler";
 import { uploadImage, uploadBlobImageWithCache } from "./services/imageUploadService";
 import { handleMarkdownContent } from "./services/markdownContentHandler";
 import { updateLastArticlePath } from "./stores/sqliteArticleStore";
+import type { WechatUploadResponse } from "@wenyan-md/core/wechat";
 
 export function setHooks() {
     setCopyClick(copyHandler);
@@ -56,7 +57,7 @@ export function setHooks() {
     setHandleFileOpen(handleFileOpen); // 处理从目录树中打开文件的逻辑
     setGetWenyanElement(getWenyanElement);
     setPublishArticleToDraft(publishArticleToDraft);
-    setUploadImage(uploadImage); // 点击发布按钮后，处理文章内容中的单个图片上传
+    setUploadImage(uploadImageHook); // 点击发布按钮后，处理文章内容中的单个图片上传
     setPublishHelpClick(publishHelpClick);
     setHandleMarkdownContent(handleMarkdownContent); // 编辑器内粘贴文本或拖拽 Markdown 文件时，处理其中的图片
     setMarkdownFileDrop(onMarkdownFileDrop);
@@ -101,4 +102,16 @@ async function importCssHandler(url: string, name: string) {
 
 async function onMarkdownFileDrop() {
     await updateLastArticlePath(null, null, null);
+}
+
+async function uploadImageHook(imageUrl: string): Promise<WechatUploadResponse> {
+    try {
+        return await uploadImage(imageUrl);
+    } catch (error) {
+        globalState.setAlertMessage({
+            type: "error",
+            message: `图片上传失败: ${error instanceof Error ? error.message : String(error)}`,
+        });
+        return { url: imageUrl, media_id: "" }; // 返回原 URL，继续发布流程，但不设置 media_id
+    }
 }

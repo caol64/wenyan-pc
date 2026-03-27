@@ -155,7 +155,10 @@ async function urlToFile(url: string, defaultName?: string): Promise<File> {
     // 优先尝试从响应头获取，如果没有则根据文件名推断
     const mimeType = response.headers.get("content-type") || getMimeType(fileName);
 
-    return new File([arrayBuffer], fileName, { type: mimeType });
+    const ext = getFileExtension(fileName) || getExtensionFromMime(mimeType);
+    const finalFileName = fileName.includes(".") ? fileName : `${fileName}.${ext}`;
+
+    return new File([arrayBuffer], finalFileName, { type: mimeType });
 }
 
 async function base64ToFile(base64: string, fileName: string = "image.png"): Promise<File> {
@@ -184,4 +187,17 @@ async function base64ToFile(base64: string, fileName: string = "image.png"): Pro
 
     // 3. 构建并返回 File 对象
     return new File([uint8Array], fileName, { type: mimeType });
+}
+
+const map: Record<string, string> = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/gif": "gif",
+    "image/webp": "webp",
+    "text/markdown": "md",
+    "text/plain": "txt",
+};
+
+function getExtensionFromMime(mime: string): string {
+    return map[mime] || "png";
 }

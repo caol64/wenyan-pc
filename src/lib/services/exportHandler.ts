@@ -27,6 +27,7 @@ export async function exportImage() {
     });
 
     try {
+        globalState.isLoading = true;
         // 2. 处理图片替换 (等待全部下载完成)
         const images = clonedWenyan.querySelectorAll("img");
         const promises = Array.from(images).map(async (img) => {
@@ -72,5 +73,6 @@ export async function exportImage() {
         if (clonedWenyan.parentNode) {
             document.body.removeChild(clonedWenyan);
         }
+        globalState.isLoading = false;
     }
 }
