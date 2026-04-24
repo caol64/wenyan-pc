@@ -18,7 +18,7 @@
     import { setHooks } from "$lib/setHooks";
     import { registerStore } from "$lib/storeRegister";
     import AboutPage from "$lib/components/AboutPage.svelte";
-    import { tauriFsAdapter } from "$lib/tauriFsAdapter";
+    import { bridgeFsAdapter } from "$lib/bridgeFsAdapter";
 
     setHooks();
     onMount(async () => {
@@ -48,7 +48,7 @@
     <TitleBar showMoreMenu={toggleMoreMenu} />
     <div class="flex h-full w-full flex-col overflow-hidden md:flex-row relative">
         {#if globalState.isShowFileSidebar}
-            <FileSidebar fsAdapter={tauriFsAdapter} />
+            <FileSidebar fsAdapter={bridgeFsAdapter} />
         {/if}
         <MainPage />
 

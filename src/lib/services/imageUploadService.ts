@@ -1,54 +1,15 @@
-import { sqliteUploadCacheStore } from "$lib/stores/sqliteUploadCacheStore";
-import { calculateHashFromPath, calculateHash, resolveRelativePath } from "$lib/utils";
-import { getFileExtension, settingsStore } from "@wenyan-md/ui";
-import { uploadFileCore } from "./wechatHandler";
-import type { WechatUploadResponse } from "@wenyan-md/core/wechat";
+import { settingsStore } from "@wenyan-md/ui";
+import { uploadImageBridge, type UploadResponse } from "../bridge/upload";
 import { getLastArticleRelativePath } from "$lib/stores/sqliteArticleStore";
-import { readFile } from "@tauri-apps/plugin-fs";
-import { basename } from "@tauri-apps/api/path";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import { resolvePath } from "../bridge/system";
 
 // 匹配 Markdown 图片语法的正则: ![alt](url)
 const IMAGE_REGEX = /!\[([^\]]*)\]\(([^)]+)\)/g;
 
-async function uploadImageWithCache(md5: string | null, file: File): Promise<WechatUploadResponse> {
-    if (md5) {
-        const cached = await sqliteUploadCacheStore.get(md5);
-        if (cached) return { media_id: cached.mediaId, url: cached.url };
-    }
-
-    const data = await uploadFileCore(file, file.name);
-
-    if (md5) {
-        await sqliteUploadCacheStore.set(md5, data.media_id, data.url);
-    }
-
-    return data;
-}
-
-async function uploadLocalImageWithCache(path: string): Promise<WechatUploadResponse> {
-    const lastArticleRelativePath = await getLastArticleRelativePath();
-    const resolvedSrc = await resolveRelativePath(path, lastArticleRelativePath || undefined);
-    const md5 = settingsStore.uploadSettings.autoCache ? await calculateHashFromPath(resolvedSrc) : null;
-    const file = await pathToFile(resolvedSrc);
-    return await uploadImageWithCache(md5, file);
-}
-
-async function uploadNetworkImageWithCache(url: string): Promise<WechatUploadResponse> {
-    const file = await urlToFile(url);
-    const md5 = settingsStore.uploadSettings.autoCache ? await calculateHash(file) : null;
-    return await uploadImageWithCache(md5, file);
-}
-
-export async function uploadBlobImageWithCache(file: File): Promise<WechatUploadResponse> {
-    const md5 = settingsStore.uploadSettings.autoCache ? await calculateHash(file) : null;
-    return await uploadImageWithCache(md5, file);
-}
-
-async function uploadBase64ImageWithCache(base64: string): Promise<WechatUploadResponse> {
-    const file = await base64ToFile(base64);
-    const md5 = settingsStore.uploadSettings.autoCache ? await calculateHash(file) : null;
-    return await uploadImageWithCache(md5, file);
+export async function uploadBlobImageWithCache(file: File): Promise<UploadResponse> {
+    const buffer = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(buffer);
+    return await uploadImageBridge("blob", uint8Array, file.name, settingsStore.uploadSettings.autoCache);
 }
 
 async function replaceImagesInMarkdown(
@@ -72,7 +33,7 @@ async function replaceImagesInMarkdown(
 
     for (const match of targetImages) {
         const oldSrc = match[2];
-        const resolvedSrc = await resolveRelativePath(oldSrc, relativeTo);
+        const resolvedSrc = await resolvePath(oldSrc, relativeTo);
 
         if (replaceMap.has(oldSrc)) continue;
 
@@ -101,103 +62,37 @@ export function replaceLocalImagesInMarkdown(markdown: string, relativeTo?: stri
     if (!settingsStore.uploadSettings.autoUploadLocal) {
         return { text: markdown, replaced: false };
     }
-    return replaceImagesInMarkdown(markdown, (src) => !src.startsWith("http"), uploadLocalImageWithCache, relativeTo);
+    return replaceImagesInMarkdown(
+        markdown,
+        (src) => !src.startsWith("http") && !src.startsWith("data:"),
+        (src) => uploadImageBridge("local", src, undefined, settingsStore.uploadSettings.autoCache),
+        relativeTo
+    );
 }
 
 export function replaceNetworkImagesInMarkdown(markdown: string) {
     if (!settingsStore.uploadSettings.autoUploadNetwork) {
         return { text: markdown, replaced: false };
     }
-    return replaceImagesInMarkdown(markdown, (src) => src.startsWith("http"), uploadNetworkImageWithCache);
+    return replaceImagesInMarkdown(
+        markdown,
+        (src) => src.startsWith("http"),
+        (src) => uploadImageBridge("network", src, undefined, settingsStore.uploadSettings.autoCache)
+    );
 }
 
-export async function uploadImage(imageUrl: string): Promise<WechatUploadResponse> {
+export async function uploadImage(imageUrl: string): Promise<UploadResponse> {
+    let sourceType: "local" | "network" | "base64" | "blob" = "local";
+    let data = imageUrl;
+
     if (imageUrl.startsWith("http")) {
-        return await uploadNetworkImageWithCache(imageUrl);
+        sourceType = "network";
     } else if (imageUrl.startsWith("data:")) {
-        return await uploadBase64ImageWithCache(imageUrl);
+        sourceType = "base64";
     } else {
-        return await uploadLocalImageWithCache(imageUrl);
-    }
-}
-
-// 将路径转换为 Blob/File 对象
-async function pathToFile(path: string): Promise<File> {
-    const uint8Array = await readFile(path);
-    const fileName = (await basename(path)) || "image.png";
-    const mimeType = getMimeType(fileName);
-    const blob = new Blob([uint8Array], { type: mimeType });
-    return new File([blob], fileName, { type: mimeType });
-}
-
-function getMimeType(fileName: string): string {
-    const ext = getFileExtension(fileName);
-    const map: Record<string, string> = {
-        png: "image/png",
-        jpg: "image/jpeg",
-        jpeg: "image/jpeg",
-        gif: "image/gif",
-        webp: "image/webp",
-        md: "text/markdown",
-        txt: "text/plain",
-    };
-    return map[ext || ""] || "application/octet-stream";
-}
-
-async function urlToFile(url: string, defaultName?: string): Promise<File> {
-    const response = await tauriFetch(url);
-    const arrayBuffer = await response.arrayBuffer();
-
-    // 例如从 https://example.com/path/to/pic.jpg?v=1 中提取 pic.jpg
-    const urlPath = new URL(url).pathname;
-    const fileName = defaultName || urlPath.split("/").pop() || "downloaded_image";
-
-    // 优先尝试从响应头获取，如果没有则根据文件名推断
-    const mimeType = response.headers.get("content-type") || getMimeType(fileName);
-
-    const ext = getFileExtension(fileName) || getExtensionFromMime(mimeType);
-    const finalFileName = fileName.includes(".") ? fileName : `${fileName}.${ext}`;
-
-    return new File([arrayBuffer], finalFileName, { type: mimeType });
-}
-
-async function base64ToFile(base64: string, fileName: string = "image.png"): Promise<File> {
-    // 1. 如果包含 data:前缀，拆分出 mime 和 纯 base64 内容
-    let mimeType = "image/png";
-    let b64Data = base64;
-
-    if (base64.startsWith("data:")) {
-        const parts = base64.split(",");
-        const mimeMatch = parts[0].match(/:(.*?);/);
-        if (mimeMatch) mimeType = mimeMatch[1];
-        b64Data = parts[1];
-    } else {
-        // 如果没有前缀，则尝试根据文件名推断 mime
-        mimeType = getMimeType(fileName);
+        const lastArticleRelativePath = await getLastArticleRelativePath();
+        data = await resolvePath(imageUrl, lastArticleRelativePath || undefined);
     }
 
-    // 2. 将 base64 转换为 Uint8Array
-    const binaryString = atob(b64Data);
-    const len = binaryString.length;
-    const uint8Array = new Uint8Array(len);
-
-    for (let i = 0; i < len; i++) {
-        uint8Array[i] = binaryString.charCodeAt(i);
-    }
-
-    // 3. 构建并返回 File 对象
-    return new File([uint8Array], fileName, { type: mimeType });
-}
-
-const map: Record<string, string> = {
-    "image/png": "png",
-    "image/jpeg": "jpg",
-    "image/gif": "gif",
-    "image/webp": "webp",
-    "text/markdown": "md",
-    "text/plain": "txt",
-};
-
-function getExtensionFromMime(mime: string): string {
-    return map[mime] || "png";
+    return await uploadImageBridge(sourceType, data, undefined, settingsStore.uploadSettings.autoCache);
 }

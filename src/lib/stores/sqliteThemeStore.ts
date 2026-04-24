@@ -1,52 +1,22 @@
 import type { ThemeStorageAdapter, CustomTheme } from "@wenyan-md/ui";
-import { DBInstance } from "./db";
-
-interface ThemeDO {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-}
+import * as themeBridge from "../bridge/theme";
 
 export const sqliteThemeStorageAdapter: ThemeStorageAdapter = {
     async load() {
-        const db = await DBInstance.getInstance();
-        const rows = await db.select<ThemeDO[]>("SELECT * FROM CustomTheme;");
+        const themes = await themeBridge.loadThemes();
         const customThemes: Record<string, CustomTheme> = Object.fromEntries(
-            rows.map((row) => [
-                String(row.id),
-                {
-                    id: String(row.id),
-                    name: row.name,
-                    css: row.content,
-                },
-            ]),
+            themes.map((theme) => [theme.id, theme]),
         );
         return customThemes;
     },
 
     async save(id: string, name: string, css: string): Promise<string> {
-        const db = await DBInstance.getInstance();
-        const row = await db.select<ThemeDO[]>("SELECT * FROM CustomTheme WHERE id = $1;", [id]);
-        if (row.length === 0) {
-            const result = await db.execute("INSERT INTO CustomTheme (name, content, createdAt) VALUES ($1, $2, $3);", [
-                name,
-                css,
-                new Date().toISOString(),
-            ]);
-            return String(result.lastInsertId);
-        } else {
-            await db.execute("UPDATE CustomTheme SET content = $1, createdAt = $2 WHERE id = $3;", [
-                css,
-                new Date().toISOString(),
-                id,
-            ]);
-            return id;
-        }
+        // 如果 id 为 '0' 或 null/undefined，则传 null 给后端表示新建
+        const actualId = id === "0" || !id ? null : id;
+        return await themeBridge.saveTheme(actualId, name, css);
     },
 
     async remove(id: string) {
-        const db = await DBInstance.getInstance();
-        await db.execute("DELETE FROM CustomTheme WHERE id = $1;", [id]);
+        await themeBridge.removeTheme(id);
     },
 };

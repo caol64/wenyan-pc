@@ -1,26 +1,21 @@
-import { writeHtml, writeText } from "@tauri-apps/plugin-clipboard-manager";
-import { resolveResource, isAbsolute, resolve, dirname, basename } from "@tauri-apps/api/path";
-import { readFile, readTextFile } from "@tauri-apps/plugin-fs";
-import { invoke } from "@tauri-apps/api/core";
-import { articleStore, bufferToBase64 } from "@wenyan-md/ui";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import { writeToClipboard, isAbsolutePath, getDataMd5, getFileMd5, resolvePath, downloadImage } from "./bridge/system";
+import { getDefaultArticle as getDefaultArticleFromBridge } from "./bridge/article";
+import { bufferToBase64 } from "@wenyan-md/ui";
 
 export async function writeHtmlToClipboard(html: string): Promise<void> {
-    await writeHtml(html);
+    await writeToClipboard("", html);
 }
 
 export async function writeTextToClipboard(text: string): Promise<void> {
-    await writeText(text);
+    await writeToClipboard(text);
 }
 
 export async function readExampleArticle(): Promise<string> {
-    const resourcePath = await resolveResource("resources/example.md");
-    return await readTextFile(resourcePath);
+    return await getDefaultArticleFromBridge();
 }
 
 export async function getDefaultArticle(): Promise<string> {
-    const article = articleStore.getLastArticle();
-    return article ? article : await readExampleArticle();
+    return await getDefaultArticleFromBridge();
 }
 
 export async function getPathType(src: string) {
@@ -30,35 +25,23 @@ export async function getPathType(src: string) {
     }
 
     // 2. 判断是否为绝对路径 (跨平台通用)
-    // 在 Windows 上它能识别 C:\ 或 \\server
-    // 在 Mac/Linux 上它能识别 /Users/...
-    const absolute = await isAbsolute(src);
+    const absolute = await isAbsolutePath(src);
     if (absolute) {
         return "absolute-local";
     }
 
     // 3. 剩下的通常被视为相对路径
-    // 例如：./img/avatar.png 或 ../assets/logo.png
     return "relative-local";
 }
 
 export async function calculateHash(blobOrFile: Blob): Promise<string> {
-    // 1. 将 Blob/File 转为 ArrayBuffer
     const buffer = await blobOrFile.arrayBuffer();
-
-    // 2. 转为 Uint8Array
     const uint8Array = new Uint8Array(buffer);
-
-    // 3. 调用 Rust 命令
-    const md5 = await invoke<string>("get_data_md5", {
-        data: uint8Array,
-    });
-    return md5;
+    return await getDataMd5(uint8Array);
 }
 
 export async function calculateHashFromPath(path: string): Promise<string> {
-    const md5 = await invoke<string>("get_file_md5", { path });
-    return md5;
+    return await getFileMd5(path);
 }
 
 export function getWenyanElement(): HTMLElement {
@@ -80,34 +63,38 @@ export async function resolveRelativePath(path: string, relative?: string): Prom
     if (path.startsWith("http")) {
         return path;
     }
-    const isAbsolutePath = await isAbsolute(path);
-    if (isAbsolutePath) {
-        return await resolve(path);
+    const isAbsolutePathVal = await isAbsolutePath(path);
+    if (isAbsolutePathVal) {
+        return await resolvePath(path);
     }
     if (relative) {
-        return getAbsoluteImagePath(relative, path);
+        return await resolvePath(path, relative);
     }
     return path;
 }
 
 export async function getAbsoluteImagePath(basePath: string, relativePath: string) {
-    const absolutePath = await resolve(basePath, relativePath);
-    return absolutePath;
+    return await resolvePath(relativePath, basePath);
 }
 
-export async function unpackFilePath(path: string): Promise<{ fileName: string; dir: string }> {
-    const fileName = await basename(path);
-    const dir = await dirname(path);
-    return { fileName, dir };
+export async function downloadImageToBase64(url: string): Promise<string> {
+    const uint8 = await downloadImage(url);
+    // Convert Uint8Array to ArrayBuffer properly
+    const arrayBuffer = uint8.buffer.slice(uint8.byteOffset, uint8.byteOffset + uint8.byteLength) as ArrayBuffer;
+    const base64 = await bufferToBase64(arrayBuffer);
+    return `data:image/png;base64,${base64}`;
 }
 
+// Simple FIFO cache implementation
 export class FIFOCache<K, V> {
     private cache: Map<K, V>;
-    private readonly max: number;
+    private keys: K[];
+    private maxSize: number;
 
-    constructor(max: number = 50) {
-        this.cache = new Map<K, V>();
-        this.max = max;
+    constructor(maxSize: number = 100) {
+        this.cache = new Map();
+        this.keys = [];
+        this.maxSize = maxSize;
     }
 
     get(key: K): V | undefined {
@@ -116,35 +103,48 @@ export class FIFOCache<K, V> {
 
     set(key: K, value: V): void {
         if (this.cache.has(key)) {
-            this.cache.set(key, value);
-            return;
-        }
-
-        if (this.cache.size >= this.max) {
-            const firstKey = this.cache.keys().next().value;
-            if (firstKey !== undefined) {
-                this.cache.delete(firstKey);
+            const idx = this.keys.indexOf(key);
+            if (idx > -1) {
+                this.keys.splice(idx, 1);
+            }
+        } else if (this.keys.length >= this.maxSize) {
+            const oldestKey = this.keys.shift();
+            if (oldestKey !== undefined) {
+                this.cache.delete(oldestKey);
             }
         }
-
+        this.keys.push(key);
         this.cache.set(key, value);
     }
 
     clear(): void {
         this.cache.clear();
+        this.keys = [];
     }
 }
 
-export async function downloadImageToBase64(src: string): Promise<string> {
-    // 获取图片二进制数据
-    const response = await tauriFetch(src);
-    const arrayBuffer = await response.arrayBuffer();
-
-    // 将 ArrayBuffer 转换为 Base64 字符串
-    return await bufferToBase64(arrayBuffer);
-}
-
 export async function localPathToBase64(path: string): Promise<string> {
-    const uint8Array = await readFile(path);
-    return await bufferToBase64(uint8Array.buffer);
+    // For local images, we need to read the file and convert to base64
+    // This should be done via a bridge call in the future
+    // For now, we'll try to fetch via browser fetch or use a bridge
+    try {
+        const uint8 = await downloadImage(path);
+        // Convert Uint8Array to ArrayBuffer properly
+        const arrayBuffer = uint8.buffer.slice(uint8.byteOffset, uint8.byteOffset + uint8.byteLength) as ArrayBuffer;
+        const base64 = await bufferToBase64(arrayBuffer);
+        // Determine mime type from path
+        const ext = path.split('.').pop()?.toLowerCase() || 'png';
+        const mimeTypes: Record<string, string> = {
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'webp': 'image/webp',
+            'svg': 'image/svg+xml',
+        };
+        const mimeType = mimeTypes[ext] || 'image/png';
+        return `data:${mimeType};base64,${base64}`;
+    } catch {
+        return '';
+    }
 }

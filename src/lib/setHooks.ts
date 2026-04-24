@@ -1,6 +1,6 @@
 import { open } from "@tauri-apps/plugin-shell";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { appState } from "./appState.svelte";
+import { fetchText } from "./bridge/system";
 import {
     setPreviewClick,
     setCopyClick,
@@ -81,23 +81,22 @@ function autoCacheChangeHandler() {
 }
 
 async function importCssHandler(url: string, name: string) {
-    const resp = await tauriFetch(url);
-    if (!resp.ok) {
+    try {
+        const cssText = await fetchText(url);
+        const themeId = globalState.getCurrentThemeId();
+        themeStore.addCustomTheme(`0:${themeId}`, name);
+        const currentTheme = globalState.getCurrentTheme();
+        currentTheme.name = name;
+        currentTheme.css = cssText;
+        currentTheme.id = `0:${themeId}`;
+        globalState.customThemeName = name;
+    } catch (error) {
         globalState.setAlertMessage({
             type: "error",
             title: "导入 CSS 失败",
-            message: `无法从 ${url} 获取 CSS 文件。`,
+            message: `无法从 ${url} 获取 CSS 文件：${error instanceof Error ? error.message : String(error)}`,
         });
-        return;
     }
-    const cssText = await resp.text();
-    const themeId = globalState.getCurrentThemeId();
-    themeStore.addCustomTheme(`0:${themeId}`, name);
-    const currentTheme = globalState.getCurrentTheme();
-    currentTheme.name = name;
-    currentTheme.css = cssText;
-    currentTheme.id = `0:${themeId}`;
-    globalState.customThemeName = name;
 }
 
 async function onMarkdownFileDrop() {

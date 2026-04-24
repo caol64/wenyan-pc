@@ -1,13 +1,9 @@
-import { listen } from "@tauri-apps/api/event";
 import { globalState } from "@wenyan-md/ui";
 import { handleMarkdownFile } from "./markdownContentHandler";
+import { onOpenFile } from "../bridge/events";
 
 export function initFileOpenListener(onOpen: (file: string) => void) {
-    listen<string>("open-file", (event) => {
-        const filePath = event.payload;
-        // console.log("Open file from system:", filePath);
-        onOpen(filePath);
-    });
+    onOpenFile(onOpen);
 }
 
 export async function handleFileOpen(file: string) {

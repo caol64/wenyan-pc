@@ -1,8 +1,7 @@
 import { domToPng } from "modern-screenshot";
-import { writeFile } from "@tauri-apps/plugin-fs";
-import { save } from "@tauri-apps/plugin-dialog";
 import { globalState } from "@wenyan-md/ui";
 import { downloadImageToBase64 } from "$lib/utils";
+import { saveImage } from "../bridge/system";
 
 export async function exportImage() {
     const element = document.getElementById("wenyan");
@@ -47,22 +46,16 @@ export async function exportImage() {
             fetch: { requestInit: { mode: "cors" } },
         });
 
-        // 5. 保存逻辑
-        const filePath = await save({
-            title: "保存导出的图片",
-            filters: [{ name: "Image", extensions: ["png"] }],
-            defaultPath: "wenyan-export.png",
-        });
-
-        if (filePath) {
-            const base64Part = dataUrl.split(",")[1];
-            const binaryString = atob(base64Part);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            await writeFile(filePath, bytes);
+        // 5. 保存逻辑 (使用 bridge)
+        const base64Part = dataUrl.split(",")[1];
+        const binaryString = atob(base64Part);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
         }
+        
+        await saveImage(bytes, "wenyan-export.png");
+        
     } catch (error) {
         console.error("保存失败:", error);
         globalState.setAlertMessage({
