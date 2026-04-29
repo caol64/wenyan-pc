@@ -1,6 +1,5 @@
-import { open } from "@tauri-apps/plugin-shell";
 import { appState } from "./appState.svelte";
-import { fetchText } from "./bridge/system";
+import { fetchText, openExternal } from "./bridge/system";
 import {
     setPreviewClick,
     setCopyClick,
@@ -65,11 +64,11 @@ export function setHooks() {
 }
 
 async function uploadHelpClick() {
-    await open("https://yuzhi.tech/docs/wenyan/upload");
+    await openExternal("https://yuzhi.tech/docs/wenyan/upload");
 }
 
 async function publishHelpClick() {
-    await open("https://yuzhi.tech/docs/wenyan/publish");
+    await openExternal("https://yuzhi.tech/docs/wenyan/publish");
 }
 
 function closeMoreMenu() {

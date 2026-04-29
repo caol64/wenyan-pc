@@ -1,15 +1,15 @@
 <script lang="ts">
     import { PlatformButtons, Win32WindowButtons, WenYanButton, MacWindowButtons, FileSidebarButton } from "@wenyan-md/ui";
     import { getCurrentWindow } from "@tauri-apps/api/window";
-    import { type } from "@tauri-apps/plugin-os";
     import { onMount } from "svelte";
+    import { osType } from "$lib/bridge/system";
 
     let { showMoreMenu }: { showMoreMenu: () => void } = $props();
     // 可能的值: 'windows', 'macos', 'linux', 'android', 'ios'
     let currentOs = $state<string | null>(null);
 
     onMount(async () => {
-        currentOs = type();
+        currentOs = await osType();
     });
 
     function minimizeWindow() {

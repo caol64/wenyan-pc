@@ -141,9 +141,15 @@ pub async fn fetch_text(url: String) -> AppResult<String> {
 
 #[tauri::command]
 pub fn open_external(app_handle: tauri::AppHandle, url: String) -> AppResult<()> {
-    use tauri_plugin_shell::ShellExt;
-    app_handle.shell().open(url, None).map_err(|e| crate::error::AppError::Internal(e.to_string()))?;
+    use tauri_plugin_opener::OpenerExt;
+    app_handle.opener().open_url(url, None::<&str>).map_err(|e| crate::error::AppError::Internal(e.to_string()))?;
     Ok(())
+}
+
+#[tauri::command]
+pub fn os_type() -> AppResult<String> {
+    let os_type = tauri_plugin_os::type_();
+    Ok(os_type.to_string())
 }
 
 #[tauri::command]

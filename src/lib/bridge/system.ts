@@ -59,3 +59,7 @@ export async function fetchText(url: string): Promise<string> {
 export async function openExternal(url: string): Promise<void> {
     await invoke("open_external", { url });
 }
+
+export async function osType(): Promise<string> {
+    return await invoke("os_type");
+}

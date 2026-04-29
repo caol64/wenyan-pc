@@ -1,22 +1,21 @@
 <script lang="ts">
     import { getVersion } from "@tauri-apps/api/app";
-    import { type } from "@tauri-apps/plugin-os";
-    import { open } from "@tauri-apps/plugin-shell";
     import { onMount } from "svelte";
     import { Modal, WenYanIcon } from "@wenyan-md/ui";
     import { appState } from "$lib/appState.svelte";
+    import { osType, openExternal } from "$lib/bridge/system";
 
     let versionStr = $state("");
     let platform = $state("");
 
     onMount(async () => {
-        platform = type();
+        platform = await osType();
         const ver = await getVersion();
         versionStr = `v${ver}`;
     });
 
     async function openLink(url: string) {
-        await open(url);
+        await openExternal(url);
     }
 </script>
 

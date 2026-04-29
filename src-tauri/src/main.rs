@@ -23,12 +23,12 @@ fn main() {
             }
         }))
         .plugin(tauri_plugin_sql::Builder::default().build())
-        .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let handle = app.handle().clone();
             let db_manager = infrastructure::db::DbManager::new(&handle).expect("failed to init db");
@@ -56,6 +56,7 @@ fn main() {
             commands::system::download_image,
             commands::system::fetch_text,
             commands::system::open_external,
+            commands::system::os_type,
             commands::article::load_articles,
             commands::article::save_article,
             commands::article::remove_article,
