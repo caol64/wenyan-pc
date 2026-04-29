@@ -38,6 +38,7 @@
 -   使用内置主题对 Markdown 内容排版
 -   自动处理并上传本地图片，[阅读文档](https://yuzhi.tech/docs/wenyan/upload)
 -   支持数学公式（MathJax）
+-   支持Mermaid
 -   支持发布到多平台：
     -   公众号
     -   知乎

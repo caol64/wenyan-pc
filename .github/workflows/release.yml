@@ -8,6 +8,14 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      WENYAN_UPDATER_ENDPOINT: ${{ vars.WENYAN_UPDATER_ENDPOINT }}
+      WENYAN_UPDATER_PUBKEY: ${{ vars.WENYAN_UPDATER_PUBKEY }}
+      R2_PUBLIC_BASE_URL: ${{ vars.R2_PUBLIC_BASE_URL }}
+      RELEASE_BODY: ${{ github.event.release.body || '' }}
+      RELEASE_PUBLISHED_AT: ${{ github.event.release.published_at || '' }}
 
     steps:
       - name: Checkout repository
@@ -32,23 +40,62 @@ jobs:
       - name: Build
         run: pnpm tauri:build
 
-      - name: Fetch zip name
+      - name: Prepare release artifacts
         shell: bash
         run: |
           VERSION=$(node -p "require('./package.json').version")
+          EXE_PATH=$(find src-tauri/target/release/bundle/nsis -maxdepth 1 -name '*.exe' | head -n 1)
+          SIG_PATH="${EXE_PATH}.sig"
           ZIP_NAME="WenYan_${VERSION}_x64-setup"
+          EXE_NAME="${ZIP_NAME}.exe"
+
+          mkdir -p artifacts/updater
+          cp "$EXE_PATH" "artifacts/updater/${EXE_NAME}"
+          cp "$SIG_PATH" "artifacts/updater/${EXE_NAME}.sig"
           echo "zip_name=$ZIP_NAME" >> $GITHUB_ENV
+          echo "exe_name=$EXE_NAME" >> $GITHUB_ENV
 
       - name: Create Zip Archive
         shell: pwsh
         run: |
-          Compress-Archive -Path "src-tauri/target/release/bundle/nsis/*.exe" -DestinationPath "./${{ env.zip_name }}.zip"
+          Compress-Archive -Path "artifacts/updater/${{ env.exe_name }}" -DestinationPath "./artifacts/${{ env.zip_name }}.zip"
+
+      - name: Generate latest.json
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          SIGNATURE=$(tr -d '\r\n' < "artifacts/updater/${{ env.exe_name }}.sig")
+          export VERSION SIGNATURE
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const version = process.env.VERSION;
+          const signature = process.env.SIGNATURE;
+          const baseUrl = (process.env.R2_PUBLIC_BASE_URL || '').replace(/\/$/, '');
+          if (!baseUrl) {
+            throw new Error('R2_PUBLIC_BASE_URL is required to generate latest.json');
+          }
+          const notes = (process.env.RELEASE_BODY || '').trim();
+          const pubDate = process.env.RELEASE_PUBLISHED_AT || new Date().toISOString();
+          const url = `${baseUrl}/updater/WenYan_${version}_x64-setup.exe`;
+          const latest = {
+            version,
+            notes,
+            pub_date: pubDate,
+            platforms: {
+              'windows-x86_64': {
+                signature,
+                url,
+              },
+            },
+          };
+          fs.writeFileSync('artifacts/updater/latest.json', JSON.stringify(latest, null, 2));
+          NODE
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.zip_name }}
-          path: ./${{ env.zip_name }}.zip
+          name: release-artifacts
+          path: ./artifacts
 
   # 发布任务
   release:

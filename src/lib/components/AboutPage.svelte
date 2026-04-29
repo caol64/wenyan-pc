@@ -4,9 +4,11 @@
     import { Modal, WenYanIcon } from "@wenyan-md/ui";
     import { appState } from "$lib/appState.svelte";
     import { osType, openExternal } from "$lib/bridge/system";
+    import { checkForUpdates } from "$lib/services/updateService";
 
     let versionStr = $state("");
     let platform = $state("");
+    let isCheckingUpdate = $state(false);
 
     onMount(async () => {
         platform = await osType();
@@ -16,6 +18,19 @@
 
     async function openLink(url: string) {
         await openExternal(url);
+    }
+
+    async function onCheckUpdateClick() {
+        if (isCheckingUpdate) {
+            return;
+        }
+
+        isCheckingUpdate = true;
+        try {
+            await checkForUpdates();
+        } finally {
+            isCheckingUpdate = false;
+        }
     }
 </script>
 
@@ -76,6 +91,18 @@
                 GitHub
             </button>
         </div>
+
+        <button
+            onclick={onCheckUpdateClick}
+            class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-950/70 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={isCheckingUpdate}
+        >
+            {#if isCheckingUpdate}
+                正在检查更新...
+            {:else}
+                检查更新
+            {/if}
+        </button>
 
         <div class="w-full grid grid-cols-2 gap-3 pt-2">
             <button

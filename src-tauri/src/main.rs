@@ -29,6 +29,7 @@ fn main() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let handle = app.handle().clone();
             let db_manager = infrastructure::db::DbManager::new(&handle).expect("failed to init db");
@@ -76,6 +77,9 @@ fn main() {
             commands::upload_cache::clear_upload_cache,
             commands::upload::upload_image,
             commands::publish::publish_wechat_draft,
+            commands::update::is_updater_enabled,
+            commands::update::check_for_app_update,
+            commands::update::install_app_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

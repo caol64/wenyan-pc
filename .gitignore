@@ -34,3 +34,4 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 src-bak/
+.github/copilot-instructions.md

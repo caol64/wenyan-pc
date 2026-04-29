@@ -19,6 +19,7 @@
     import { registerStore } from "$lib/storeRegister";
     import AboutPage from "$lib/components/AboutPage.svelte";
     import { bridgeFsAdapter } from "$lib/bridgeFsAdapter";
+    import { checkForUpdates } from "$lib/services/updateService";
 
     setHooks();
     onMount(async () => {
@@ -29,6 +30,8 @@
         initFileOpenListener(async (filePath) => {
             await handleFileOpen(filePath);
         });
+
+        void checkForUpdates({ silent: true });
     });
 
     function toggleMoreMenu() {
