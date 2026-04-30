@@ -6726,6 +6726,7 @@ dependencies = [
  "log",
  "md5",
  "mime_guess",
+ "regex",
  "reqwest 0.13.3",
  "serde",
  "serde_json",

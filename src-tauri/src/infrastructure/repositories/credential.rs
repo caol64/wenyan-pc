@@ -28,20 +28,26 @@ impl<'a> CredentialRepository<'a> {
                 r#type: row.get("type"),
                 name: row.get::<Option<String>, _>("name").unwrap_or_default(),
                 app_id: row.get::<Option<String>, _>("appId").unwrap_or_default(),
-                app_secret: row.get::<Option<String>, _>("appSecret").unwrap_or_default(),
+                app_secret: row
+                    .get::<Option<String>, _>("appSecret")
+                    .unwrap_or_default(),
             })
             .collect())
     }
 
-    pub async fn save(&self, r#type: &str, name: Option<String>, app_id: Option<String>, app_secret: Option<String>) -> AppResult<()> {
+    pub async fn save(
+        &self,
+        r#type: &str,
+        name: Option<String>,
+        app_id: Option<String>,
+        app_secret: Option<String>,
+    ) -> AppResult<()> {
         let pool = self.db.pool().await?;
-        let row = sqlx::query(
-            "SELECT id FROM Credential WHERE type = ?"
-        )
-        .bind(r#type)
-        .fetch_optional(pool)
-        .await
-        .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
+        let row = sqlx::query("SELECT id FROM Credential WHERE type = ?")
+            .bind(r#type)
+            .fetch_optional(pool)
+            .await
+            .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
 
         let now_millis = chrono::Utc::now().timestamp_millis();
         let now_iso = chrono::Utc::now().to_rfc3339();
@@ -108,11 +114,16 @@ impl<'a> CredentialRepository<'a> {
         }
     }
 
-    pub async fn update_token(&self, r#type: &str, access_token: Option<String>, expire_time: i64) -> AppResult<()> {
+    pub async fn update_token(
+        &self,
+        r#type: &str,
+        access_token: Option<String>,
+        expire_time: i64,
+    ) -> AppResult<()> {
         let pool = self.db.pool().await?;
         let now_millis = chrono::Utc::now().timestamp_millis();
         sqlx::query(
-            "UPDATE Credential SET accessToken = ?, expireTime = ?, updatedAt = ? WHERE type = ?"
+            "UPDATE Credential SET accessToken = ?, expireTime = ?, updatedAt = ? WHERE type = ?",
         )
         .bind(access_token)
         .bind(expire_time)

@@ -1,43 +1,27 @@
 import type { ImageProcessorAction } from "@wenyan-md/ui";
-import { downloadImageToBase64, FIFOCache, getPathType, localPathToBase64, resolveRelativePath } from "$lib/utils";
-import { getLastArticleRelativePath } from "./stores/sqliteArticleStore";
-
-const cache = new FIFOCache<string, string>();
+import { pathToBase64 } from "./bridge/system";
 
 export const imageProcessorAction: ImageProcessorAction = (node) => {
     const run = async () => {
         const images = node.querySelectorAll<HTMLImageElement>("img");
         if (images.length === 0) return;
-        const relativePath = await getLastArticleRelativePath();
 
         for (const img of images) {
             const dataSrc = img.getAttribute("src");
 
-            if (!dataSrc || dataSrc.startsWith("data:")) {
+            if (
+                !dataSrc ||
+                dataSrc.startsWith("data:") ||
+                (dataSrc.startsWith("http") && !dataSrc.startsWith("https://mmbiz.qpic.cn"))
+            ) {
                 continue;
             }
 
-            const resolvedSrc = await resolveRelativePath(dataSrc, relativePath || undefined);
-            const cached = cache.get(resolvedSrc);
-            if (cached) {
-                img.src = cached;
-                continue;
-            }
             try {
-                if (dataSrc.startsWith("https://mmbiz.qpic.cn")) {
+                const resolvedSrc = await pathToBase64(dataSrc);
+                if (resolvedSrc && resolvedSrc.startsWith("data:")) {
                     img.setAttribute("data-src", dataSrc);
-                    const base64 = await downloadImageToBase64(dataSrc);
-                    if (base64) {
-                        cache.set(dataSrc, base64);
-                        img.src = base64;
-                    }
-                } else if ((await getPathType(dataSrc)) !== "network") {
-                    img.setAttribute("data-src", dataSrc);
-                    const base64 = await localPathToBase64(resolvedSrc);
-                    if (base64) {
-                        cache.set(resolvedSrc, base64);
-                        img.src = base64;
-                    }
+                    img.src = resolvedSrc;
                 }
             } catch (err) {
                 console.error("Image process failed:", dataSrc, err);
@@ -59,7 +43,6 @@ export const imageProcessorAction: ImageProcessorAction = (node) => {
     return {
         destroy() {
             observer.disconnect();
-            cache.clear();
         },
     };
 };

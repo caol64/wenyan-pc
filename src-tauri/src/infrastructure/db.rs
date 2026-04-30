@@ -1,10 +1,10 @@
+use crate::error::AppResult;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use std::fs;
 use std::path::PathBuf;
 use tauri::AppHandle;
 use tauri::Manager;
 use tokio::sync::OnceCell;
-use crate::error::AppResult;
 
 pub struct DbManager {
     db_path: PathBuf,
@@ -54,7 +54,7 @@ impl DbManager {
                 content TEXT NOT NULL,
                 createdAt TEXT NOT NULL
             );
-            "#
+            "#,
         )
         .execute(pool)
         .await
@@ -71,7 +71,7 @@ impl DbManager {
                 relativePath TEXT,
                 createdAt TEXT NOT NULL
             );
-            "#
+            "#,
         )
         .execute(pool)
         .await
@@ -91,7 +91,7 @@ impl DbManager {
                 updatedAt INTEGER,
                 createdAt TEXT NOT NULL
             );
-            "#
+            "#,
         )
         .execute(pool)
         .await
@@ -107,7 +107,7 @@ impl DbManager {
                 lastUsed TEXT NOT NULL,
                 createdAt TEXT NOT NULL
             );
-            "#
+            "#,
         )
         .execute(pool)
         .await

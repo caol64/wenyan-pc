@@ -35,3 +35,4 @@ vite.config.ts.timestamp-*
 
 src-bak/
 .github/copilot-instructions.md
+wenyan-updater.key

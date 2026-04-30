@@ -95,12 +95,16 @@ fn configured_endpoint_strings() -> Vec<&'static str> {
 fn configured_endpoints() -> AppResult<Vec<Url>> {
     let endpoints = configured_endpoint_strings();
     if endpoints.is_empty() {
-        return Err(AppError::InvalidRequest("当前构建未配置自动更新地址。".into()));
+        return Err(AppError::InvalidRequest(
+            "当前构建未配置自动更新地址。".into(),
+        ));
     }
 
     endpoints
         .into_iter()
-        .map(|endpoint| Url::parse(endpoint).map_err(|error| AppError::InvalidRequest(error.to_string())))
+        .map(|endpoint| {
+            Url::parse(endpoint).map_err(|error| AppError::InvalidRequest(error.to_string()))
+        })
         .collect()
 }
 
@@ -108,6 +112,8 @@ fn ensure_windows_runtime() -> AppResult<()> {
     if cfg!(target_os = "windows") {
         Ok(())
     } else {
-        Err(AppError::InvalidRequest("自动更新当前仅支持 Windows 桌面端。".into()))
+        Err(AppError::InvalidRequest(
+            "自动更新当前仅支持 Windows 桌面端。".into(),
+        ))
     }
 }

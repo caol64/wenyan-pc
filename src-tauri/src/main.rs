@@ -13,6 +13,14 @@ use log::info;
 use tauri::{Emitter, Manager};
 
 fn main() {
+    let mut updater_builder = tauri_plugin_updater::Builder::new();
+    if let Some(pubkey) = option_env!("WENYAN_UPDATER_PUBKEY")
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        updater_builder = updater_builder.pubkey(pubkey.replace("\\n", "\n"));
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
             info!("second instance args: {:?}", argv);
@@ -29,10 +37,11 @@ fn main() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(updater_builder.build())
         .setup(|app| {
             let handle = app.handle().clone();
-            let db_manager = infrastructure::db::DbManager::new(&handle).expect("failed to init db");
+            let db_manager =
+                infrastructure::db::DbManager::new(&handle).expect("failed to init db");
             handle.manage(db_manager);
 
             let args: Vec<String> = std::env::args().collect();
@@ -55,6 +64,7 @@ fn main() {
             commands::system::is_absolute_path,
             commands::system::write_to_clipboard,
             commands::system::download_image,
+            commands::system::path_to_base64,
             commands::system::fetch_text,
             commands::system::open_external,
             commands::system::os_type,
@@ -62,6 +72,7 @@ fn main() {
             commands::article::save_article,
             commands::article::remove_article,
             commands::article::open_markdown_file,
+            commands::article::open_markdown_file_processed,
             commands::article::get_default_article,
             commands::article::get_last_article_relative_path,
             commands::article::update_last_article_path,
@@ -76,6 +87,7 @@ fn main() {
             commands::upload_cache::set_upload_cache,
             commands::upload_cache::clear_upload_cache,
             commands::upload::upload_image,
+            commands::upload::process_markdown_content,
             commands::publish::publish_wechat_draft,
             commands::update::is_updater_enabled,
             commands::update::check_for_app_update,

@@ -37,37 +37,31 @@ impl<'a> ArticleRepository<'a> {
 
     pub async fn save(&self, title: &str, content: &str) -> AppResult<()> {
         let pool = self.db.pool().await?;
-        let row = sqlx::query(
-            "SELECT id FROM Article ORDER BY id DESC LIMIT 1"
-        )
-        .fetch_optional(pool)
-        .await
-        .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
+        let row = sqlx::query("SELECT id FROM Article ORDER BY id DESC LIMIT 1")
+            .fetch_optional(pool)
+            .await
+            .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
 
         let now = chrono::Utc::now().to_rfc3339();
 
         if let Some(r) = row {
             let id: i32 = r.get("id");
-            sqlx::query(
-                "UPDATE Article SET title = ?, content = ?, createdAt = ? WHERE id = ?"
-            )
-            .bind(title)
-            .bind(content)
-            .bind(now)
-            .bind(id)
-            .execute(pool)
-            .await
-            .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
+            sqlx::query("UPDATE Article SET title = ?, content = ?, createdAt = ? WHERE id = ?")
+                .bind(title)
+                .bind(content)
+                .bind(now)
+                .bind(id)
+                .execute(pool)
+                .await
+                .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
         } else {
-            sqlx::query(
-                "INSERT INTO Article (title, content, createdAt) VALUES (?, ?, ?)"
-            )
-            .bind(title)
-            .bind(content)
-            .bind(now)
-            .execute(pool)
-            .await
-            .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
+            sqlx::query("INSERT INTO Article (title, content, createdAt) VALUES (?, ?, ?)")
+                .bind(title)
+                .bind(content)
+                .bind(now)
+                .execute(pool)
+                .await
+                .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
         }
 
         Ok(())
@@ -75,29 +69,31 @@ impl<'a> ArticleRepository<'a> {
 
     pub async fn remove(&self, id: i32) -> AppResult<()> {
         let pool = self.db.pool().await?;
-        sqlx::query(
-            "DELETE FROM Article WHERE id = ?"
-        )
-        .bind(id)
-        .execute(pool)
-        .await
-        .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
+        sqlx::query("DELETE FROM Article WHERE id = ?")
+            .bind(id)
+            .execute(pool)
+            .await
+            .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
 
         Ok(())
     }
 
-    pub async fn update_path(&self, id: i32, file_name: Option<String>, file_path: Option<String>, relative_path: Option<String>) -> AppResult<()> {
+    pub async fn update_path(
+        &self,
+        id: i32,
+        file_name: Option<String>,
+        file_path: Option<String>,
+        relative_path: Option<String>,
+    ) -> AppResult<()> {
         let pool = self.db.pool().await?;
-        sqlx::query(
-            "UPDATE Article SET fileName = ?, filePath = ?, relativePath = ? WHERE id = ?"
-        )
-        .bind(file_name)
-        .bind(file_path)
-        .bind(relative_path)
-        .bind(id)
-        .execute(pool)
-        .await
-        .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
+        sqlx::query("UPDATE Article SET fileName = ?, filePath = ?, relativePath = ? WHERE id = ?")
+            .bind(file_name)
+            .bind(file_path)
+            .bind(relative_path)
+            .bind(id)
+            .execute(pool)
+            .await
+            .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
 
         Ok(())
     }

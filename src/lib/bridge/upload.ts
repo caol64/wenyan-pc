@@ -5,13 +5,26 @@ export interface UploadResponse {
     url: string;
 }
 
+export interface ProcessMarkdownOptions {
+    relativeTo?: string;
+    autoUploadLocal: boolean;
+    autoUploadNetwork: boolean;
+    autoCache: boolean;
+}
+
 export async function uploadImageBridge(
-    sourceType: "local" | "network" | "base64" | "blob",
+    sourceType: "local" | "network" | "base64" | "blob" | "auto",
     data: string | Uint8Array,
     filename?: string,
     autoCache: boolean = true,
+    wechatEnabled?: boolean,
 ): Promise<UploadResponse> {
-    // If it's Uint8Array (blob), we convert to base64 to pass through JSON invoke
-    // Or if Tauri supports Uint8Array directly in invoke (which it does)
-    return await invoke("upload_image", { sourceType, data, filename, autoCache });
+    return await invoke("upload_image", { sourceType, data, filename, autoCache, wechatEnabled });
+}
+
+export async function processMarkdownContentBridge(
+    content: string,
+    options: ProcessMarkdownOptions,
+): Promise<string> {
+    return await invoke("process_markdown_content", { content, options });
 }

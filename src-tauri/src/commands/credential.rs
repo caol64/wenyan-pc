@@ -1,9 +1,9 @@
-use tauri::State;
 use crate::domain::credential::Credential;
 use crate::dto::credential::CredentialDto;
 use crate::error::AppResult;
 use crate::infrastructure::db::DbManager;
 use crate::infrastructure::repositories::credential::CredentialRepository;
+use tauri::State;
 
 #[tauri::command]
 pub async fn load_credentials(db: State<'_, DbManager>) -> AppResult<Vec<CredentialDto>> {
@@ -17,7 +17,7 @@ pub async fn save_credential(
     r#type: String,
     name: Option<String>,
     app_id: Option<String>,
-    app_secret: Option<String>
+    app_secret: Option<String>,
 ) -> AppResult<()> {
     let repo = CredentialRepository::new(&db);
     repo.save(&r#type, name, app_id, app_secret).await
@@ -27,7 +27,7 @@ pub async fn save_credential(
 pub async fn update_wechat_token(
     db: State<'_, DbManager>,
     access_token: Option<String>,
-    expire_time: i64
+    expire_time: i64,
 ) -> AppResult<()> {
     let repo = CredentialRepository::new(&db);
     repo.update_token("wechat", access_token, expire_time).await

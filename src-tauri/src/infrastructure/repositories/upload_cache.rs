@@ -1,7 +1,7 @@
 use crate::domain::upload_cache::UploadCache;
 use crate::error::AppResult;
 use crate::infrastructure::db::DbManager;
-use sqlx::{query, Row};
+use sqlx::{Row, query};
 
 pub struct UploadCacheRepository<'a> {
     db: &'a DbManager,
@@ -42,16 +42,14 @@ impl<'a> UploadCacheRepository<'a> {
         let pool = self.db.pool().await?;
 
         if let Some(r) = existing {
-            query(
-                r#"UPDATE UploadCache SET mediaId = ?, url = ?, lastUsed = ? WHERE id = ?"#
-            )
-            .bind(media_id)
-            .bind(url)
-            .bind(&now)
-            .bind(r.id)
-            .execute(pool)
-            .await
-            .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
+            query(r#"UPDATE UploadCache SET mediaId = ?, url = ?, lastUsed = ? WHERE id = ?"#)
+                .bind(media_id)
+                .bind(url)
+                .bind(&now)
+                .bind(r.id)
+                .execute(pool)
+                .await
+                .map_err(|e| crate::error::AppError::Database(e.to_string()))?;
         } else {
             query(
                 r#"INSERT INTO UploadCache (md5, mediaId, url, lastUsed, createdAt) VALUES (?, ?, ?, ?, ?)"#

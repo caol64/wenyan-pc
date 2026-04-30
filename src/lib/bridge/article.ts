@@ -9,6 +9,13 @@ export async function openMarkdownFile(path: string): Promise<string> {
     return await invoke("open_markdown_file", { path });
 }
 
+export async function openProcessedMarkdownFile(
+    path: string,
+    options: { autoUploadLocal: boolean; autoUploadNetwork: boolean; autoCache: boolean },
+): Promise<string> {
+    return await invoke("open_markdown_file_processed", { path, options });
+}
+
 export async function getDefaultArticle(): Promise<string> {
     return await invoke("get_default_article");
 }

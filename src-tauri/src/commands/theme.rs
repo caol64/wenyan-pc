@@ -1,8 +1,8 @@
-use tauri::State;
 use crate::dto::theme::ThemeDto;
 use crate::error::AppResult;
 use crate::infrastructure::db::DbManager;
 use crate::infrastructure::repositories::theme::ThemeRepository;
+use tauri::State;
 
 #[tauri::command]
 pub async fn load_themes(db: State<'_, DbManager>) -> AppResult<Vec<ThemeDto>> {
@@ -11,7 +11,12 @@ pub async fn load_themes(db: State<'_, DbManager>) -> AppResult<Vec<ThemeDto>> {
 }
 
 #[tauri::command]
-pub async fn save_theme(db: State<'_, DbManager>, id: Option<String>, name: String, css: String) -> AppResult<String> {
+pub async fn save_theme(
+    db: State<'_, DbManager>,
+    id: Option<String>,
+    name: String,
+    css: String,
+) -> AppResult<String> {
     let repo = ThemeRepository::new(&db);
     repo.save(id, &name, &css).await
 }

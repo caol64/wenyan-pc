@@ -1,17 +1,20 @@
-import { replaceLocalImagesInMarkdown, replaceNetworkImagesInMarkdown } from "./imageUploadService";
-import { unpackFilePath } from "../bridge/system";
-import { openMarkdownFile } from "../bridge/article";
-import { getLastArticleRelativePath } from "$lib/stores/sqliteArticleStore";
+import { settingsStore } from "@wenyan-md/ui";
+import { openProcessedMarkdownFile } from "../bridge/article";
+import { processMarkdownContentBridge } from "../bridge/upload";
 
 export async function handleMarkdownContent(content: string, relativeTo?: string): Promise<string> {
-    const dir = relativeTo || (await getLastArticleRelativePath()) || undefined;
-    const { text } = await replaceLocalImagesInMarkdown(content, dir);
-    const { text: finalText } = await replaceNetworkImagesInMarkdown(text);
-    return finalText;
+    return await processMarkdownContentBridge(content, {
+        relativeTo,
+        autoUploadLocal: settingsStore.uploadSettings.autoUploadLocal,
+        autoUploadNetwork: settingsStore.uploadSettings.autoUploadNetwork,
+        autoCache: settingsStore.uploadSettings.autoCache,
+    });
 }
 
 export async function handleMarkdownFile(path: string): Promise<string> {
-    const content = await openMarkdownFile(path);
-    const { dir } = await unpackFilePath(path);
-    return await handleMarkdownContent(content, dir);
+    return await openProcessedMarkdownFile(path, {
+        autoUploadLocal: settingsStore.uploadSettings.autoUploadLocal,
+        autoUploadNetwork: settingsStore.uploadSettings.autoUploadNetwork,
+        autoCache: settingsStore.uploadSettings.autoCache,
+    });
 }

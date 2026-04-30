@@ -1,4 +1,8 @@
-use std::{collections::HashMap, env, fs, path::{Path, PathBuf}};
+use std::{
+    collections::HashMap,
+    env, fs,
+    path::{Path, PathBuf},
+};
 
 const UPDATER_ENV_KEYS: [&str; 3] = [
     "WENYAN_UPDATER_ENDPOINT",
@@ -7,7 +11,8 @@ const UPDATER_ENV_KEYS: [&str; 3] = [
 ];
 
 fn main() {
-    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("missing CARGO_MANIFEST_DIR"));
+    let manifest_dir =
+        PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("missing CARGO_MANIFEST_DIR"));
     let repo_root_env = manifest_dir
         .parent()
         .map(|path| path.join(".env"))
