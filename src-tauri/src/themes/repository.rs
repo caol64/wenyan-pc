@@ -1,7 +1,6 @@
-use crate::domain::theme::Theme;
-use crate::dto::theme::ThemeDto;
+use crate::db::DbManager;
 use crate::error::AppResult;
-use crate::infrastructure::db::DbManager;
+use crate::themes::model::{Theme, ThemeDto};
 use sqlx::Row;
 
 pub struct ThemeRepository<'a> {

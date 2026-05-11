@@ -1,9 +1,9 @@
-use crate::application::article_service::ArticleService;
-use crate::application::upload_service::{MarkdownProcessingOptions, UploadService};
-use crate::dto::article::ArticleDto;
+use crate::articles::model::ArticleDto;
+use crate::articles::repository::ArticleRepository;
+use crate::articles::service::ArticleService;
+use crate::db::DbManager;
 use crate::error::AppResult;
-use crate::infrastructure::db::DbManager;
-use crate::infrastructure::repositories::article::ArticleRepository;
+use crate::wechat::service::{MarkdownProcessingOptions, UploadService};
 use serde::Deserialize;
 use tauri::{AppHandle, State};
 

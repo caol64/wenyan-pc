@@ -1,15 +1,193 @@
-use crate::application::wechat_service::WechatService;
-use crate::dto::upload::UploadResponse;
-use crate::error::AppResult;
-use crate::infrastructure::db::DbManager;
-use crate::infrastructure::repositories::article::ArticleRepository;
-use crate::infrastructure::repositories::upload_cache::UploadCacheRepository;
+use crate::articles::repository::ArticleRepository;
+use crate::db::DbManager;
+use crate::error::{AppError, AppResult};
+use crate::wechat::model::UploadResponse;
+use crate::wechat::repository::{CredentialRepository, UploadCacheRepository};
 use base64::{Engine as _, engine::general_purpose};
 use log::warn;
 use regex::Regex;
+use reqwest::Client;
+use reqwest::multipart;
+use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+
+// ========== WechatService ==========
+
+pub struct WechatService<'a> {
+    db: &'a DbManager,
+}
+
+impl<'a> WechatService<'a> {
+    pub fn new(db: &'a DbManager) -> Self {
+        Self { db }
+    }
+
+    pub async fn ensure_ready(&self, wechat_enabled: bool) -> AppResult<()> {
+        if !wechat_enabled {
+            return Err(AppError::InvalidRequest("请先在设置中启用微信图床".into()));
+        }
+
+        let repo = CredentialRepository::new(self.db);
+        let cred = repo
+            .get_by_type("wechat")
+            .await?
+            .ok_or_else(|| AppError::InvalidRequest("请先在设置中配置微信的凭据".into()))?;
+
+        if !cred.is_complete() {
+            return Err(AppError::InvalidRequest("请先在设置中配置微信的凭据".into()));
+        }
+
+        Ok(())
+    }
+
+    pub async fn get_access_token(&self) -> AppResult<String> {
+        self.ensure_ready(true).await?;
+
+        let repo = CredentialRepository::new(self.db);
+        let cred = repo
+            .get_by_type("wechat")
+            .await?
+            .ok_or_else(|| AppError::InvalidRequest("请先在设置中配置微信的凭据".into()))?;
+
+        let now = chrono::Utc::now().timestamp_millis();
+        if let (Some(token), expire_time) = (cred.access_token, cred.expire_time) {
+            if now < expire_time {
+                return Ok(token);
+            }
+        }
+
+        let app_id = cred
+            .app_id
+            .ok_or_else(|| AppError::InvalidRequest("请先在设置中配置微信的凭据".into()))?;
+        let app_secret = cred
+            .app_secret
+            .ok_or_else(|| AppError::InvalidRequest("请先在设置中配置微信的凭据".into()))?;
+
+        let url = format!(
+            "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={}&secret={}",
+            app_id, app_secret
+        );
+
+        let resp: Value = reqwest::get(url)
+            .await
+            .map_err(|e| AppError::Network(e.to_string()))?
+            .json()
+            .await
+            .map_err(|e| AppError::Network(e.to_string()))?;
+
+        if let Some(err) = resp.get("errmsg") {
+            if let Some(code) = resp.get("errcode") {
+                if code.as_i64() != Some(0) {
+                    return Err(AppError::Network(format!("WeChat error: {}", err)));
+                }
+            }
+        }
+
+        let token = resp
+            .get("access_token")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| AppError::Network("Failed to get access token from WeChat".into()))?
+            .to_string();
+
+        let expires_in = resp
+            .get("expires_in")
+            .and_then(|v| v.as_i64())
+            .unwrap_or(7200);
+        let expire_at = now + (expires_in - 200) * 1000;
+
+        repo.update_token("wechat", Some(token.clone()), expire_at)
+            .await?;
+
+        Ok(token)
+    }
+
+    pub async fn upload_material(
+        &self,
+        media_type: &str,
+        data: Vec<u8>,
+        filename: &str,
+    ) -> AppResult<Value> {
+        let token = self.get_access_token().await?;
+        let url = format!(
+            "https://api.weixin.qq.com/cgi-bin/material/add_material?access_token={}&type={}",
+            token, media_type
+        );
+
+        let client = Client::new();
+        let part = multipart::Part::bytes(data)
+            .file_name(filename.to_string())
+            .mime_str(
+                &mime_guess::from_path(filename)
+                    .first_or_octet_stream()
+                    .to_string(),
+            )
+            .map_err(|e| AppError::Internal(e.to_string()))?;
+
+        let form = multipart::Form::new().part("media", part);
+
+        let resp: Value = client
+            .post(url)
+            .multipart(form)
+            .send()
+            .await
+            .map_err(|e| AppError::Network(e.to_string()))?
+            .json()
+            .await
+            .map_err(|e| AppError::Network(e.to_string()))?;
+
+        if let Some(err) = resp.get("errmsg") {
+            if let Some(code) = resp.get("errcode") {
+                if code.as_i64() != Some(0) && code.as_i64().is_some() {
+                    return Err(AppError::Network(format!("WeChat upload error: {}", err)));
+                }
+            }
+        }
+
+        Ok(resp)
+    }
+
+    pub async fn publish_article(
+        &self,
+        options: crate::wechat::model::WechatPublishOptions,
+    ) -> AppResult<String> {
+        let token = self.get_access_token().await?;
+        let url = format!(
+            "https://api.weixin.qq.com/cgi-bin/draft/add?access_token={}",
+            token
+        );
+
+        let client = Client::new();
+        let resp: Value = client
+            .post(url)
+            .json(&options)
+            .send()
+            .await
+            .map_err(|e| AppError::Network(e.to_string()))?
+            .json()
+            .await
+            .map_err(|e| AppError::Network(e.to_string()))?;
+
+        if let Some(err) = resp.get("errmsg") {
+            if let Some(code) = resp.get("errcode") {
+                if code.as_i64() != Some(0) && code.as_i64().is_some() {
+                    return Err(AppError::Network(format!("WeChat publish error: {}", err)));
+                }
+            }
+        }
+
+        let media_id = resp
+            .get("media_id")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| AppError::Network("Failed to get media_id from WeChat".into()))?
+            .to_string();
+
+        Ok(media_id)
+    }
+}
+
+// ========== UploadService ==========
 
 pub struct UploadService<'a> {
     db: &'a DbManager,
@@ -18,8 +196,8 @@ pub struct UploadService<'a> {
 pub enum ImageSource {
     Local(String),
     Network(String),
-    Base64(String, String), // data, filename
-    Blob(Vec<u8>, String),  // data, filename
+    Base64(String, String),
+    Blob(Vec<u8>, String),
 }
 
 #[derive(Debug, Clone)]
@@ -99,7 +277,6 @@ impl<'a> UploadService<'a> {
             }
         }
 
-        // Call WeChat API
         let wechat = WechatService::new(self.db);
         let resp = wechat.upload_material("image", data, &filename).await?;
 

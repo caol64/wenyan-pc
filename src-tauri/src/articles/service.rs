@@ -1,6 +1,6 @@
+use crate::articles::repository::ArticleRepository;
+use crate::db::DbManager;
 use crate::error::AppResult;
-use crate::infrastructure::db::DbManager;
-use crate::infrastructure::repositories::article::ArticleRepository;
 use std::fs;
 use std::path::Path;
 use tauri::Manager;
@@ -43,7 +43,6 @@ impl<'a> ArticleService<'a> {
             }
         }
 
-        // Fallback to example.md
         let resource_path = app_handle
             .path()
             .resolve("resources/example.md", tauri::path::BaseDirectory::Resource)?;

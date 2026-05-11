@@ -1,6 +1,6 @@
+use crate::articles::repository::ArticleRepository;
+use crate::db::DbManager;
 use crate::error::AppResult;
-use crate::infrastructure::db::DbManager;
-use crate::infrastructure::repositories::article::ArticleRepository;
 use base64::{Engine as _, engine::general_purpose};
 use reqwest::header::CONTENT_TYPE;
 use serde::Serialize;
@@ -286,17 +286,11 @@ pub fn os_type() -> AppResult<String> {
 
 #[tauri::command]
 pub fn get_file_md5(path: String) -> Result<String, String> {
-    // 1. 打开文件
     let mut file = File::open(&path).map_err(|e| format!("无法打开文件: {}", e))?;
-
-    // 2. 初始化 MD5 上下文
     let mut context = md5::Context::new();
-
-    // 3. 增大缓冲区到 8KB 或更大 (通常 8*1024 或 64*1024 都不错)
     let mut buffer = [0; 8 * 1024];
 
     loop {
-        // 阻塞读取是安全的，因为我们在普通 fn 中 (Tauri 会在独立线程运行它)
         let count = file
             .read(&mut buffer)
             .map_err(|e| format!("读取文件失败: {}", e))?;
@@ -314,8 +308,6 @@ pub fn get_file_md5(path: String) -> Result<String, String> {
 
 #[tauri::command]
 pub fn get_data_md5(data: Vec<u8>) -> String {
-    // 对于已经在内存中的数据，直接使用 compute 即可
-    // md5::compute 接收 &[u8]
     let digest = md5::compute(&data);
     format!("{:x}", digest)
 }

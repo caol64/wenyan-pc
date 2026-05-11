@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// 文章领域对象 - 用于内部业务逻辑
+/// 文章数据对象
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Article {
     pub id: i32,
@@ -13,12 +13,10 @@ pub struct Article {
 }
 
 impl Article {
-    /// 判断是否有文件关联
     pub fn has_file(&self) -> bool {
         self.file_path.is_some()
     }
 
-    /// 更新文件路径信息
     pub fn update_file_info(
         &mut self,
         file_name: Option<String>,
@@ -29,4 +27,14 @@ impl Article {
         self.file_path = file_path;
         self.relative_path = relative_path;
     }
+}
+
+/// 文章数据传输对象 - 用于前端展示
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArticleDto {
+    pub id: String,
+    pub title: String,
+    pub content: String,
+    pub created: i64,
 }

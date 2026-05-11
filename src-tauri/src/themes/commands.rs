@@ -1,7 +1,7 @@
-use crate::dto::theme::ThemeDto;
+use crate::db::DbManager;
 use crate::error::AppResult;
-use crate::infrastructure::db::DbManager;
-use crate::infrastructure::repositories::theme::ThemeRepository;
+use crate::themes::model::ThemeDto;
+use crate::themes::repository::ThemeRepository;
 use tauri::State;
 
 #[tauri::command]

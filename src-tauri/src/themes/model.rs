@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// 主题领域对象 - 用于内部业务逻辑
+/// 主题数据对象
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Theme {
     pub id: i32,
@@ -10,19 +10,26 @@ pub struct Theme {
 }
 
 impl Theme {
-    /// 创建新主题
     pub fn new(name: String, content: String, created_at: String) -> Self {
         Self {
-            id: 0, // 未持久化时 id 为 0
+            id: 0,
             name,
             content,
             created_at,
         }
     }
 
-    /// 更新主题内容
     pub fn update(&mut self, name: String, content: String) {
         self.name = name;
         self.content = content;
     }
+}
+
+/// 主题数据传输对象 - 用于前端展示
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThemeDto {
+    pub id: String,
+    pub name: String,
+    pub css: String,
 }

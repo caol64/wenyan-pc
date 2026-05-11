@@ -1,5 +1,5 @@
-use crate::dto::update::UpdateInfoDto;
 use crate::error::{AppError, AppResult};
+use crate::update::model::UpdateInfoDto;
 use reqwest::Url;
 use tauri::{AppHandle, Runtime};
 use tauri_plugin_updater::UpdaterExt;

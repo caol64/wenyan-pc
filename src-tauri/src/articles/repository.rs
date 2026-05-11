@@ -1,7 +1,7 @@
-use crate::domain::article::Article;
-use crate::dto::article::ArticleDto;
+use crate::articles::model::Article;
+use crate::articles::model::ArticleDto;
+use crate::db::DbManager;
 use crate::error::AppResult;
-use crate::infrastructure::db::DbManager;
 use sqlx::Row;
 
 pub struct ArticleRepository<'a> {
