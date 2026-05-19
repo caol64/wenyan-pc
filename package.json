@@ -20,7 +20,7 @@
     "@sveltejs/kit": "^2.49.1",
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "@tailwindcss/vite": "^4.1.17",
-    "@tauri-apps/cli": "2.10.0",
+    "@tauri-apps/cli": "^2.11.0",
     "@types/node": "^24.3.0",
     "svelte": "^5.45.6",
     "svelte-check": "^4.3.4",
@@ -30,8 +30,8 @@
   },
   "dependencies": {
     "@codemirror/view": "^6.39.12",
-    "@tauri-apps/api": "2.10.1",
-    "@wenyan-md/core": "^3.0.9",
+    "@tauri-apps/api": "^2.11.0",
+    "@wenyan-md/core": "^3.0.10",
     "@wenyan-md/ui": "file:./wenyan-ui",
     "modern-screenshot": "^4.6.8"
   },

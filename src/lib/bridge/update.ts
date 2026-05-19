@@ -1,4 +1,5 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { isTauri } from "@tauri-apps/api/core";
+import { invokeBridge } from "./invoke";
 
 export interface UpdateInfo {
     currentVersion: string;
@@ -16,13 +17,13 @@ export async function isUpdaterEnabled(): Promise<boolean> {
         return false;
     }
 
-    return await invoke("is_updater_enabled");
+    return await invokeBridge("is_updater_enabled");
 }
 
 export async function checkForAppUpdate(): Promise<UpdateInfo | null> {
-    return await invoke("check_for_app_update");
+    return await invokeBridge("check_for_app_update");
 }
 
 export async function installAppUpdate(): Promise<void> {
-    await invoke("install_app_update");
+    await invokeBridge("install_app_update");
 }

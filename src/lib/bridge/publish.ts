@@ -1,6 +1,6 @@
-import { invoke } from "@tauri-apps/api/core";
 import type { WechatPublishOptions } from "@wenyan-md/core/wechat";
+import { invokeBridge } from "./invoke";
 
 export async function publishWechatDraft(options: WechatPublishOptions, wechatEnabled: boolean): Promise<string> {
-    return await invoke("publish_wechat_draft", { options, wechatEnabled });
+    return await invokeBridge("publish_wechat_draft", { options, wechatEnabled });
 }

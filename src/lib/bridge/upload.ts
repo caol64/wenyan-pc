@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invokeBridge } from "./invoke";
 
 export interface UploadResponse {
     media_id: string;
@@ -19,12 +19,12 @@ export async function uploadImageBridge(
     autoCache: boolean = true,
     wechatEnabled?: boolean,
 ): Promise<UploadResponse> {
-    return await invoke("upload_image", { sourceType, data, filename, autoCache, wechatEnabled });
+    return await invokeBridge("upload_image", { sourceType, data, filename, autoCache, wechatEnabled });
 }
 
 export async function processMarkdownContentBridge(
     content: string,
     options: ProcessMarkdownOptions,
 ): Promise<string> {
-    return await invoke("process_markdown_content", { content, options });
+    return await invokeBridge("process_markdown_content", { content, options });
 }

@@ -1,35 +1,35 @@
-import { invoke } from "@tauri-apps/api/core";
 import type { Article } from "@wenyan-md/ui";
+import { invokeBridge } from "./invoke";
 
 export async function loadArticles(): Promise<Article[]> {
-    return await invoke("load_articles");
+    return await invokeBridge("load_articles");
 }
 
 export async function openMarkdownFile(path: string): Promise<string> {
-    return await invoke("open_markdown_file", { path });
+    return await invokeBridge("open_markdown_file", { path });
 }
 
 export async function openProcessedMarkdownFile(
     path: string,
     options: { autoUploadLocal: boolean; autoUploadNetwork: boolean; autoCache: boolean },
 ): Promise<string> {
-    return await invoke("open_markdown_file_processed", { path, options });
+    return await invokeBridge("open_markdown_file_processed", { path, options });
 }
 
 export async function getDefaultArticle(): Promise<string> {
-    return await invoke("get_default_article");
+    return await invokeBridge("get_default_article");
 }
 
 export async function saveArticle(article: Article): Promise<void> {
-    await invoke("save_article", { title: article.title, content: article.content });
+    await invokeBridge("save_article", { title: article.title, content: article.content });
 }
 
 export async function removeArticle(id: string): Promise<void> {
-    await invoke("remove_article", { id });
+    await invokeBridge("remove_article", { id });
 }
 
 export async function getLastArticleRelativePath(): Promise<string | null> {
-    return await invoke("get_last_article_relative_path");
+    return await invokeBridge("get_last_article_relative_path");
 }
 
 export async function updateLastArticlePath(
@@ -37,5 +37,5 @@ export async function updateLastArticlePath(
     filePath: string | null,
     relativePath: string | null,
 ): Promise<void> {
-    await invoke("update_last_article_path", { fileName, filePath, relativePath });
+    await invokeBridge("update_last_article_path", { fileName, filePath, relativePath });
 }
